@@ -54,4 +54,6 @@ export interface RingDef {
 /** 拥有的戒指实例（存储用） */
 export interface OwnedRing {
   defId: string
+  /** 强化等级 0-10（缺省 0） */
+  enhance?: number
 }

@@ -12,8 +12,18 @@ import { useHiddenNpcStore } from './useHiddenNpcStore'
 import { getCombinedItemCount, removeCombinedItem, getLowestCombinedQuality } from '@/composables/useCombinedInventory'
 
 const QUALITY_ORDER: Quality[] = ['normal', 'fine', 'excellent', 'supreme']
-const QUALITY_MULTIPLIER: Record<Quality, number> = { normal: 1, fine: 1.25, excellent: 1.5, supreme: 2 }
-const QUALITY_LABEL: Record<Quality, string> = { normal: '', fine: '优良', excellent: '精品', supreme: '极品' }
+const QUALITY_MULTIPLIER: Record<Quality, number> = {
+  normal: 1,
+  fine: 1.25,
+  excellent: 1.5,
+  supreme: 2
+}
+const QUALITY_LABEL: Record<Quality, string> = {
+  normal: '',
+  fine: '优良',
+  excellent: '精品',
+  supreme: '极品'
+}
 
 export const useCookingStore = defineStore('cooking', () => {
   const inventoryStore = useInventoryStore()
@@ -124,7 +134,10 @@ export const useCookingStore = defineStore('cooking', () => {
     }
     const qualityTag = QUALITY_LABEL[resultQuality] ? `【${QUALITY_LABEL[resultQuality]}】` : ''
     const qtyTag = maxPossible > 1 ? `${maxPossible}份` : ''
-    return { success: true, message: `烹饪了${qtyTag}${qualityTag}${recipe.name}！` }
+    return {
+      success: true,
+      message: `烹饪了${qtyTag}${qualityTag}${recipe.name}！`
+    }
   }
 
   /** 食用烹饪品 */
@@ -190,7 +203,10 @@ export const useCookingStore = defineStore('cooking', () => {
   }
 
   const serialize = () => {
-    return { unlockedRecipes: unlockedRecipes.value, activeBuff: activeBuff.value }
+    return {
+      unlockedRecipes: unlockedRecipes.value,
+      activeBuff: activeBuff.value
+    }
   }
 
   const deserialize = (data: ReturnType<typeof serialize>) => {

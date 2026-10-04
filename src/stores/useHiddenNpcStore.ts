@@ -138,7 +138,10 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
   }
 
   /** 检查所有NPC的发现进度 */
-  const checkDiscoveryConditions = (): { npcId: string; step: DiscoveryStep }[] => {
+  const checkDiscoveryConditions = (): {
+    npcId: string
+    step: DiscoveryStep
+  }[] => {
     const triggered: { npcId: string; step: DiscoveryStep }[] = []
 
     for (const npc of HIDDEN_NPCS) {
@@ -181,13 +184,27 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
     const state = getHiddenNpcState(npcId)
     const def = getHiddenNpcById(npcId)
     if (!state || !def) return { success: false, message: '找不到此仙灵。', affinityChange: 0 }
-    if (state.discoveryPhase !== 'revealed') return { success: false, message: '尚未与此仙灵建立联系。', affinityChange: 0 }
+    if (state.discoveryPhase !== 'revealed')
+      return {
+        success: false,
+        message: '尚未与此仙灵建立联系。',
+        affinityChange: 0
+      }
     if (state.offeredToday) return { success: false, message: '今日已供奉过了。', affinityChange: 0 }
-    if (state.offersThisWeek >= MAX_OFFERS_PER_WEEK) return { success: false, message: '本周供奉次数已满。', affinityChange: 0 }
+    if (state.offersThisWeek >= MAX_OFFERS_PER_WEEK)
+      return {
+        success: false,
+        message: '本周供奉次数已满。',
+        affinityChange: 0
+      }
 
     const inventoryStore = useInventoryStore()
     if (!inventoryStore.removeItem(itemId, 1, quality)) {
-      return { success: false, message: '背包中没有此物品。', affinityChange: 0 }
+      return {
+        success: false,
+        message: '背包中没有此物品。',
+        affinityChange: 0
+      }
     }
 
     let base = OFFERING_NEUTRAL
@@ -217,10 +234,19 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
     const state = getHiddenNpcState(npcId)
     const def = getHiddenNpcById(npcId)
     if (!state || !def) return { success: false, message: '找不到此仙灵。', affinityChange: 0 }
-    if (state.discoveryPhase !== 'revealed') return { success: false, message: '尚未与此仙灵建立联系。', affinityChange: 0 }
+    if (state.discoveryPhase !== 'revealed')
+      return {
+        success: false,
+        message: '尚未与此仙灵建立联系。',
+        affinityChange: 0
+      }
     if (state.interactedToday) return { success: false, message: '今日已互动过了。', affinityChange: 0 }
     if (state.specialInteractionCooldown > 0)
-      return { success: false, message: `需要再等${state.specialInteractionCooldown}天。`, affinityChange: 0 }
+      return {
+        success: false,
+        message: `需要再等${state.specialInteractionCooldown}天。`,
+        affinityChange: 0
+      }
 
     const skillStore = useSkillStore()
     let affinityGain = 30
@@ -288,7 +314,11 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
     if (!def.bondable) return { success: false, message: '此仙灵无法结缘。' }
     if (state.courting) return { success: false, message: '已在求缘中。' }
     if (state.bonded) return { success: false, message: '已结缘。' }
-    if (state.affinity < def.courtshipThreshold) return { success: false, message: `缘分不足（需要${def.courtshipThreshold}）。` }
+    if (state.affinity < def.courtshipThreshold)
+      return {
+        success: false,
+        message: `缘分不足（需要${def.courtshipThreshold}）。`
+      }
 
     // 检查是否已有结缘对象
     const existingBond = hiddenNpcStates.value.find(s => s.bonded || s.courting)
@@ -311,7 +341,11 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
     if (!state || !def) return { success: false, message: '找不到此仙灵。' }
     if (!state.courting) return { success: false, message: '需要先求缘。' }
     if (state.bonded) return { success: false, message: '已结缘。' }
-    if (state.affinity < def.bondThreshold) return { success: false, message: `缘分不足（需要${def.bondThreshold}）。` }
+    if (state.affinity < def.bondThreshold)
+      return {
+        success: false,
+        message: `缘分不足（需要${def.bondThreshold}）。`
+      }
 
     const inventoryStore = useInventoryStore()
     if (!inventoryStore.removeItem(def.bondItemId, 1)) {
@@ -392,8 +426,18 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
 
   // ==================== 能力系统 ====================
 
-  const checkAbilityUnlocks = (): { id: string; npcId: string; name: string; description: string }[] => {
-    const newlyUnlocked: { id: string; npcId: string; name: string; description: string }[] = []
+  const checkAbilityUnlocks = (): {
+    id: string
+    npcId: string
+    name: string
+    description: string
+  }[] => {
+    const newlyUnlocked: {
+      id: string
+      npcId: string
+      name: string
+      description: string
+    }[] = []
 
     for (const npc of HIDDEN_NPCS) {
       const state = getHiddenNpcState(npc.id)
@@ -402,7 +446,12 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
       for (const ability of npc.abilities) {
         if (state.affinity >= ability.affinityRequired && !state.unlockedAbilities.includes(ability.id)) {
           state.unlockedAbilities.push(ability.id)
-          newlyUnlocked.push({ id: ability.id, npcId: npc.id, name: ability.name, description: ability.description })
+          newlyUnlocked.push({
+            id: ability.id,
+            npcId: npc.id,
+            name: ability.name,
+            description: ability.description
+          })
         }
       }
     }
@@ -464,7 +513,12 @@ export const useHiddenNpcStore = defineStore('hiddenNpc', () => {
 
       for (const ability of npc.abilities) {
         if (state.unlockedAbilities.includes(ability.id) && ability.passive) {
-          abilities.push({ npcId: npc.id, id: ability.id, name: ability.name, passive: ability.passive })
+          abilities.push({
+            npcId: npc.id,
+            id: ability.id,
+            name: ability.name,
+            passive: ability.passive
+          })
         }
       }
     }

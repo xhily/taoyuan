@@ -10,7 +10,9 @@
             <span v-if="state.bonded" class="text-[10px] text-accent border border-accent/30 rounded-xs px-1 ml-1">已结缘</span>
             <span v-else-if="state.courting" class="text-[10px] text-accent/70 border border-accent/20 rounded-xs px-1 ml-1">求缘中</span>
           </p>
-          <p class="text-[10px] text-muted/60 mt-0.5">{{ npcDef.personality }}</p>
+          <p class="text-[10px] text-muted/60 mt-0.5">
+            {{ npcDef.personality }}
+          </p>
           <p v-if="showTrueName" class="text-[10px] text-accent/60 mt-0.5">真名：{{ npcDef.trueName }}</p>
         </div>
         <Button @click="emit('close')">关闭</Button>
@@ -232,7 +234,9 @@
 
       <!-- 背景故事 -->
       <div class="mt-3 border-t border-accent/10 pt-2">
-        <p class="text-[10px] text-muted/50 leading-relaxed">{{ npcDef.origin }}</p>
+        <p class="text-[10px] text-muted/50 leading-relaxed">
+          {{ npcDef.origin }}
+        </p>
       </div>
     </div>
   </div>

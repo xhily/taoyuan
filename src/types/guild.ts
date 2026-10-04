@@ -40,6 +40,8 @@ export interface GuildShopItemDef {
   totalLimit?: number
   /** 装备类型（购买后加入对应装备栏） */
   equipType?: 'weapon' | 'ring' | 'hat' | 'shoe'
+  /** 兑换后把马升级为指定品种（需已有马） */
+  horseUpgrade?: 'steppe' | 'cloud' | 'divine'
   /** 合成材料 */
   materials?: { itemId: string; quantity: number }[]
 }

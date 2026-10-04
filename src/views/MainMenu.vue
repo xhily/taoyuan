@@ -8,7 +8,9 @@
     <!-- 标题 -->
     <div class="flex items-center space-x-3">
       <div class="logo" />
-      <h1 class="text-accent text-2xl md:text-4xl tracking-widest">{{ pkg.title }}</h1>
+      <h1 class="text-accent text-2xl md:text-4xl tracking-widest">
+        {{ pkg.title }}
+      </h1>
     </div>
 
     <!-- 主菜单 -->
@@ -90,6 +92,7 @@
               关于游戏
             </Button>
             <Button
+              v-if="!Capacitor.isNativePlatform() && !isElectron"
               class="flex-1 justify-center"
               :class="{ '!bg-accent !text-bg': aboutTab === 'author' }"
               :icon="UserRound"
@@ -124,8 +127,8 @@
               </a>
             </div>
           </div>
-          <!-- 赞助作者 -->
-          <div v-if="aboutTab === 'author'" class="flex flex-col space-y-3 text-sm">
+          <!-- 赞助作者（安卓原生平台和 Electron 桌面端隐藏，避免计费内容审核问题） -->
+          <div v-if="aboutTab === 'author' && !Capacitor.isNativePlatform() && !isElectron" class="flex flex-col space-y-3 text-sm">
             <p class="text-xs text-muted">如果你喜欢这款游戏，可以请作者喝杯奶茶、吃顿 KFC，你的支持是作者继续更新的最大动力！</p>
             <div class="flex space-x-3">
               <div class="flex-1 border border-accent/20 rounded-xs p-3">
@@ -219,7 +222,9 @@
                 @click="handleSelectFarm(farm.type)"
               >
                 <div class="text-sm mb-0.5">{{ farm.name }}</div>
-                <div class="text-muted text-xs mb-1">{{ farm.description }}</div>
+                <div class="text-muted text-xs mb-1">
+                  {{ farm.description }}
+                </div>
                 <div class="text-accent text-xs">{{ farm.bonus }}</div>
               </button>
             </div>
@@ -241,8 +246,12 @@
                 <X :size="14" />
               </button>
               <Divider title>{{ selectedFarmDef?.name }}</Divider>
-              <p class="text-xs text-muted mb-2">{{ selectedFarmDef?.description }}</p>
-              <p class="text-xs text-accent mb-4">{{ selectedFarmDef?.bonus }}</p>
+              <p class="text-xs text-muted mb-2">
+                {{ selectedFarmDef?.description }}
+              </p>
+              <p class="text-xs text-accent mb-4">
+                {{ selectedFarmDef?.bonus }}
+              </p>
               <div class="flex space-x-3 justify-center">
                 <Button :icon-size="12" :icon="ArrowLeft" @click="showFarmConfirm = false">取消</Button>
                 <Button class="px-6" :icon-size="12" :icon="Play" @click="handleNewGame">开始旅程</Button>
@@ -376,9 +385,18 @@
   import type { FarmMapType, Gender } from '@/types'
   import { Capacitor } from '@capacitor/core'
 
+  /** 是否在 Electron 桌面端 */
+  const isElectron = typeof navigator !== 'undefined' && navigator.userAgent.includes('Electron')
+
   const router = useRouter()
   const { startBgm } = useAudio()
-  const pkg = _pkg as typeof _pkg & { title: string; qq: string; version: string; name: string; author: string }
+  const pkg = _pkg as typeof _pkg & {
+    title: string
+    qq: string
+    version: string
+    name: string
+    author: string
+  }
 
   const gameStore = useGameStore()
   const saveStore = useSaveStore()

@@ -116,6 +116,21 @@ button {
   background-color: var(--color-danger);
 }
 
+/*
+ * 行内紧凑按钮：一行要并排放三个按钮的场合（牧场动物行等）。
+ * .btn 声明在 utilities 之后，组件里写 px-1 py-0 压不过它；小屏下按钮被挤窄后
+ * 汉字会逐字竖排。这里收窄内边距并禁止换行，宽度不够时整组按钮换到下一行。
+ */
+.btn-compact {
+  padding: var(--spacing-1) var(--spacing-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-compact > :not([hidden]) ~ :not([hidden]) {
+  margin-left: var(--spacing-1);
+}
+
 /* 像素风面板 */
 .game-panel {
   background-color: rgb(var(--color-panel));

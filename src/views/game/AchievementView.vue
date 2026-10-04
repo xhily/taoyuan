@@ -48,7 +48,12 @@
         </button>
       </div>
       <div ref="collectionRef" class="max-h-60 overflow-y-auto" @scroll="onCollectionScroll">
-        <div :style="{ paddingTop: topPad + 'px', paddingBottom: bottomPad + 'px' }">
+        <div
+          :style="{
+            paddingTop: topPad + 'px',
+            paddingBottom: bottomPad + 'px'
+          }"
+        >
           <div class="grid grid-cols-3 md:grid-cols-5 gap-1">
             <div
               v-for="item in visibleItems"
@@ -81,10 +86,14 @@
             <X :size="14" />
           </button>
 
-          <p class="text-sm mb-2" :class="getCategoryColor(activeCollectionItem.category)">{{ activeCollectionItem.name }}</p>
+          <p class="text-sm mb-2" :class="getCategoryColor(activeCollectionItem.category)">
+            {{ activeCollectionItem.name }}
+          </p>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs text-muted">{{ activeCollectionItem.description }}</p>
+            <p class="text-xs text-muted">
+              {{ activeCollectionItem.description }}
+            </p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2">
@@ -178,7 +187,9 @@
 
           <!-- 描述 -->
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs text-muted">{{ activeAchievement.description }}</p>
+            <p class="text-xs text-muted">
+              {{ activeAchievement.description }}
+            </p>
           </div>
 
           <!-- 进度条 -->
@@ -234,7 +245,9 @@
               {{ getBundleProgress(bundle) }}
             </span>
           </div>
-          <p class="text-xs text-muted mt-0.5 pl-4.5">{{ bundle.description }}</p>
+          <p class="text-xs text-muted mt-0.5 pl-4.5">
+            {{ bundle.description }}
+          </p>
         </div>
       </div>
     </template>
@@ -273,7 +286,9 @@
           <!-- 奖励 -->
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs text-muted mb-1">奖励</p>
-            <p class="text-xs text-accent">{{ activeBundle.reward.description }}</p>
+            <p class="text-xs text-accent">
+              {{ activeBundle.reward.description }}
+            </p>
           </div>
 
           <!-- 提交按钮 -->
@@ -307,7 +322,9 @@
       <p class="text-xs text-muted mb-2">出货记录 {{ shopStore.shippedItems.length }}/{{ shippableItems.length }}</p>
       <div class="flex flex-col space-y-2 max-h-72 overflow-y-auto">
         <div v-for="(items, category) in itemsByCategory" :key="category" class="border border-accent/20 rounded-xs p-2">
-          <p class="text-xs text-muted mb-1">{{ CATEGORY_NAMES[category] ?? category }}</p>
+          <p class="text-xs text-muted mb-1">
+            {{ CATEGORY_NAMES[category] ?? category }}
+          </p>
           <div class="grid grid-cols-3 md:grid-cols-5 gap-1">
             <div
               v-for="item in items"
@@ -340,10 +357,14 @@
             <X :size="14" />
           </button>
 
-          <p class="text-sm mb-2" :class="getCategoryColor(activeShippingItem.category)">{{ activeShippingItem.name }}</p>
+          <p class="text-sm mb-2" :class="getCategoryColor(activeShippingItem.category)">
+            {{ activeShippingItem.name }}
+          </p>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs text-muted">{{ activeShippingItem.description }}</p>
+            <p class="text-xs text-muted">
+              {{ activeShippingItem.description }}
+            </p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2">
@@ -415,7 +436,9 @@
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs mb-1" :class="noteTypeColor(activeNote.type)">{{ NOTE_TYPE_LABELS[activeNote.type] ?? activeNote.type }}</p>
+            <p class="text-xs mb-1" :class="noteTypeColor(activeNote.type)">
+              {{ NOTE_TYPE_LABELS[activeNote.type] ?? activeNote.type }}
+            </p>
             <p class="text-xs">{{ activeNote.content }}</p>
           </div>
 
@@ -886,7 +909,12 @@
         target = skillStore.skills.length
         break
       case 'npcFriendship': {
-        const LEVEL_RANK: Record<string, number> = { stranger: 0, acquaintance: 1, friendly: 2, bestFriend: 3 }
+        const LEVEL_RANK: Record<string, number> = {
+          stranger: 0,
+          acquaintance: 1,
+          friendly: 2,
+          bestFriend: 3
+        }
         const requiredRank = LEVEL_RANK[c.level] ?? 0
         current = npcStore.npcStates.filter(n => (LEVEL_RANK[npcStore.getFriendshipLevel(n.npcId)] ?? 0) >= requiredRank).length
         target = npcStore.npcStates.length
@@ -972,7 +1000,12 @@
         return `${maxCount}/${skillStore.skills.length}`
       }
       case 'npcFriendship': {
-        const LEVEL_RANK: Record<string, number> = { stranger: 0, acquaintance: 1, friendly: 2, bestFriend: 3 }
+        const LEVEL_RANK: Record<string, number> = {
+          stranger: 0,
+          acquaintance: 1,
+          friendly: 2,
+          bestFriend: 3
+        }
         const requiredRank = LEVEL_RANK[c.level] ?? 0
         const metCount = npcStore.npcStates.filter(n => (LEVEL_RANK[npcStore.getFriendshipLevel(n.npcId)] ?? 0) >= requiredRank).length
         return `${metCount}/${npcStore.npcStates.length}`

@@ -48,7 +48,12 @@ export const useHomeStore = defineStore('home', () => {
   const caveDaysActive = ref(0)
 
   const farmhouseName = computed(() => {
-    const names: Record<FarmhouseLevel, string> = { 0: '茅屋', 1: '砖房', 2: '宅院', 3: '酒窖宅院' }
+    const names: Record<FarmhouseLevel, string> = {
+      0: '茅屋',
+      1: '砖房',
+      2: '宅院',
+      3: '酒窖宅院'
+    }
     return names[farmhouseLevel.value]
   })
 
@@ -122,12 +127,27 @@ export const useHomeStore = defineStore('home', () => {
   }
 
   /** 山洞每日产出 */
-  const dailyCaveUpdate = (): { itemId: string; quantity: number; quality: Quality }[] => {
+  const dailyCaveUpdate = (): {
+    itemId: string
+    quantity: number
+    quality: Quality
+  }[] => {
     if (caveChoice.value === 'none') return []
     const results: { itemId: string; quantity: number; quality: Quality }[] = []
     const def = getCaveUpgrade(caveLevel.value)
     if (!def) return []
-    const quality = getCaveQuality(caveDaysActive.value)
+
+    // 品质 = 按天数积累的档位 + 山洞等级带来的加成
+    const QUALITY_ORDER: Quality[] = ['normal', 'fine', 'excellent', 'supreme']
+    const baseIndex = QUALITY_ORDER.indexOf(getCaveQuality(caveDaysActive.value))
+    const quality = QUALITY_ORDER[Math.min(QUALITY_ORDER.length - 1, baseIndex + (def.qualityBonus ?? 0))]!
+
+    /** 触发加成时按上限随机多产几个 */
+    const rollQty = (): number => {
+      if (def.doubleChance <= 0 || Math.random() >= def.doubleChance) return 1
+      const max = def.maxQty ?? 2
+      return 2 + Math.floor(Math.random() * (max - 1))
+    }
 
     if (caveChoice.value === 'mushroom') {
       if (Math.random() < def.mushroomChance) {
@@ -142,14 +162,12 @@ export const useHomeStore = defineStore('home', () => {
             break
           }
         }
-        const qty = def.doubleChance > 0 && Math.random() < def.doubleChance ? 2 : 1
-        results.push({ itemId: picked, quantity: qty, quality })
+        results.push({ itemId: picked, quantity: rollQty(), quality })
       }
     } else if (caveChoice.value === 'fruit_bat') {
       if (Math.random() < def.fruitBatChance) {
         const pick = def.fruitPool[Math.floor(Math.random() * def.fruitPool.length)]!
-        const qty = def.doubleChance > 0 && Math.random() < def.doubleChance ? 2 : 1
-        results.push({ itemId: pick, quantity: qty, quality })
+        results.push({ itemId: pick, quantity: rollQty(), quality })
       }
     }
 
@@ -187,12 +205,25 @@ export const useHomeStore = defineStore('home', () => {
     const inventoryStore = useInventoryStore()
     if (!inventoryStore.removeItem(itemId, 1, quality)) return false
 
-    cellarSlots.value.push({ itemId, originalQuality: quality, daysAging: 0, addedValue: 0, upgradeCount: 0 })
+    cellarSlots.value.push({
+      itemId,
+      originalQuality: quality,
+      daysAging: 0,
+      addedValue: 0,
+      upgradeCount: 0
+    })
     return true
   }
 
   /** 酒窖取出陈酿 */
-  const removeAging = (index: number): { itemId: string; quality: Quality; addedValue: number; upgradeCount: number } | null => {
+  const removeAging = (
+    index: number
+  ): {
+    itemId: string
+    quality: Quality
+    addedValue: number
+    upgradeCount: number
+  } | null => {
     if (index < 0 || index >= cellarSlots.value.length) return null
     const slot = cellarSlots.value[index]!
     cellarSlots.value.splice(index, 1)
@@ -201,12 +232,23 @@ export const useHomeStore = defineStore('home', () => {
       const playerStore = usePlayerStore()
       playerStore.earnMoney(slot.addedValue)
     }
-    return { itemId: slot.itemId, quality: slot.originalQuality, addedValue: slot.addedValue, upgradeCount: slot.upgradeCount }
+    return {
+      itemId: slot.itemId,
+      quality: slot.originalQuality,
+      addedValue: slot.addedValue,
+      upgradeCount: slot.upgradeCount
+    }
   }
 
   /** 酒窖每日更新 */
-  const dailyCellarUpdate = (): { upgraded: { itemId: string; addedValue: number; upgradeCount: number }[] } => {
-    const upgraded: { itemId: string; addedValue: number; upgradeCount: number }[] = []
+  const dailyCellarUpdate = (): {
+    upgraded: { itemId: string; addedValue: number; upgradeCount: number }[]
+  } => {
+    const upgraded: {
+      itemId: string
+      addedValue: number
+      upgradeCount: number
+    }[] = []
 
     for (const slot of cellarSlots.value) {
       slot.daysAging++
@@ -214,7 +256,11 @@ export const useHomeStore = defineStore('home', () => {
         slot.addedValue += cellarValuePerCycle.value
         slot.upgradeCount++
         slot.daysAging = 0
-        upgraded.push({ itemId: slot.itemId, addedValue: slot.addedValue, upgradeCount: slot.upgradeCount })
+        upgraded.push({
+          itemId: slot.itemId,
+          addedValue: slot.addedValue,
+          upgradeCount: slot.upgradeCount
+        })
       }
     }
 

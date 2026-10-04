@@ -1,25 +1,22 @@
 # 本地构建用的 Dockerfile
 # 支持完整的源代码构建流程
 
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
 
 # 复制 package 文件
-COPY package.json pnpm-lock.yaml ./
-
-# 安装 pnpm
-RUN npm install -g pnpm
+COPY package.json bun.lock ./
 
 # 安装依赖
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 # 复制源代码
 COPY . .
 
 # 构建项目
-RUN pnpm run build
+RUN bun run build
 
 # 生产阶段
 FROM nginx:alpine

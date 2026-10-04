@@ -69,7 +69,9 @@
             <div
               class="h-full transition-all"
               :class="getKillCount(goal.monsterId) >= goal.killTarget ? 'bg-success' : 'bg-accent/60'"
-              :style="{ width: Math.min(100, (getKillCount(goal.monsterId) / goal.killTarget) * 100) + '%' }"
+              :style="{
+                width: Math.min(100, (getKillCount(goal.monsterId) / goal.killTarget) * 100) + '%'
+              }"
             />
           </div>
         </div>
@@ -105,7 +107,9 @@
               <div
                 class="h-full transition-all"
                 :class="getKillCount(selectedGoal.monsterId) >= selectedGoal.killTarget ? 'bg-success' : 'bg-accent/60'"
-                :style="{ width: Math.min(100, (getKillCount(selectedGoal.monsterId) / selectedGoal.killTarget) * 100) + '%' }"
+                :style="{
+                  width: Math.min(100, (getKillCount(selectedGoal.monsterId) / selectedGoal.killTarget) * 100) + '%'
+                }"
               />
             </div>
           </div>
@@ -151,7 +155,9 @@
           @click="item.count > 0 && openDonateModal(item)"
         >
           <div class="flex-1">
-            <p class="text-xs" :class="item.count > 0 ? 'text-text' : 'text-muted'">{{ item.name }}</p>
+            <p class="text-xs" :class="item.count > 0 ? 'text-text' : 'text-muted'">
+              {{ item.name }}
+            </p>
             <p class="text-xs text-muted">持有 {{ item.count }} · 每个 {{ item.points }} 贡献点</p>
           </div>
           <span class="text-xs ml-2" :class="item.count > 0 ? 'text-accent' : 'text-muted'">{{ item.count * item.points }}点</span>
@@ -255,7 +261,9 @@
         @click="openShopModal(item)"
       >
         <div>
-          <p class="text-sm" :class="guildStore.isShopItemUnlocked(item.itemId) ? '' : 'text-muted'">{{ item.name }}</p>
+          <p class="text-sm" :class="guildStore.isShopItemUnlocked(item.itemId) ? '' : 'text-muted'">
+            {{ item.name }}
+          </p>
           <p class="text-xs text-muted">{{ item.description }}</p>
           <p v-if="item.materials && guildStore.isShopItemUnlocked(item.itemId)" class="text-xs text-muted mt-0.5">
             材料:
@@ -273,13 +281,16 @@
             公会 Lv.{{ item.unlockGuildLevel }} 解锁
           </p>
           <p v-if="item.dailyLimit && guildStore.isShopItemUnlocked(item.itemId)" class="text-xs text-muted mt-0.5">
-            今日剩余: {{ guildStore.getDailyRemaining(item.itemId, item.dailyLimit) }}/{{ item.dailyLimit }}
+            今日剩余:
+            {{ guildStore.getDailyRemaining(item.itemId, item.dailyLimit) }}/{{ item.dailyLimit }}
           </p>
           <p v-if="item.weeklyLimit && guildStore.isShopItemUnlocked(item.itemId)" class="text-xs text-muted mt-0.5">
-            本周剩余: {{ guildStore.getWeeklyRemaining(item.itemId, item.weeklyLimit) }}/{{ item.weeklyLimit }}
+            本周剩余:
+            {{ guildStore.getWeeklyRemaining(item.itemId, item.weeklyLimit) }}/{{ item.weeklyLimit }}
           </p>
           <p v-if="item.totalLimit && guildStore.isShopItemUnlocked(item.itemId)" class="text-xs text-muted mt-0.5">
-            总限购: {{ guildStore.getTotalRemaining(item.itemId, item.totalLimit) }}/{{ item.totalLimit }}
+            总限购:
+            {{ guildStore.getTotalRemaining(item.itemId, item.totalLimit) }}/{{ item.totalLimit }}
           </p>
         </div>
         <span class="text-xs whitespace-nowrap ml-2" :class="item.contributionCost ? 'text-success' : 'text-accent'">
@@ -516,7 +527,9 @@
         <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
           <div
             class="h-full bg-accent rounded-xs transition-all"
-            :style="{ width: Math.round((guildStore.completedGoalCount / MONSTER_GOALS.length) * 100) + '%' }"
+            :style="{
+              width: Math.round((guildStore.completedGoalCount / MONSTER_GOALS.length) * 100) + '%'
+            }"
           />
         </div>
         <span class="text-accent whitespace-nowrap">{{ Math.round((guildStore.completedGoalCount / MONSTER_GOALS.length) * 100) }}%</span>
@@ -641,7 +654,12 @@
   }
 
   /** 捐献弹窗状态 */
-  const donateModalItem = ref<{ itemId: string; name: string; count: number; points: number } | null>(null)
+  const donateModalItem = ref<{
+    itemId: string
+    name: string
+    count: number
+    points: number
+  } | null>(null)
   const donateQuantity = ref(1)
   const donateConfirmed = ref(false)
 
@@ -694,7 +712,12 @@
     return GUILD_DONATIONS.map(donation => {
       const count = inventoryStore.getItemCount(donation.itemId)
       const def = getItemById(donation.itemId)
-      return { itemId: donation.itemId, name: def?.name ?? donation.itemId, count, points: donation.points }
+      return {
+        itemId: donation.itemId,
+        name: def?.name ?? donation.itemId,
+        count,
+        points: donation.points
+      }
     })
   })
 
@@ -742,7 +765,10 @@
   const monsterGroups = computed(() => [
     { label: '普通怪物', monsters: Object.values(MONSTERS) as MonsterDef[] },
     { label: 'BOSS', monsters: Object.values(BOSS_MONSTERS) as MonsterDef[] },
-    { label: '骷髅矿穴', monsters: Object.values(SKULL_CAVERN_MONSTERS) as MonsterDef[] }
+    {
+      label: '骷髅矿穴',
+      monsters: Object.values(SKULL_CAVERN_MONSTERS) as MonsterDef[]
+    }
   ])
 
   const getDropName = (itemId: string): string => {
@@ -773,26 +799,62 @@
 
     if (zone) {
       for (const d of MONSTER_DROP_WEAPONS[zone] ?? []) {
-        drops.push({ name: getWeaponById(d.weaponId)?.name ?? d.weaponId, chance: d.chance, firstKill: false })
+        drops.push({
+          name: getWeaponById(d.weaponId)?.name ?? d.weaponId,
+          chance: d.chance,
+          firstKill: false
+        })
       }
       for (const d of MONSTER_DROP_RINGS[zone] ?? []) {
-        drops.push({ name: getRingById(d.ringId)?.name ?? d.ringId, chance: d.chance, firstKill: false })
+        drops.push({
+          name: getRingById(d.ringId)?.name ?? d.ringId,
+          chance: d.chance,
+          firstKill: false
+        })
       }
       for (const d of MONSTER_DROP_HATS[zone] ?? []) {
-        drops.push({ name: getHatById(d.hatId)?.name ?? d.hatId, chance: d.chance, firstKill: false })
+        drops.push({
+          name: getHatById(d.hatId)?.name ?? d.hatId,
+          chance: d.chance,
+          firstKill: false
+        })
       }
       for (const d of MONSTER_DROP_SHOES[zone] ?? []) {
-        drops.push({ name: getShoeById(d.shoeId)?.name ?? d.shoeId, chance: d.chance, firstKill: false })
+        drops.push({
+          name: getShoeById(d.shoeId)?.name ?? d.shoeId,
+          chance: d.chance,
+          firstKill: false
+        })
       }
     } else if (bossFloor !== null) {
       const w = BOSS_DROP_WEAPONS[bossFloor]
-      if (w) drops.push({ name: getWeaponById(w)?.name ?? w, chance: null, firstKill: true })
+      if (w)
+        drops.push({
+          name: getWeaponById(w)?.name ?? w,
+          chance: null,
+          firstKill: true
+        })
       const r = BOSS_DROP_RINGS[bossFloor]
-      if (r) drops.push({ name: getRingById(r)?.name ?? r, chance: null, firstKill: false })
+      if (r)
+        drops.push({
+          name: getRingById(r)?.name ?? r,
+          chance: null,
+          firstKill: false
+        })
       const h = BOSS_DROP_HATS[bossFloor]
-      if (h) drops.push({ name: getHatById(h)?.name ?? h, chance: null, firstKill: false })
+      if (h)
+        drops.push({
+          name: getHatById(h)?.name ?? h,
+          chance: null,
+          firstKill: false
+        })
       const s = BOSS_DROP_SHOES[bossFloor]
-      if (s) drops.push({ name: getShoeById(s)?.name ?? s, chance: null, firstKill: false })
+      if (s)
+        drops.push({
+          name: getShoeById(s)?.name ?? s,
+          chance: null,
+          firstKill: false
+        })
     }
     return drops
   }

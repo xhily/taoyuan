@@ -1,7 +1,9 @@
 <template>
   <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
     <div class="game-panel max-w-lg w-full max-h-[80vh] overflow-y-auto border-accent/40">
-      <p class="text-[10px] text-accent/50 mb-1 text-center">{{ phaseLabel }}</p>
+      <p class="text-[10px] text-accent/50 mb-1 text-center">
+        {{ phaseLabel }}
+      </p>
       <h3 class="text-accent text-sm mb-3">{{ stepTitle }}</h3>
       <div v-for="(scene, i) in playedScenes" :key="i" class="mb-3">
         <p class="text-xs leading-relaxed">{{ scene.text }}</p>

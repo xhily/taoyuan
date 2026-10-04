@@ -44,7 +44,9 @@
             <div
               class="h-full transition-all duration-100 flex items-center justify-end pr-0.5"
               :class="boatTrackClass(i)"
-              :style="{ width: `${Math.min(100, (boat.progress / raceGoal) * 100)}%` }"
+              :style="{
+                width: `${Math.min(100, (boat.progress / raceGoal) * 100)}%`
+              }"
             >
               <Ship :size="12" class="relative z-10" :class="{ 'boat-rock': i === 0 && rowing }" />
             </div>

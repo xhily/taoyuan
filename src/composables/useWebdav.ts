@@ -107,9 +107,17 @@ const webdavFetch = async (
   try {
     // 原生平台（Capacitor Android/iOS）：CapacitorHttp 绕过 CORS
     if (Capacitor.isNativePlatform()) {
-      const res = await CapacitorHttp.request({ url, method, headers, data: body })
+      const res = await CapacitorHttp.request({
+        url,
+        method,
+        headers,
+        data: body
+      })
       pushTrace(`响应 ${method} ${res.status}`)
-      return { status: res.status, data: typeof res.data === 'string' ? res.data : JSON.stringify(res.data) }
+      return {
+        status: res.status,
+        data: typeof res.data === 'string' ? res.data : JSON.stringify(res.data)
+      }
     }
     // Dev 环境（非 Electron）：走 Vite 代理中间件绕过 CORS
     if (import.meta.env.DEV && !isElectron) {
@@ -123,7 +131,12 @@ const webdavFetch = async (
     }
     // Electron（主进程已注入 CORS 头）/ 生产 web（同源部署）：直连
     // credentials: 'omit' 防止浏览器弹出原生认证对话框（认证由 Authorization 头自行处理）
-    const res = await fetch(url, { method, headers, body, credentials: 'omit' })
+    const res = await fetch(url, {
+      method,
+      headers,
+      body,
+      credentials: 'omit'
+    })
     pushTrace(`响应 ${method} ${res.status}`)
     return { status: res.status, data: await res.text() }
   } catch (e: unknown) {
@@ -250,7 +263,10 @@ export const useWebdav = () => {
 
       if (!isNative) {
         pushTrace('策略：PROPFIND 检测目录')
-        const res = await webdavFetch(url, 'PROPFIND', { ...authHeaders(), Depth: '0' })
+        const res = await webdavFetch(url, 'PROPFIND', {
+          ...authHeaders(),
+          Depth: '0'
+        })
         // 大多数 WebDAV 返回 207，部分实现可能返回 200
         if (res.status === 207 || res.status === 200) {
           testStatus.value = 'success'
@@ -351,7 +367,10 @@ export const useWebdav = () => {
         }
       }
       if (res.status === 404) {
-        return { success: false, message: '上传路径无效。' + getPathHint(config.value.serverUrl) }
+        return {
+          success: false,
+          message: '上传路径无效。' + getPathHint(config.value.serverUrl)
+        }
       }
       pushTrace(`上传失败 slot=${slot} status=${res.status}`)
       return { success: false, message: `上传失败（${res.status}）。` }
@@ -397,7 +416,10 @@ export const useWebdav = () => {
         const method = isNative ? 'GET' : 'HEAD'
         const res = await webdavFetch(remoteFilePath(i), method, authHeaders())
         pushTrace(`远程槽位 slot=${i} status=${res.status}`)
-        results.push({ slot: i, exists: res.status >= 200 && res.status < 300 })
+        results.push({
+          slot: i,
+          exists: res.status >= 200 && res.status < 300
+        })
       } catch {
         pushTrace(`远程槽位 slot=${i} 请求异常`)
         results.push({ slot: i, exists: false })

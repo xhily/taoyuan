@@ -1,4 +1,13 @@
-import type { ProcessingMachineDef, ProcessingRecipeDef, SprinklerDef, FertilizerDef, BaitDef, TackleDef, BombDef } from '@/types'
+import type {
+  ProcessingMachineDef,
+  ProcessingRecipeDef,
+  MachineUpgradeDef,
+  SprinklerDef,
+  FertilizerDef,
+  BaitDef,
+  TackleDef,
+  BombDef
+} from '@/types'
 
 /** 加工机器定义 */
 export const PROCESSING_MACHINES: ProcessingMachineDef[] = [
@@ -224,6 +233,37 @@ export const PROCESSING_MACHINES: ProcessingMachineDef[] = [
     craftMoney: 200
   }
 ]
+
+/** 加工设备升级费用（level 为目标等级，每级产出 +1 份） */
+export const MACHINE_UPGRADES: MachineUpgradeDef[] = [
+  {
+    level: 1,
+    money: 10000,
+    materials: [
+      { itemId: 'iron_bar', quantity: 10 },
+      { itemId: 'wood', quantity: 50 }
+    ]
+  },
+  {
+    level: 2,
+    money: 50000,
+    materials: [
+      { itemId: 'gold_bar', quantity: 10 },
+      { itemId: 'wood', quantity: 100 }
+    ]
+  },
+  {
+    level: 3,
+    money: 200000,
+    materials: [
+      { itemId: 'iridium_bar', quantity: 10 },
+      { itemId: 'prismatic_shard', quantity: 1 }
+    ]
+  }
+]
+
+/** 加工设备最高等级（等级从 1 起连续编号） */
+export const MAX_MACHINE_LEVEL = MACHINE_UPGRADES.length
 
 /** 加工配方 */
 export const PROCESSING_RECIPES: ProcessingRecipeDef[] = [
@@ -883,6 +923,17 @@ export const PROCESSING_RECIPES: ProcessingRecipeDef[] = [
     outputQuantity: 2,
     processingDays: 1,
     description: '从韭菜中提取种子。'
+  },
+  {
+    id: 'seed_from_ancient_fruit',
+    machineType: 'seed_maker',
+    name: '远古种子',
+    inputItemId: 'ancient_fruit',
+    inputQuantity: 1,
+    outputItemId: 'ancient_seed',
+    outputQuantity: 1,
+    processingDays: 2,
+    description: '从远古水果中提取种子。'
   },
   // 结晶复制机
   {
@@ -1736,10 +1787,11 @@ export const SPRINKLERS: SprinklerDef[] = [
     description: '自动灌溉周围8块地。',
     range: 8,
     craftCost: [
-      { itemId: 'copper_bar', quantity: 3 },
-      { itemId: 'iron_bar', quantity: 1 }
+      { itemId: 'copper_bar', quantity: 6 },
+      { itemId: 'iron_bar', quantity: 2 },
+      { itemId: 'quartz', quantity: 2 }
     ],
-    craftMoney: 500
+    craftMoney: 1500
   },
   {
     id: 'gold_sprinkler',
@@ -1747,11 +1799,12 @@ export const SPRINKLERS: SprinklerDef[] = [
     description: '自动灌溉周围5×5共24块地。',
     range: 24,
     craftCost: [
-      { itemId: 'gold_bar', quantity: 2 },
-      { itemId: 'iron_bar', quantity: 2 },
-      { itemId: 'quartz', quantity: 1 }
+      { itemId: 'gold_bar', quantity: 6 },
+      { itemId: 'iron_bar', quantity: 4 },
+      { itemId: 'crystal_ore', quantity: 3 },
+      { itemId: 'quartz', quantity: 5 }
     ],
-    craftMoney: 1500
+    craftMoney: 8000
   }
 ]
 
@@ -1988,6 +2041,21 @@ export const getSprinklerById = (id: string): SprinklerDef | undefined => {
 export const getFertilizerById = (id: string): FertilizerDef | undefined => {
   return FERTILIZERS.find(f => f.id === id)
 }
+
+/**
+ * 肥料档次。数值越大越好，用于判断能否覆盖已施的肥。
+ * 保湿土与生长激素作用不同，按各自体系排序即可，不允许互相顶替。
+ */
+const FERTILIZER_RANKS: Record<string, number> = {
+  basic_fertilizer: 1,
+  quality_fertilizer: 2,
+  speed_gro: 2,
+  deluxe_speed_gro: 3,
+  retaining_soil: 2
+}
+
+/** 取肥料档次，未知肥料按最低档处理 */
+export const getFertilizerRank = (id: string): number => FERTILIZER_RANKS[id] ?? 1
 
 export const getBaitById = (id: string): BaitDef | undefined => {
   return BAITS.find(b => b.id === id)

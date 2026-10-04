@@ -91,7 +91,9 @@
           <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
             <div
               class="h-full bg-accent rounded-xs transition-all"
-              :style="{ width: Math.round((museumStore.donatedCount / museumStore.totalCount) * 100) + '%' }"
+              :style="{
+                width: Math.round((museumStore.donatedCount / museumStore.totalCount) * 100) + '%'
+              }"
             />
           </div>
           <span class="text-accent whitespace-nowrap">{{ Math.round((museumStore.donatedCount / museumStore.totalCount) * 100) }}%</span>

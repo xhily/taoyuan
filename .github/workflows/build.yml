@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
     paths-ignore:
       - '**.md'
       - '.github/**'
+  # 工作流本身的改动被 paths-ignore 挡在外面，修完 CI 得能手动跑一次
+  workflow_dispatch:
 
 jobs:
   # 1. 构建 Electron 客户端
@@ -21,14 +25,13 @@ jobs:
             platform: win
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: latest
+          bun-version: latest
       - name: 配置 Node
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'pnpm'
 
       - name: 缓存 Electron Builder
         uses: actions/cache@v5
@@ -36,14 +39,14 @@ jobs:
           path: |
             ~/AppData/Local/electron/Cache
             ~/AppData/Local/electron-builder/Cache
-          key: electron-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: electron-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: |
             electron-${{ runner.os }}-
 
       - name: 构建 Electron
         run: |
-          pnpm install
-          pnpm run build:electron --${{ matrix.platform }}
+          bun install
+          bun run build:electron --${{ matrix.platform }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -61,14 +64,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: latest
+          bun-version: latest
       - name: 配置 Node
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: 'pnpm'
       - name: 配置 Java
         uses: actions/setup-java@v5
         with:
@@ -76,6 +78,11 @@ jobs:
           java-version: '21'
       - name: 配置 Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # 该 action 默认还会装早已下架的 legacy「tools」包，sdkmanager 找不到就直接失败；
+          # 只装 platform-tools，其余组件由 Gradle 按需下载
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
 
       # 使用官方 Gradle Action（内置智能缓存）
       - name: 配置 Gradle
@@ -85,11 +92,11 @@ jobs:
 
       - name: 构建前端
         run: |
-          pnpm install
-          pnpm run build
+          bun install
+          bun run build
 
       - name: 同步 Capacitor
-        run: npx cap sync android
+        run: bunx cap sync android
 
       - name: 构建 APK (Release)
         working-directory: android
@@ -103,9 +110,42 @@ jobs:
           name: android-apk
           path: android/app/build/outputs/apk/release/*.apk
 
-  # 3. 发布 Release
+  # 3. 打包网页版（docs 目录），给想自己架静态站的人
+  build-web:
+    name: 打包网页版 (docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: 配置 Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: 构建前端
+        run: |
+          bun install
+          bun run build
+
+      - name: 压缩 docs 目录
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          # 在 docs 内打包：解压即得 index.html 与 assets/，不带 docs 顶层目录
+          (cd docs && zip -r "../taoyuan-${VERSION}-web.zip" .)
+          ls -la taoyuan-*-web.zip
+          unzip -l taoyuan-*-web.zip | head -8
+
+      - name: 上传网页版压缩包
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-docs
+          path: taoyuan-*-web.zip
+
+  # 4. 发布 Release
   release:
-    needs: [build-electron, build-android]
+    needs: [build-electron, build-android, build-web]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -132,6 +172,9 @@ jobs:
 
           # 移动 Android APK
           find ./raw-assets/android-apk -type f -name "*.apk" -exec cp {} ./final-release/ \; || true
+
+          # 移动网页版 docs 压缩包
+          find ./raw-assets/web-docs -type f -name "*.zip" -exec cp {} ./final-release/ \; || true
 
           # 检查结果
           echo "Final assets to upload:"

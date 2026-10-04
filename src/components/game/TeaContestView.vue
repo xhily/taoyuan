@@ -184,9 +184,30 @@
   type Grade = 'perfect' | 'good' | 'poor'
 
   const BREW_STEPS = [
-    { label: '控制水温', shortLabel: '温', hint: '将水烧到合适温度', action: '定温！', lowLabel: '凉', highLabel: '烫' },
-    { label: '投茶', shortLabel: '茶', hint: '放入适量茶叶', action: '放茶！', lowLabel: '少', highLabel: '多' },
-    { label: '出汤时机', shortLabel: '汤', hint: '在最佳时机出汤', action: '出汤！', lowLabel: '淡', highLabel: '苦' }
+    {
+      label: '控制水温',
+      shortLabel: '温',
+      hint: '将水烧到合适温度',
+      action: '定温！',
+      lowLabel: '凉',
+      highLabel: '烫'
+    },
+    {
+      label: '投茶',
+      shortLabel: '茶',
+      hint: '放入适量茶叶',
+      action: '放茶！',
+      lowLabel: '少',
+      highLabel: '多'
+    },
+    {
+      label: '出汤时机',
+      shortLabel: '汤',
+      hint: '在最佳时机出汤',
+      action: '出汤！',
+      lowLabel: '淡',
+      highLabel: '苦'
+    }
   ]
 
   const phase = ref<Phase>('ready')

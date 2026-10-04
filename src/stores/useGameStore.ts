@@ -5,6 +5,7 @@ import {
   DAY_START_HOUR,
   PASSOUT_HOUR,
   MIDNIGHT_HOUR,
+  BEDTIME_PROMPT_HOUR,
   WEEKDAY_NAMES,
   getWeekday,
   formatTime,
@@ -67,6 +68,8 @@ export const useGameStore = defineStore('game', () => {
   const isGameStarted = ref(false)
   const farmMapType = ref<FarmMapType>('standard')
   const midnightWarned = ref(false)
+  /** 今日是否已弹出过就寝询问（凌晨1点触发，每天一次） */
+  const bedtimePrompted = ref(false)
   const dailyLuck = ref(0)
 
   /** 山丘田庄：地表矿脉（日结生成，在农场面板开采后清除） */
@@ -134,7 +137,11 @@ export const useGameStore = defineStore('game', () => {
 
     if (newHour >= PASSOUT_HOUR) {
       hour.value = PASSOUT_HOUR
-      return { ok: true, passedOut: true, message: '已经凌晨2点了，你撑不住倒下了……' }
+      return {
+        ok: true,
+        passedOut: true,
+        message: '已经凌晨2点了，你撑不住倒下了……'
+      }
     }
 
     hour.value = newHour
@@ -142,7 +149,11 @@ export const useGameStore = defineStore('game', () => {
     // 跨午夜提示（仅一次）
     if (!midnightWarned.value && prevHour < MIDNIGHT_HOUR && hour.value >= MIDNIGHT_HOUR) {
       midnightWarned.value = true
-      return { ok: true, passedOut: false, message: '已经过了午夜，你开始感到困倦……' }
+      return {
+        ok: true,
+        passedOut: false,
+        message: '已经过了午夜，你开始感到困倦……'
+      }
     }
 
     return { ok: true, passedOut: false, message: '' }
@@ -155,9 +166,9 @@ export const useGameStore = defineStore('game', () => {
     if (targetGroup === currentLocationGroup.value) return 0
     const key = `${currentLocationGroup.value}->${targetGroup}`
     const baseCost = TRAVEL_TIME[key] ?? 0.5
-    // 拥有马减少30%旅行时间
+    // 骑马减少旅行时间（品种与好感度都会影响）
     const animalStore = useAnimalStore()
-    let multiplier = animalStore.hasHorse ? 0.7 : 1
+    let multiplier = animalStore.hasHorse ? animalStore.getHorseTravelTimeMultiplier() : 1
     // 装备旅行速度加成（与马叠乘）
     const inventoryStore = useInventoryStore()
     const travelSpeedBonus = inventoryStore.getRingEffectValue('travel_speed')
@@ -175,13 +186,16 @@ export const useGameStore = defineStore('game', () => {
 
     const cost = getTravelCost(targetTab)
 
-    // 体力消耗：有马减半（向下取整）
+    // 体力消耗：骑马减免（品种与好感度都会影响）
     const key = `${currentLocationGroup.value}->${targetGroup}`
     const baseStamina = TRAVEL_STAMINA[key] ?? 1
     const animalStore = useAnimalStore()
-    const staminaCost = animalStore.hasHorse ? Math.max(1, Math.floor(baseStamina / 2)) : baseStamina
+    const staminaCost = animalStore.hasHorse
+      ? Math.max(1, Math.floor(baseStamina * animalStore.getHorseTravelStaminaMultiplier()))
+      : baseStamina
     const playerStore = usePlayerStore()
-    playerStore.consumeStamina(staminaCost)
+    // 赶路不弹「即将耗尽」确认：把人拦在半道毫无意义
+    playerStore.consumeStamina(staminaCost, true)
 
     const result = advanceTime(cost)
     const targetName = getLocationGroupName(targetGroup)
@@ -219,6 +233,7 @@ export const useGameStore = defineStore('game', () => {
     dailyLuck.value = Math.random() * 0.2 - 0.1
     hour.value = DAY_START_HOUR
     midnightWarned.value = false
+    bedtimePrompted.value = false
     currentLocationGroup.value = 'farm'
     return { seasonChanged: oldSeason !== season.value, oldSeason }
   }
@@ -240,6 +255,7 @@ export const useGameStore = defineStore('game', () => {
     day.value = 1
     hour.value = DAY_START_HOUR
     midnightWarned.value = false
+    bedtimePrompted.value = false
     weather.value = 'sunny'
     tomorrowWeather.value = rollWeather('spring', 2)
     currentLocation.value = 'farm'
@@ -273,6 +289,7 @@ export const useGameStore = defineStore('game', () => {
     day.value = data.day ?? 1
     hour.value = data.hour ?? DAY_START_HOUR
     midnightWarned.value = (data.hour ?? DAY_START_HOUR) >= MIDNIGHT_HOUR
+    bedtimePrompted.value = (data.hour ?? DAY_START_HOUR) >= BEDTIME_PROMPT_HOUR
     weather.value = data.weather ?? 'sunny'
     tomorrowWeather.value = data.tomorrowWeather ?? rollWeather(data.season ?? 'spring', ((data.day ?? 1) % 28) + 1)
     currentLocation.value = data.currentLocation ?? 'farm'
@@ -296,6 +313,7 @@ export const useGameStore = defineStore('game', () => {
     isGameStarted,
     farmMapType,
     midnightWarned,
+    bedtimePrompted,
     dailyLuck,
     surfaceOrePatch,
     creekCatch,

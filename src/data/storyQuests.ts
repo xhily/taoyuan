@@ -32,7 +32,14 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '远亲不如近邻',
     description: '陈伯是村里万物铺的老板，多和他打打交道吧。',
     npcId: 'chen_bo',
-    objectives: [{ type: 'npcFriendship', label: '与陈伯成为相识', npcId: 'chen_bo', friendshipLevel: 'acquaintance' }],
+    objectives: [
+      {
+        type: 'npcFriendship',
+        label: '与陈伯成为相识',
+        npcId: 'chen_bo',
+        friendshipLevel: 'acquaintance'
+      }
+    ],
     moneyReward: 200,
     friendshipReward: [{ npcId: 'chen_bo', amount: 20 }]
   },
@@ -88,7 +95,14 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '木匠的考验',
     description: '小满说他师父赵木匠急需一批木材，帮忙送去30个木材吧。',
     npcId: 'xiao_man',
-    objectives: [{ type: 'deliverItem', label: '交付木材×30', itemId: 'wood', itemQuantity: 30 }],
+    objectives: [
+      {
+        type: 'deliverItem',
+        label: '交付木材×30',
+        itemId: 'wood',
+        itemQuantity: 30
+      }
+    ],
     moneyReward: 500,
     itemReward: [{ itemId: 'basic_fertilizer', quantity: 5 }],
     friendshipReward: [{ npcId: 'xiao_man', amount: 30 }]
@@ -100,7 +114,14 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '林老的嘱托',
     description: '林老要配一副药方，需要一些草药，帮他收集10个草药吧。',
     npcId: 'lin_lao',
-    objectives: [{ type: 'deliverItem', label: '交付草药×10', itemId: 'herb', itemQuantity: 10 }],
+    objectives: [
+      {
+        type: 'deliverItem',
+        label: '交付草药×10',
+        itemId: 'herb',
+        itemQuantity: 10
+      }
+    ],
     moneyReward: 500,
     friendshipReward: [{ npcId: 'lin_lao', amount: 30 }]
   },
@@ -122,7 +143,14 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '扎根桃源',
     description: '要在桃源乡真正站稳脚跟，农耕技能必须过硬。把农耕练到3级吧。',
     npcId: 'liu_cunzhang',
-    objectives: [{ type: 'skillLevel', label: '农耕技能达到3级', skillType: 'farming', target: 3 }],
+    objectives: [
+      {
+        type: 'skillLevel',
+        label: '农耕技能达到3级',
+        skillType: 'farming',
+        target: 3
+      }
+    ],
     moneyReward: 1000,
     itemReward: [{ itemId: 'quality_fertilizer', quantity: 5 }],
     friendshipReward: [{ npcId: 'liu_cunzhang', amount: 30 }]
@@ -184,8 +212,18 @@ export const STORY_QUESTS: MainQuestDef[] = [
     description: '孙铁匠需要一批铁矿来打造农具，送去15个铁矿表达心意。',
     npcId: 'sun_tiejiang',
     objectives: [
-      { type: 'npcFriendship', label: '与孙铁匠成为相识', npcId: 'sun_tiejiang', friendshipLevel: 'acquaintance' },
-      { type: 'deliverItem', label: '交付铁矿×15', itemId: 'iron_ore', itemQuantity: 15 }
+      {
+        type: 'npcFriendship',
+        label: '与孙铁匠成为相识',
+        npcId: 'sun_tiejiang',
+        friendshipLevel: 'acquaintance'
+      },
+      {
+        type: 'deliverItem',
+        label: '交付铁矿×15',
+        itemId: 'iron_ore',
+        itemQuantity: 15
+      }
     ],
     moneyReward: 1000,
     friendshipReward: [{ npcId: 'sun_tiejiang', amount: 30 }]
@@ -302,7 +340,13 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '人缘好',
     description: '柳村长希望你能和村里所有人都混个脸熟。',
     npcId: 'liu_cunzhang',
-    objectives: [{ type: 'npcAllFriendly', label: '与所有村民成为相识', friendshipLevel: 'acquaintance' }],
+    objectives: [
+      {
+        type: 'npcAllFriendly',
+        label: '与所有村民成为相识',
+        friendshipLevel: 'acquaintance'
+      }
+    ],
     moneyReward: 2000,
     friendshipReward: [{ npcId: 'liu_cunzhang', amount: 30 }]
   },
@@ -404,10 +448,17 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: 'main_4_4',
     chapter: 4,
     order: 4,
-    title: '百年好合',
-    description: '柳村长笑着说，是时候成个家了吧？',
+    title: '此心安处',
+    description:
+      '柳村长给你倒了杯茶：「在桃源乡住了这么久，总该有几个能交心的人了吧？成家也好，知己也罢，三五挚友也算——日子过得踏实就行。」',
     npcId: 'liu_cunzhang',
-    objectives: [{ type: 'married', label: '与心仪之人结婚' }],
+    objectives: [
+      {
+        type: 'settleDown',
+        label: '成家、结为知己，或与3位村民成为挚友（任选其一）',
+        target: 3
+      }
+    ],
     moneyReward: 2000,
     friendshipReward: [{ npcId: 'liu_cunzhang', amount: 30 }]
   },
@@ -451,7 +502,14 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '知己之交',
     description: '人生得一知己足矣。和一位村民成为挚友吧。',
     npcId: 'lin_lao',
-    objectives: [{ type: 'npcFriendship', label: '与任意村民成为挚友', npcId: '_any', friendshipLevel: 'bestFriend' }],
+    objectives: [
+      {
+        type: 'npcFriendship',
+        label: '与任意村民成为挚友',
+        npcId: '_any',
+        friendshipLevel: 'bestFriend'
+      }
+    ],
     moneyReward: 2500,
     friendshipReward: [{ npcId: 'lin_lao', amount: 20 }]
   },
@@ -542,10 +600,16 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: 'main_5_6',
     chapter: 5,
     order: 6,
-    title: '天伦之乐',
-    description: '柳村长笑着说，成家之后也该添个孩子了。',
+    title: '满院生机',
+    description: '柳村长倚在篱笆上：「家里有点动静才像过日子。养只猫狗、添几头牲口，或是添个娃娃——都算。」',
     npcId: 'liu_cunzhang',
-    objectives: [{ type: 'hasChild', label: '迎来第一个孩子' }],
+    objectives: [
+      {
+        type: 'household',
+        label: '有了孩子、宠物，或饲养6只牲畜（任选其一）',
+        target: 6
+      }
+    ],
     moneyReward: 3000,
     friendshipReward: [{ npcId: 'liu_cunzhang', amount: 30 }]
   },
@@ -556,7 +620,13 @@ export const STORY_QUESTS: MainQuestDef[] = [
     title: '桃源之友',
     description: '柳村长希望你能和村里每一个人都成为朋友。',
     npcId: 'liu_cunzhang',
-    objectives: [{ type: 'npcAllFriendly', label: '与所有村民成为相知', friendshipLevel: 'friendly' }],
+    objectives: [
+      {
+        type: 'npcAllFriendly',
+        label: '与所有村民成为相知',
+        friendshipLevel: 'friendly'
+      }
+    ],
     moneyReward: 5000,
     friendshipReward: [{ npcId: 'liu_cunzhang', amount: 30 }]
   },

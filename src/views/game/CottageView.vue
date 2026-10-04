@@ -37,14 +37,14 @@
       <!-- 配偶互动 -->
       <div class="border border-accent/10 rounded-xs p-2 mb-2">
         <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs text-accent">{{ spouseDef?.name }}</span>
+          <span class="text-xs text-accent">{{ spouseDisplayName }}</span>
           <span class="text-[10px] text-danger">
             <Heart :size="10" class="inline" />
             伴侣
           </span>
         </div>
         <div v-if="spouseDialogue" class="border border-accent/10 rounded-xs p-2 mb-1.5">
-          <p class="text-[10px] text-accent mb-0.5">「{{ spouseDef?.name }}」</p>
+          <p class="text-[10px] text-accent mb-0.5">「{{ spouseDisplayName }}」</p>
           <p class="text-xs">{{ spouseDialogue }}</p>
         </div>
         <div class="flex space-x-1.5">
@@ -84,7 +84,9 @@
           <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
             <div
               class="h-full rounded-xs bg-success transition-all"
-              :style="{ width: Math.floor((npcStore.pregnancy.daysInStage / npcStore.pregnancy.stageDays) * 100) + '%' }"
+              :style="{
+                width: Math.floor((npcStore.pregnancy.daysInStage / npcStore.pregnancy.stageDays) * 100) + '%'
+              }"
             />
           </div>
           <span class="text-[10px] text-muted shrink-0">{{ npcStore.pregnancy.daysInStage }}/{{ npcStore.pregnancy.stageDays }}天</span>
@@ -102,7 +104,9 @@
           <span class="text-[10px] text-muted shrink-0">{{ npcStore.pregnancy.careScore }}%</span>
         </div>
         <!-- 阶段提示 -->
-        <p class="text-[10px] text-muted/60 mb-2">{{ STAGE_TIPS[npcStore.pregnancy.stage] }}</p>
+        <p class="text-[10px] text-muted/60 mb-2">
+          {{ STAGE_TIPS[npcStore.pregnancy.stage] }}
+        </p>
         <!-- 照料操作 -->
         <div class="grid grid-cols-2 gap-1 mb-1">
           <Button
@@ -221,7 +225,7 @@
           class="flex items-center justify-between border border-accent/10 rounded-xs px-3 py-1.5"
         >
           <div>
-            <span class="text-xs text-accent">{{ getNpcById(h.npcId)?.name }}</span>
+            <span class="text-xs text-accent">{{ npcStore.getNpcDisplayName(h.npcId) }}</span>
             <span class="text-xs text-muted ml-1">{{ npcStore.HELPER_TASK_NAMES[h.task] }}</span>
           </div>
           <div class="flex items-center space-x-1.5">
@@ -266,7 +270,9 @@
             <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
               <div
                 class="h-full rounded-xs bg-accent transition-all"
-                :style="{ width: Math.min(100, Math.floor((slot.daysAging / 7) * 100)) + '%' }"
+                :style="{
+                  width: Math.min(100, Math.floor((slot.daysAging / 7) * 100)) + '%'
+                }"
               />
             </div>
             <span class="text-[10px] text-muted">{{ slot.daysAging }}/7天</span>
@@ -304,7 +310,9 @@
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs">升级为「{{ homeStore.nextUpgrade.name }}」</p>
-            <p class="text-xs text-muted mt-0.5">{{ homeStore.nextUpgrade.description }}</p>
+            <p class="text-xs text-muted mt-0.5">
+              {{ homeStore.nextUpgrade.description }}
+            </p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2 space-y-1">
@@ -373,94 +381,7 @@
       </div>
     </Transition>
 
-    <!-- 时历弹窗 -->
-    <Transition name="panel-fade">
-      <div
-        v-if="showCalendarModal"
-        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-        @click.self="showCalendarModal = false"
-      >
-        <div class="game-panel max-w-xs w-full relative">
-          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showCalendarModal = false">
-            <X :size="14" />
-          </button>
-
-          <p class="text-sm text-accent mb-2">
-            <Calendar :size="14" class="inline" />
-            时历
-          </p>
-
-          <!-- 季节切换 -->
-          <div class="grid grid-cols-4 gap-2 mb-2">
-            <button
-              v-for="s in SEASONS"
-              :key="s"
-              class="text-[10px] px-2 py-0.5 border rounded-xs transition-colors"
-              :class="calendarSeason === s ? 'bg-accent/20 border-accent/40 text-accent' : 'border-accent/10 text-muted hover:text-text'"
-              @click="handleSelectSeason(s)"
-            >
-              {{ SEASON_NAMES[s] }}
-            </button>
-          </div>
-
-          <!-- 28天网格 -->
-          <div class="grid grid-cols-7 gap-px">
-            <div v-for="wd in WEEKDAYS" :key="wd" class="text-center py-0.5">
-              <span class="text-[10px]" :class="wd === 'sat' || wd === 'sun' ? 'text-accent' : 'text-muted'">{{ WEEKDAY_NAMES[wd] }}</span>
-            </div>
-            <div
-              v-for="entry in calendarDays"
-              :key="entry.day"
-              class="text-center py-1 border border-transparent transition-colors"
-              :class="[
-                entry.isToday ? 'bg-accent/20 border-accent/40' : '',
-                entry.festivals.length > 0 || entry.birthdays.length > 0 ? 'cursor-pointer hover:bg-accent/10 rounded-sm' : '',
-                selectedCalendarDay === entry.day ? 'border-accent/30' : ''
-              ]"
-              @click="handleSelectDay(entry)"
-            >
-              <span class="text-[10px]" :class="entry.isToday ? 'text-accent' : 'text-muted'">
-                {{ entry.day }}
-              </span>
-              <div class="flex justify-center space-x-px mt-px min-h-1.5">
-                <span v-if="entry.festivals.length > 0" class="w-1 h-1 rounded-full bg-danger inline-block" />
-                <span v-if="entry.birthdays.length > 0" class="w-1 h-1 rounded-full bg-success inline-block" />
-              </div>
-            </div>
-          </div>
-
-          <!-- 图例 -->
-          <div class="flex items-center space-x-3 mt-1.5">
-            <span class="text-[10px] text-muted flex items-center space-x-0.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-danger inline-block" />
-              <span>节日</span>
-            </span>
-            <span class="text-[10px] text-muted flex items-center space-x-0.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-success inline-block" />
-              <span>生日</span>
-            </span>
-          </div>
-
-          <!-- 选中日详情 -->
-          <div
-            v-if="selectedDayEntry && (selectedDayEntry.festivals.length > 0 || selectedDayEntry.birthdays.length > 0)"
-            class="border border-accent/10 rounded-xs p-2 mt-2"
-          >
-            <p class="text-[10px] text-accent mb-1">
-              {{ SEASON_NAMES[calendarSeason] }}{{ selectedCalendarDay }}日
-              <span v-if="selectedDayEntry.isToday" class="text-danger ml-1">(今天)</span>
-            </p>
-            <div v-for="f in selectedDayEntry.festivals" :key="f.name" class="mb-0.5">
-              <span class="text-[10px] text-danger">{{ f.name }}</span>
-              <span class="text-[10px] text-muted ml-1">{{ f.description }}</span>
-            </div>
-            <div v-for="b in selectedDayEntry.birthdays" :key="b.npcName">
-              <span class="text-[10px] text-success">{{ b.npcName }}的生日</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <CalendarModal :open="showCalendarModal" @close="showCalendarModal = false" />
 
     <!-- 配偶送礼弹窗 -->
     <Transition name="panel-fade">
@@ -471,7 +392,7 @@
       >
         <div class="game-panel max-w-sm w-full">
           <div class="flex items-center justify-between mb-2">
-            <p class="text-sm text-accent">送礼给{{ spouseDef?.name }}</p>
+            <p class="text-sm text-accent">送礼给{{ spouseDisplayName }}</p>
             <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="showSpouseGiftModal = false" />
           </div>
           <div class="flex flex-col space-y-1 max-h-60 overflow-y-auto">
@@ -512,7 +433,7 @@
 
           <!-- 任务选择 -->
           <p class="text-xs text-muted mb-1">选择任务</p>
-          <div class="grid grid-cols-4 gap-1 mb-3">
+          <div class="grid grid-cols-3 gap-1 mb-2">
             <button
               v-for="(label, key) in npcStore.HELPER_TASK_NAMES"
               :key="key"
@@ -523,13 +444,20 @@
               {{ label }}
             </button>
           </div>
+          <!-- 讲清这份活到底做什么，避免雇了之后看不出效果 -->
+          <div class="border border-accent/10 rounded-xs p-2 mb-2">
+            <p class="text-[10px] text-muted leading-relaxed">
+              {{ npcStore.HELPER_TASK_DESCRIPTIONS[selectedHireTask] }}
+            </p>
+            <p class="text-[10px] text-muted/60 mt-1">雇工在次日清晨自动干活，结果会写进当天日志。</p>
+          </div>
           <p class="text-xs text-muted mb-2">日薪：{{ npcStore.HELPER_WAGES[selectedHireTask] }}文</p>
 
           <!-- 确认雇佣 -->
           <div v-if="hireConfirmNpc" class="border border-accent/30 rounded-xs p-3 mb-2">
             <p class="text-xs text-accent mb-2">
               确定雇佣
-              <span class="text-text">{{ hireConfirmNpc.name }}</span>
+              <span class="text-text">{{ npcStore.getNpcDisplayName(hireConfirmNpc.id) }}</span>
               负责
               <span class="text-text">{{ npcStore.HELPER_TASK_NAMES[selectedHireTask] }}</span>
               吗？
@@ -549,7 +477,7 @@
               class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
               @click="hireConfirmNpcId = npc.npcId"
             >
-              <span class="text-xs">{{ npc.name }}</span>
+              <span class="text-xs">{{ npcStore.getNpcDisplayName(npc.npcId) }}</span>
               <span class="text-[10px] text-muted">
                 <Heart :size="10" class="inline" />
                 {{ Math.floor(npc.friendship / 250) }}心
@@ -571,7 +499,7 @@
         @click.self="dismissConfirmNpcId = null"
       >
         <div class="game-panel max-w-xs w-full text-center">
-          <p class="text-sm text-danger mb-3">确定解雇{{ getNpcById(dismissConfirmNpcId)?.name }}吗？</p>
+          <p class="text-sm text-danger mb-3">确定解雇{{ npcStore.getNpcDisplayName(dismissConfirmNpcId) }}吗？</p>
           <p class="text-xs text-muted mb-4">解雇后需要重新招募。</p>
           <div class="flex space-x-3 justify-center">
             <Button @click="dismissConfirmNpcId = null">取消</Button>
@@ -671,16 +599,15 @@
   import { useNpcStore } from '@/stores/useNpcStore'
   import { useAchievementStore } from '@/stores/useAchievementStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
-  import { SEASON_NAMES } from '@/stores/useGameStore'
   import { getCombinedItemCount } from '@/composables/useCombinedInventory'
-  import { getItemById, getNpcById, NPCS } from '@/data'
-  import { SEASON_EVENTS } from '@/data/events'
-  import { ACTION_TIME_COSTS, WEEKDAYS, WEEKDAY_NAMES } from '@/data/timeConstants'
-  import type { Quality, ChildStage, PregnancyStage, Season, FarmHelperTask } from '@/types'
+  import { getItemById, getNpcById } from '@/data'
+  import { ACTION_TIME_COSTS } from '@/data/timeConstants'
+  import type { Quality, ChildStage, PregnancyStage, FarmHelperTask } from '@/types'
   import { addLog } from '@/composables/useGameLog'
   import { showChildProposal, triggerHeartEvent } from '@/composables/useDialogs'
   import { handleEndDay } from '@/composables/useEndDay'
   import Button from '@/components/game/Button.vue'
+  import CalendarModal from '@/components/game/CalendarModal.vue'
 
   const homeStore = useHomeStore()
   const inventoryStore = useInventoryStore()
@@ -736,6 +663,7 @@
 
   const spouseState = computed(() => npcStore.getSpouse())
   const spouseDef = computed(() => (spouseState.value ? getNpcById(spouseState.value.npcId) : null))
+  const spouseDisplayName = computed(() => (spouseState.value ? npcStore.getNpcDisplayName(spouseState.value.npcId) : ''))
   const spouseDialogue = ref<string | null>(null)
 
   const handleSpouseTalk = () => {
@@ -770,9 +698,24 @@
     return 'neutral'
   }
 
-  const GIFT_PREF_LABELS: Record<GiftPreference, string> = { loved: '最爱', liked: '喜欢', hated: '讨厌', neutral: '' }
-  const GIFT_PREF_CLASS: Record<GiftPreference, string> = { loved: 'text-danger', liked: 'text-success', hated: 'text-muted', neutral: '' }
-  const GIFT_PREF_ORDER: Record<GiftPreference, number> = { loved: 0, liked: 1, neutral: 2, hated: 3 }
+  const GIFT_PREF_LABELS: Record<GiftPreference, string> = {
+    loved: '最爱',
+    liked: '喜欢',
+    hated: '讨厌',
+    neutral: ''
+  }
+  const GIFT_PREF_CLASS: Record<GiftPreference, string> = {
+    loved: 'text-danger',
+    liked: 'text-success',
+    hated: 'text-muted',
+    neutral: ''
+  }
+  const GIFT_PREF_ORDER: Record<GiftPreference, number> = {
+    loved: 0,
+    liked: 1,
+    neutral: 2,
+    hated: 3
+  }
 
   const spouseGiftableItems = computed(() => {
     const filtered = inventoryStore.items.filter(i => {
@@ -841,39 +784,6 @@
   }
 
   const AGEABLE_ITEMS = ['watermelon_wine', 'osmanthus_wine', 'peach_wine', 'jujube_wine', 'corn_wine', 'rice_vinegar']
-
-  // === 日历 ===
-
-  const SEASONS: Season[] = ['spring', 'summer', 'autumn', 'winter']
-  const calendarSeason = ref<Season>(gameStore.season)
-  const selectedCalendarDay = ref<number | null>(null)
-
-  const calendarDays = computed(() => {
-    const s = calendarSeason.value
-    const entries = []
-    for (let d = 1; d <= 28; d++) {
-      const festivals = SEASON_EVENTS.filter(e => e.season === s && e.day === d).map(e => ({ name: e.name, description: e.description }))
-      const birthdays = NPCS.filter(npc => npc.birthday?.season === s && npc.birthday?.day === d).map(npc => ({ npcName: npc.name }))
-      entries.push({ day: d, festivals, birthdays, isToday: s === gameStore.season && d === gameStore.day })
-    }
-    return entries
-  })
-
-  const selectedDayEntry = computed(() => {
-    if (selectedCalendarDay.value === null) return null
-    return calendarDays.value[selectedCalendarDay.value - 1] ?? null
-  })
-
-  const handleSelectSeason = (s: Season) => {
-    calendarSeason.value = s
-    selectedCalendarDay.value = null
-  }
-
-  const handleSelectDay = (entry: { day: number; festivals: { name: string }[]; birthdays: { npcName: string }[] }) => {
-    if (entry.festivals.length > 0 || entry.birthdays.length > 0) {
-      selectedCalendarDay.value = selectedCalendarDay.value === entry.day ? null : entry.day
-    }
-  }
 
   const currentBenefit = computed(() => {
     switch (homeStore.farmhouseLevel) {

@@ -732,12 +732,48 @@ interface BgmConfig {
 }
 
 const BGM_CONFIG: Record<BgmType, BgmConfig> = {
-  spring: { melody: SPRING_MELODY, bass: SPRING_BASS, noteDur: 0.38, melodyWave: 'triangle', bassWave: 'sine' },
-  summer: { melody: SUMMER_MELODY, bass: SUMMER_BASS, noteDur: 0.34, melodyWave: 'triangle', bassWave: 'sine' },
-  autumn: { melody: AUTUMN_MELODY, bass: AUTUMN_BASS, noteDur: 0.42, melodyWave: 'triangle', bassWave: 'sine' },
-  winter: { melody: WINTER_MELODY, bass: WINTER_BASS, noteDur: 0.5, melodyWave: 'sine', bassWave: 'sine' },
-  festival_spring: { melody: FESTIVAL_SPRING_MELODY, bass: FESTIVAL_SPRING_BASS, noteDur: 0.3, melodyWave: 'square', bassWave: 'triangle' },
-  festival_summer: { melody: FESTIVAL_SUMMER_MELODY, bass: FESTIVAL_SUMMER_BASS, noteDur: 0.4, melodyWave: 'sine', bassWave: 'sine' },
+  spring: {
+    melody: SPRING_MELODY,
+    bass: SPRING_BASS,
+    noteDur: 0.38,
+    melodyWave: 'triangle',
+    bassWave: 'sine'
+  },
+  summer: {
+    melody: SUMMER_MELODY,
+    bass: SUMMER_BASS,
+    noteDur: 0.34,
+    melodyWave: 'triangle',
+    bassWave: 'sine'
+  },
+  autumn: {
+    melody: AUTUMN_MELODY,
+    bass: AUTUMN_BASS,
+    noteDur: 0.42,
+    melodyWave: 'triangle',
+    bassWave: 'sine'
+  },
+  winter: {
+    melody: WINTER_MELODY,
+    bass: WINTER_BASS,
+    noteDur: 0.5,
+    melodyWave: 'sine',
+    bassWave: 'sine'
+  },
+  festival_spring: {
+    melody: FESTIVAL_SPRING_MELODY,
+    bass: FESTIVAL_SPRING_BASS,
+    noteDur: 0.3,
+    melodyWave: 'square',
+    bassWave: 'triangle'
+  },
+  festival_summer: {
+    melody: FESTIVAL_SUMMER_MELODY,
+    bass: FESTIVAL_SUMMER_BASS,
+    noteDur: 0.4,
+    melodyWave: 'sine',
+    bassWave: 'sine'
+  },
   festival_autumn: {
     melody: FESTIVAL_AUTUMN_MELODY,
     bass: FESTIVAL_AUTUMN_BASS,
@@ -745,8 +781,21 @@ const BGM_CONFIG: Record<BgmType, BgmConfig> = {
     melodyWave: 'square',
     bassWave: 'triangle'
   },
-  festival_winter: { melody: FESTIVAL_WINTER_MELODY, bass: FESTIVAL_WINTER_BASS, noteDur: 0.35, melodyWave: 'triangle', bassWave: 'sine' },
-  battle: { melody: BATTLE_MELODY, bass: BATTLE_BASS, noteDur: 0.15, melodyWave: 'sawtooth', bassWave: 'square', bassInterval: 2 },
+  festival_winter: {
+    melody: FESTIVAL_WINTER_MELODY,
+    bass: FESTIVAL_WINTER_BASS,
+    noteDur: 0.35,
+    melodyWave: 'triangle',
+    bassWave: 'sine'
+  },
+  battle: {
+    melody: BATTLE_MELODY,
+    bass: BATTLE_BASS,
+    noteDur: 0.15,
+    melodyWave: 'sawtooth',
+    bassWave: 'square',
+    bassInterval: 2
+  },
   // 小游戏 BGM
   minigame_fishing: {
     melody: MINIGAME_FISHING_MELODY,
@@ -770,7 +819,13 @@ const BGM_CONFIG: Record<BgmType, BgmConfig> = {
     melodyWave: 'sine',
     bassWave: 'sine'
   },
-  minigame_tea_contest: { melody: MINIGAME_TEA_MELODY, bass: MINIGAME_TEA_BASS, noteDur: 0.42, melodyWave: 'sine', bassWave: 'triangle' },
+  minigame_tea_contest: {
+    melody: MINIGAME_TEA_MELODY,
+    bass: MINIGAME_TEA_BASS,
+    noteDur: 0.42,
+    melodyWave: 'sine',
+    bassWave: 'triangle'
+  },
   minigame_harvest_fair: {
     melody: MINIGAME_HARVEST_MELODY,
     bass: MINIGAME_HARVEST_BASS,
@@ -778,8 +833,20 @@ const BGM_CONFIG: Record<BgmType, BgmConfig> = {
     melodyWave: 'square',
     bassWave: 'triangle'
   },
-  minigame_pot_throwing: { melody: MINIGAME_POT_MELODY, bass: MINIGAME_POT_BASS, noteDur: 0.3, melodyWave: 'sawtooth', bassWave: 'square' },
-  minigame_kite_flying: { melody: MINIGAME_KITE_MELODY, bass: MINIGAME_KITE_BASS, noteDur: 0.28, melodyWave: 'triangle', bassWave: 'sine' },
+  minigame_pot_throwing: {
+    melody: MINIGAME_POT_MELODY,
+    bass: MINIGAME_POT_BASS,
+    noteDur: 0.3,
+    melodyWave: 'sawtooth',
+    bassWave: 'square'
+  },
+  minigame_kite_flying: {
+    melody: MINIGAME_KITE_MELODY,
+    bass: MINIGAME_KITE_BASS,
+    noteDur: 0.28,
+    melodyWave: 'triangle',
+    bassWave: 'sine'
+  },
   minigame_dumpling: {
     melody: MINIGAME_DUMPLING_MELODY,
     bass: MINIGAME_DUMPLING_BASS,
@@ -796,7 +863,14 @@ const BGM_CONFIG: Record<BgmType, BgmConfig> = {
     bassInterval: 2
   },
   // 瀚海 BGM
-  hanhai: { melody: HANHAI_MELODY, bass: HANHAI_BASS, noteDur: 0.32, melodyWave: 'sawtooth', bassWave: 'square', bassInterval: 2 }
+  hanhai: {
+    melody: HANHAI_MELODY,
+    bass: HANHAI_BASS,
+    noteDur: 0.32,
+    melodyWave: 'sawtooth',
+    bassWave: 'square',
+    bassInterval: 2
+  }
 }
 
 // ---- 天气修饰器 ----
@@ -878,11 +952,36 @@ interface TimeModifier {
 }
 
 const TIME_MODIFIERS: Record<TimePeriod, TimeModifier> = {
-  morning: { volumeScale: 1.0, tempoScale: 1.0, detuneOffset: 0, bassVolumeScale: 0.8 },
-  afternoon: { volumeScale: 0.95, tempoScale: 1.05, detuneOffset: 0, bassVolumeScale: 1.0 },
-  evening: { volumeScale: 0.85, tempoScale: 1.1, detuneOffset: 3, bassVolumeScale: 1.1 },
-  night: { volumeScale: 0.7, tempoScale: 1.2, detuneOffset: 6, bassVolumeScale: 1.3 },
-  late_night: { volumeScale: 0.55, tempoScale: 1.3, detuneOffset: 10, bassVolumeScale: 1.5 }
+  morning: {
+    volumeScale: 1.0,
+    tempoScale: 1.0,
+    detuneOffset: 0,
+    bassVolumeScale: 0.8
+  },
+  afternoon: {
+    volumeScale: 0.95,
+    tempoScale: 1.05,
+    detuneOffset: 0,
+    bassVolumeScale: 1.0
+  },
+  evening: {
+    volumeScale: 0.85,
+    tempoScale: 1.1,
+    detuneOffset: 3,
+    bassVolumeScale: 1.1
+  },
+  night: {
+    volumeScale: 0.7,
+    tempoScale: 1.2,
+    detuneOffset: 6,
+    bassVolumeScale: 1.3
+  },
+  late_night: {
+    volumeScale: 0.55,
+    tempoScale: 1.3,
+    detuneOffset: 10,
+    bassVolumeScale: 1.5
+  }
 }
 
 // ====== BGM 播放核心 ======
@@ -1069,7 +1168,10 @@ const resolveCurrentBgm = (): { type: BgmType; weather: Weather } => {
   if (currentFestivalOverride) {
     return { type: currentFestivalOverride, weather: 'sunny' }
   }
-  return { type: gameStore.season as SeasonBgmType, weather: gameStore.weather as Weather }
+  return {
+    type: gameStore.season as SeasonBgmType,
+    weather: gameStore.weather as Weather
+  }
 }
 
 // ====== 页面可见性处理（切标签页时停止/恢复音频） ======

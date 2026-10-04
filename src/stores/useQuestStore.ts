@@ -54,7 +54,10 @@ export const useQuestStore = defineStore('quest', () => {
   /** 接取任务 */
   const acceptQuest = (questId: string): { success: boolean; message: string } => {
     if (activeQuests.value.length >= MAX_ACTIVE_QUESTS) {
-      return { success: false, message: `最多同时接取${MAX_ACTIVE_QUESTS}个任务。` }
+      return {
+        success: false,
+        message: `最多同时接取${MAX_ACTIVE_QUESTS}个任务。`
+      }
     }
     const idx = boardQuests.value.findIndex(q => q.id === questId)
     if (idx === -1) return { success: false, message: '任务不存在。' }
@@ -76,7 +79,10 @@ export const useQuestStore = defineStore('quest', () => {
   const acceptSpecialOrder = (): { success: boolean; message: string } => {
     if (!specialOrder.value) return { success: false, message: '没有可接取的特殊订单。' }
     if (activeQuests.value.length >= MAX_ACTIVE_QUESTS) {
-      return { success: false, message: `最多同时接取${MAX_ACTIVE_QUESTS}个任务。` }
+      return {
+        success: false,
+        message: `最多同时接取${MAX_ACTIVE_QUESTS}个任务。`
+      }
     }
 
     const order = specialOrder.value
@@ -98,14 +104,20 @@ export const useQuestStore = defineStore('quest', () => {
     // 送货类委托：提交时从背包扣除物品
     if (quest.type === 'delivery') {
       if (!inventoryStore.hasItem(quest.targetItemId, quest.targetQuantity)) {
-        return { success: false, message: `背包中${quest.targetItemName}不足。` }
+        return {
+          success: false,
+          message: `背包中${quest.targetItemName}不足。`
+        }
       }
       inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity)
     } else {
       // 钓鱼/挖矿/采集/特殊订单类：检查收集进度或背包数量
       const effectiveProgress = Math.max(quest.collectedQuantity, inventoryStore.getItemCount(quest.targetItemId))
       if (effectiveProgress < quest.targetQuantity) {
-        return { success: false, message: `${quest.targetItemName}收集进度不足（${effectiveProgress}/${quest.targetQuantity}）。` }
+        return {
+          success: false,
+          message: `${quest.targetItemName}收集进度不足（${effectiveProgress}/${quest.targetQuantity}）。`
+        }
       }
     }
 
@@ -254,8 +266,21 @@ export const useQuestStore = defineStore('quest', () => {
         return animalStore.animals.length >= (obj.target ?? 0)
       case 'married':
         return npcStore.getSpouse() !== null
+      case 'settleDown': {
+        // 在桃源乡扎下根：成家、结为知己，或与足够多的村民成为挚友——任选其一即可
+        if (npcStore.getSpouse() !== null) return true
+        if (npcStore.npcStates.some(n => n.zhiji)) return true
+        const bestFriends = npcStore.npcStates.filter(n => npcStore.getFriendshipLevel(n.npcId) === 'bestFriend').length
+        return bestFriends >= (obj.target ?? 3)
+      }
       case 'hasChild':
         return npcStore.children.length > 0
+      case 'household': {
+        // 家里有需要照顾的生命：孩子、宠物，或成规模的牲畜——不强求生养
+        if (npcStore.children.length > 0) return true
+        if (animalStore.pet !== null) return true
+        return animalStore.animals.length >= (obj.target ?? 6)
+      }
       case 'deliverItem':
         // deliverItem 只检查背包有足够物品（提交时才扣除）
         return inventoryStore.hasItem(obj.itemId ?? '', obj.itemQuantity ?? 1)
@@ -301,7 +326,10 @@ export const useQuestStore = defineStore('quest', () => {
 
     const npcDef = getNpcById(def.npcId)
     const npcName = npcDef?.name ?? def.npcId
-    return { success: true, message: `接取了主线任务：${def.title}（${npcName}）` }
+    return {
+      success: true,
+      message: `接取了主线任务：${def.title}（${npcName}）`
+    }
   }
 
   /** 每日更新主线任务进度 */

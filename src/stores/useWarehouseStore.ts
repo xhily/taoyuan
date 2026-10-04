@@ -1,13 +1,15 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { InventoryItem, Quality, Chest, ChestTier, VoidChestRole } from '@/types'
-import { getItemById, CHEST_DEFS } from '@/data/items'
+import { getItemById, CHEST_DEFS, ITEM_CATEGORY_NAMES } from '@/data/items'
 import { useInventoryStore } from './useInventoryStore'
 
 const INITIAL_MAX_CHESTS = 3
 const MAX_CHESTS_CAP = 10
 const MAX_STACK = 999
 const UNLOCK_COST = 50000
+/** 每次扩建仓库为总仓追加的格数 */
+const MAIN_CHEST_CAPACITY_PER_EXPAND = 30
 
 export const useWarehouseStore = defineStore('warehouse', () => {
   const unlocked = ref(false)
@@ -16,11 +18,48 @@ export const useWarehouseStore = defineStore('warehouse', () => {
 
   const hasVoidChest = computed(() => chests.value.some(c => c.tier === 'void'))
 
+  // ---- 总仓 ----
+
+  /** 总仓：解锁即赠的大仓库，按类归档、不可拆除 */
+  const mainChest = computed(() => chests.value.find(c => c.tier === 'main') ?? null)
+
+  /**
+   * 总仓容量：基础值 + 每次扩建追加。
+   * 让「扩建仓库」同时抬高总仓，玩家不必为了空间再去造一堆小箱子。
+   */
+  const mainChestCapacity = computed(() => {
+    const extraSlots = Math.max(0, maxChests.value - INITIAL_MAX_CHESTS)
+    return CHEST_DEFS.main.capacity + extraSlots * MAIN_CHEST_CAPACITY_PER_EXPAND
+  })
+
+  /** 确保总仓存在（解锁时与旧存档迁移时调用） */
+  const ensureMainChest = () => {
+    if (mainChest.value) return
+    // 总仓固定放在最前面，且不占用 maxChests 的名额
+    chests.value.unshift({
+      id: 'chest_main',
+      tier: 'main',
+      label: CHEST_DEFS.main.name,
+      items: [],
+      voidRole: 'none'
+    })
+  }
+
+  /** 玩家自造的箱子数（不含总仓），用于与 maxChests 比较 */
+  const craftedChestCount = computed(() => chests.value.filter(c => c.tier !== 'main').length)
+
+  /** 解锁仓库：同时把总仓建好，解锁后立刻能用 */
+  const unlock = () => {
+    unlocked.value = true
+    ensureMainChest()
+  }
+
   // ---- 箱子管理 ----
 
   /** 创建箱子 */
   const addChest = (tier: ChestTier, label?: string): boolean => {
-    if (chests.value.length >= maxChests.value) return false
+    if (tier === 'main') return false
+    if (craftedChestCount.value >= maxChests.value) return false
     const def = CHEST_DEFS[tier]
     chests.value.push({
       id: `chest_${Date.now()}`,
@@ -32,10 +71,11 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     return true
   }
 
-  /** 删除空箱子 */
+  /** 删除空箱子（总仓不可删） */
   const removeChest = (chestId: string): boolean => {
     const idx = chests.value.findIndex(c => c.id === chestId)
     if (idx === -1) return false
+    if (chests.value[idx]!.tier === 'main') return false
     if (chests.value[idx]!.items.length > 0) return false
     chests.value.splice(idx, 1)
     return true
@@ -56,10 +96,11 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     return chests.value.find(c => c.id === chestId)
   }
 
-  /** 获取箱子容量 */
+  /** 获取箱子容量（总仓随扩建增长） */
   const getChestCapacity = (chestId: string): number => {
     const chest = chests.value.find(c => c.id === chestId)
     if (!chest) return 0
+    if (chest.tier === 'main') return mainChestCapacity.value
     return CHEST_DEFS[chest.tier].capacity
   }
 
@@ -67,7 +108,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
   const isChestFull = (chestId: string): boolean => {
     const chest = chests.value.find(c => c.id === chestId)
     if (!chest) return true
-    return chest.items.length >= CHEST_DEFS[chest.tier].capacity
+    return chest.items.length >= getChestCapacity(chestId)
   }
 
   // ---- 物品操作 ----
@@ -76,7 +117,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
   const addItemToChest = (chestId: string, itemId: string, quantity: number = 1, quality: Quality = 'normal'): boolean => {
     const chest = chests.value.find(c => c.id === chestId)
     if (!chest) return false
-    const cap = CHEST_DEFS[chest.tier].capacity
+    const cap = getChestCapacity(chestId)
     let remaining = quantity
 
     for (const slot of chest.items) {
@@ -142,7 +183,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     if (!chest) return 0
 
     // 计算箱子可容纳数量
-    const cap = CHEST_DEFS[chest.tier].capacity
+    const cap = getChestCapacity(chestId)
     let canStore = 0
     for (const slot of chest.items) {
       if (slot.itemId === itemId && slot.quality === quality && slot.quantity < MAX_STACK) {
@@ -260,7 +301,12 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     misc: 20
   }
 
-  const qualityOrder: Record<string, number> = { normal: 0, fine: 1, excellent: 2, supreme: 3 }
+  const qualityOrder: Record<string, number> = {
+    normal: 0,
+    fine: 1,
+    excellent: 2,
+    supreme: 3
+  }
 
   /** 一键整理箱子（按分类→物品ID→品质排序，合并同类栈） */
   const sortChest = (chestId: string) => {
@@ -282,7 +328,11 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       let remaining = item.quantity
       while (remaining > 0) {
         const batch = Math.min(remaining, MAX_STACK)
-        split.push({ itemId: item.itemId, quantity: batch, quality: item.quality })
+        split.push({
+          itemId: item.itemId,
+          quantity: batch,
+          quality: item.quality
+        })
         remaining -= batch
       }
     }
@@ -297,6 +347,58 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       return (qualityOrder[a.quality] ?? 0) - (qualityOrder[b.quality] ?? 0)
     })
     chest.items = split
+  }
+
+  /**
+   * 一键把背包里的东西收进总仓。
+   * 默认只收「已经在总仓里有同类」的物品（补货），传 all=true 则收全部可存物品。
+   * 种子、受保护物品、锁定物品不动。返回收入的物品数。
+   */
+  const stowToMain = (all = false): { kinds: number; total: number } => {
+    const inv = useInventoryStore()
+    const main = mainChest.value
+    if (!main) return { kinds: 0, total: 0 }
+    const known = new Set(main.items.map(i => i.itemId))
+    const snapshot = inv.items
+      .filter(i => {
+        if (i.locked) return false
+        const def = getItemById(i.itemId)
+        if (!def || def.category === 'seed' || def.protected) return false
+        return all || known.has(i.itemId)
+      })
+      .map(i => ({ itemId: i.itemId, quality: i.quality, quantity: i.quantity }))
+
+    let kinds = 0
+    let total = 0
+    for (const item of snapshot) {
+      const stored = depositToChest(main.id, item.itemId, item.quantity, item.quality)
+      if (stored > 0) {
+        kinds++
+        total += stored
+      }
+    }
+    if (total > 0) sortChest(main.id)
+    return { kinds, total }
+  }
+
+  /** 总仓按类别分组（供界面渲染分区） */
+  const getMainChestGroups = (): { category: string; name: string; items: InventoryItem[] }[] => {
+    const main = mainChest.value
+    if (!main) return []
+    const groups = new Map<string, InventoryItem[]>()
+    for (const item of main.items) {
+      const cat = getItemById(item.itemId)?.category ?? 'misc'
+      const list = groups.get(cat) ?? []
+      list.push(item)
+      groups.set(cat, list)
+    }
+    return [...groups.entries()]
+      .sort((a, b) => (CATEGORY_ORDER[a[0]] ?? 99) - (CATEGORY_ORDER[b[0]] ?? 99))
+      .map(([category, items]) => ({
+        category,
+        name: ITEM_CATEGORY_NAMES[category as keyof typeof ITEM_CATEGORY_NAMES] ?? category,
+        items
+      }))
   }
 
   // ---- 序列化 ----
@@ -343,6 +445,8 @@ export const useWarehouseStore = defineStore('warehouse', () => {
 
     // 兼容旧存档：如果有箱子但未标记解锁，自动解锁
     if (!unlocked.value && chests.value.length > 0) unlocked.value = true
+    // 已解锁的旧存档补发总仓，让老玩家也能直接用上
+    if (unlocked.value) ensureMainChest()
   }
 
   return {
@@ -350,6 +454,12 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     chests,
     maxChests,
     hasVoidChest,
+    mainChest,
+    mainChestCapacity,
+    craftedChestCount,
+    unlock,
+    stowToMain,
+    getMainChestGroups,
     UNLOCK_COST,
     MAX_CHESTS_CAP,
     addChest,

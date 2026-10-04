@@ -59,7 +59,12 @@ export const useAchievementStore = defineStore('achievement', () => {
     if (!discoveredItems.value.includes(itemId)) {
       discoveredItems.value.push(itemId)
       const gameStore = useGameStore()
-      const SEASON_NAMES: Record<string, string> = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' }
+      const SEASON_NAMES: Record<string, string> = {
+        spring: '春',
+        summer: '夏',
+        autumn: '秋',
+        winter: '冬'
+      }
       discoveryTimes.value[itemId] = `第${gameStore.year}年 ${SEASON_NAMES[gameStore.season] ?? gameStore.season} 第${gameStore.day}天`
     }
   }
@@ -144,7 +149,12 @@ export const useAchievementStore = defineStore('achievement', () => {
         return skill !== undefined && skill.level >= c.level
       }
       case 'npcFriendship': {
-        const LEVEL_RANK: Record<string, number> = { stranger: 0, acquaintance: 1, friendly: 2, bestFriend: 3 }
+        const LEVEL_RANK: Record<string, number> = {
+          stranger: 0,
+          acquaintance: 1,
+          friendly: 2,
+          bestFriend: 3
+        }
         const requiredRank = LEVEL_RANK[c.level] ?? 0
         return npcStore.npcStates.every(n => (LEVEL_RANK[npcStore.getFriendshipLevel(n.npcId)] ?? 0) >= requiredRank)
       }
@@ -379,9 +389,9 @@ export const useAchievementStore = defineStore('achievement', () => {
     for (const r of inventoryStore.ownedRings) discoverItem(r.defId)
     for (const h of inventoryStore.ownedHats) discoverItem(h.defId)
     for (const s of inventoryStore.ownedShoes) discoverItem(s.defId)
-    // 同步背包中已有物品到图鉴
+    // 同步背包与种子袋中已有物品到图鉴
     const seen = new Set<string>()
-    for (const slot of inventoryStore.items) {
+    for (const slot of [...inventoryStore.items, ...inventoryStore.seedItems]) {
       if (!seen.has(slot.itemId)) {
         seen.add(slot.itemId)
         discoverItem(slot.itemId)

@@ -68,7 +68,9 @@ export type MainQuestObjectiveType =
   | 'shipItems'
   | 'ownAnimals'
   | 'married'
+  | 'settleDown'
   | 'hasChild'
+  | 'household'
   | 'deliverItem'
 
 /** 主线任务单个目标 */

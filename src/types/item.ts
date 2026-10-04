@@ -42,6 +42,11 @@ export interface ItemDef {
   staminaRestore?: number
   /** 食用恢复生命值 */
   healthRestore?: number
+  /**
+   * 受保护物品：禁止出售、丢弃、放入出货箱。
+   * 用于公会限定奖励、求婚信物、剧情道具等——误卖一次可能逼玩家重开存档。
+   */
+  protected?: boolean
 }
 
 /** 背包中的物品实例 */
@@ -97,10 +102,17 @@ export interface EnchantmentDef {
 export interface OwnedWeapon {
   defId: string
   enchantmentId: string | null
+  /** 强化等级 0-10（缺省 0） */
+  enhance?: number
 }
 
 /** 箱子阶梯 */
-export type ChestTier = 'wood' | 'copper' | 'iron' | 'gold' | 'void'
+/**
+ * 箱子等级。
+ * main 是解锁仓库即赠送的「总仓」：容量大、按类别自动分区、不可拆除，
+ * 免得玩家花五万文解锁后发现是个空壳还得再造箱子。
+ */
+export type ChestTier = 'main' | 'wood' | 'copper' | 'iron' | 'gold' | 'void'
 
 /** 虚空箱子角色 */
 export type VoidChestRole = 'none' | 'input' | 'output'

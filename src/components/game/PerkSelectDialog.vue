@@ -1,5 +1,6 @@
 <template>
-  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-40">
+  <!-- z-[80]：必须盖过矿洞探索(z-50)、战斗(z-60)、道具(z-70)弹窗，否则矿洞里升级时点不到 -->
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[80]">
     <div class="game-panel max-w-md w-full">
       <h3 class="text-accent text-sm mb-2">{{ SKILL_NAMES[skillType] }} 达到{{ level }}级！</h3>
       <p class="text-xs text-muted mb-4">选择一个专精方向：</p>
@@ -55,7 +56,11 @@
       { id: 'rancher', name: '牧人', description: '动物产品售价+20%' }
     ],
     foraging: [
-      { id: 'lumberjack', name: '樵夫', description: '采集时25%概率额外获得木材' },
+      {
+        id: 'lumberjack',
+        name: '樵夫',
+        description: '采集时25%概率额外获得木材'
+      },
       { id: 'herbalist', name: '药师', description: '采集物品概率+20%' }
     ],
     fishing: [
@@ -110,8 +115,16 @@
         { id: 'blacksmith', name: '铁匠', description: '金属矿石售价+50%' }
       ],
       geologist: [
-        { id: 'excavator', name: '挖掘者', description: '使用炸弹时30%概率不消耗' },
-        { id: 'mineralogist', name: '宝石学家', description: '击败怪物额外掉落矿石' }
+        {
+          id: 'excavator',
+          name: '挖掘者',
+          description: '使用炸弹时30%概率不消耗'
+        },
+        {
+          id: 'mineralogist',
+          name: '宝石学家',
+          description: '击败怪物额外掉落矿石'
+        }
       ]
     },
     combat: {

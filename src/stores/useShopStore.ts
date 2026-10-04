@@ -6,6 +6,7 @@ import { useInventoryStore } from './useInventoryStore'
 import { useSkillStore } from './useSkillStore'
 import { useWalletStore } from './useWalletStore'
 import { getCropsBySeason, getItemById } from '@/data'
+import { isProtectedItem } from '@/data/items'
 import { BAITS, TACKLES, FERTILIZERS } from '@/data/processing'
 import { isTravelingMerchantDay, generateMerchantStock, TRAVELING_MERCHANT_POOL } from '@/data/travelingMerchant'
 import { getMarketMultiplier } from '@/data/market'
@@ -63,11 +64,10 @@ export const useShopStore = defineStore('shop', () => {
       }))
   })
 
-  /** 购买种子 */
+  /** 购买种子（种子进种子袋，不受背包格数限制） */
   const buySeed = (seedId: string, quantity: number = 1): boolean => {
     const seed = availableSeeds.value.find(s => s.seedId === seedId)
     if (!seed) return false
-    if (inventoryStore.isAllFull && !inventoryStore.items.some(s => s.itemId === seedId && s.quantity + quantity <= 999)) return false
     const totalCost = applyDiscount(seed.price) * quantity
     if (!playerStore.spendMoney(totalCost)) return false
     if (!inventoryStore.addItem(seedId, quantity)) {
@@ -79,14 +79,32 @@ export const useShopStore = defineStore('shop', () => {
 
   // === 铁匠铺 (孙铁匠) ===
 
+  // 只卖原矿，不卖冶炼好的锭——锭必须自己用熔炉炼，否则熔炉就没有存在意义了
   const blacksmithItems = computed<ShopItemEntry[]>(() => [
-    { itemId: 'copper_ore', name: '铜矿', price: 100, description: '矿洞中常见的铜矿' },
-    { itemId: 'iron_ore', name: '铁矿', price: 200, description: '中层矿洞出产的铁矿' },
-    { itemId: 'gold_ore', name: '金矿', price: 400, description: '深层矿洞出产的金矿' },
-    { itemId: 'copper_bar', name: '铜锭', price: 300, description: '冶炼好的铜锭' },
-    { itemId: 'iron_bar', name: '铁锭', price: 600, description: '冶炼好的铁锭' },
-    { itemId: 'gold_bar', name: '金锭', price: 1200, description: '冶炼好的金锭' },
-    { itemId: 'charcoal', name: '木炭', price: 100, description: '烧制的木炭' }
+    {
+      itemId: 'copper_ore',
+      name: '铜矿',
+      price: 100,
+      description: '矿洞中常见的铜矿，需用熔炉冶炼成锭'
+    },
+    {
+      itemId: 'iron_ore',
+      name: '铁矿',
+      price: 200,
+      description: '中层矿洞出产的铁矿，需用熔炉冶炼成锭'
+    },
+    {
+      itemId: 'gold_ore',
+      name: '金矿',
+      price: 400,
+      description: '深层矿洞出产的金矿，需用熔炉冶炼成锭'
+    },
+    {
+      itemId: 'charcoal',
+      name: '木炭',
+      price: 100,
+      description: '烧制的木炭，冶炼的燃料'
+    }
   ])
 
   // === 药铺 (林老) ===
@@ -103,13 +121,48 @@ export const useShopStore = defineStore('shop', () => {
 
   const apothecaryItems = computed<ShopItemEntry[]>(() => [
     { itemId: 'herb', name: '草药', price: 50, description: '山间野生的草药' },
-    { itemId: 'ginseng', name: '人参', price: 600, description: '极其珍贵的野生人参' },
-    { itemId: 'animal_medicine', name: '兽药', price: 150, description: '治疗生病的牲畜' },
-    { itemId: 'premium_feed', name: '精饲料', price: 200, description: '提升动物心情和好感' },
-    { itemId: 'nourishing_feed', name: '滋补饲料', price: 250, description: '加速动物产出' },
-    { itemId: 'vitality_feed', name: '活力饲料', price: 300, description: '喂食必定治愈疾病' },
-    { itemId: 'fish_feed', name: '鱼饲料', price: 30, description: '鱼塘专用饲料' },
-    { itemId: 'water_purifier', name: '水质改良剂', price: 100, description: '改善鱼塘水质' }
+    {
+      itemId: 'ginseng',
+      name: '人参',
+      price: 600,
+      description: '极其珍贵的野生人参'
+    },
+    {
+      itemId: 'animal_medicine',
+      name: '兽药',
+      price: 150,
+      description: '治疗生病的牲畜'
+    },
+    {
+      itemId: 'premium_feed',
+      name: '精饲料',
+      price: 200,
+      description: '提升动物心情和好感'
+    },
+    {
+      itemId: 'nourishing_feed',
+      name: '滋补饲料',
+      price: 250,
+      description: '加速动物产出'
+    },
+    {
+      itemId: 'vitality_feed',
+      name: '活力饲料',
+      price: 300,
+      description: '喂食必定治愈疾病'
+    },
+    {
+      itemId: 'fish_feed',
+      name: '鱼饲料',
+      price: 30,
+      description: '鱼塘专用饲料'
+    },
+    {
+      itemId: 'water_purifier',
+      name: '水质改良剂',
+      price: 100,
+      description: '改善鱼塘水质'
+    }
   ])
 
   // === 渔具铺 (秋月) ===
@@ -136,29 +189,90 @@ export const useShopStore = defineStore('shop', () => {
 
   /** 渔具铺其他商品 */
   const fishingShopItems = computed<ShopItemEntry[]>(() => [
-    { itemId: 'crab_pot', name: '蟹笼', price: 1500, description: '放置在钓鱼地点，每日自动捕获水产（需鱼饵）' }
+    {
+      itemId: 'crab_pot',
+      name: '蟹笼',
+      price: 1500,
+      description: '放置在钓鱼地点，每日自动捕获水产（需鱼饵）'
+    }
   ])
 
   // === 绸缎庄 (素素) ===
 
   const textileItems = computed<ShopItemEntry[]>(() => [
-    { itemId: 'cloth', name: '布匹', price: 1200, description: '用羊毛纺织的布匹' },
-    { itemId: 'silk_cloth', name: '丝绸', price: 500, description: '华美的丝绸' },
-    { itemId: 'alpaca_cloth', name: '羊驼绒', price: 900, description: '极其柔软的羊驼绒布' },
-    { itemId: 'felt', name: '毛毡', price: 600, description: '用兔毛压制的毛毡' },
-    { itemId: 'silk_ribbon', name: '丝帕', price: 500, description: '精心绣制的丝帕' },
-    { itemId: 'jade_ring', name: '翡翠戒指', price: 1500, description: '可以用来求婚' },
-    { itemId: 'zhiji_jade', name: '知己玉佩', price: 1500, description: '赠予同性挚友可结为知己' },
-    { itemId: 'pine_incense', name: '松香', price: 250, description: '清新的松香' },
-    { itemId: 'camphor_incense', name: '樟脑香', price: 400, description: '提神醒脑' },
-    { itemId: 'osmanthus_incense', name: '桂花香', price: 800, description: '馥郁的桂花香' }
+    {
+      itemId: 'cloth',
+      name: '布匹',
+      price: 1200,
+      description: '用羊毛纺织的布匹'
+    },
+    {
+      itemId: 'silk_cloth',
+      name: '丝绸',
+      price: 500,
+      description: '华美的丝绸'
+    },
+    {
+      itemId: 'alpaca_cloth',
+      name: '羊驼绒',
+      price: 900,
+      description: '极其柔软的羊驼绒布'
+    },
+    {
+      itemId: 'felt',
+      name: '毛毡',
+      price: 600,
+      description: '用兔毛压制的毛毡'
+    },
+    {
+      itemId: 'silk_ribbon',
+      name: '丝帕',
+      price: 500,
+      description: '精心绣制的丝帕'
+    },
+    {
+      itemId: 'jade_ring',
+      name: '翡翠戒指',
+      price: 1500,
+      description: '可以用来求婚'
+    },
+    {
+      itemId: 'zhiji_jade',
+      name: '知己玉佩',
+      price: 1500,
+      description: '赠予同性挚友可结为知己'
+    },
+    {
+      itemId: 'pine_incense',
+      name: '松香',
+      price: 250,
+      description: '清新的松香'
+    },
+    {
+      itemId: 'camphor_incense',
+      name: '樟脑香',
+      price: 400,
+      description: '提神醒脑'
+    },
+    {
+      itemId: 'osmanthus_incense',
+      name: '桂花香',
+      price: 800,
+      description: '馥郁的桂花香'
+    }
   ])
 
   // === 通用购买/出售 ===
 
   /** 购买通用物品 */
   const buyItem = (itemId: string, price: number, quantity: number = 1): boolean => {
-    if (inventoryStore.isAllFull && !inventoryStore.items.some(s => s.itemId === itemId && s.quantity + quantity <= 999)) return false
+    if (
+      !inventoryStore.isSeedItem(itemId) &&
+      inventoryStore.isAllFull &&
+      !inventoryStore.items.some(s => s.itemId === itemId && s.quantity + quantity <= 999)
+    ) {
+      return false
+    }
     const totalCost = applyDiscount(price) * quantity
     if (!playerStore.spendMoney(totalCost)) return false
     if (!inventoryStore.addItem(itemId, quantity)) {
@@ -210,6 +324,8 @@ export const useShopStore = defineStore('shop', () => {
 
   /** 出售物品，返回实际售价（0表示失败） */
   const sellItem = (itemId: string, quantity: number = 1, quality: Quality = 'normal'): number => {
+    // 限定物品一律不收：误卖会直接卡死进度
+    if (isProtectedItem(itemId)) return 0
     if (!inventoryStore.removeItem(itemId, quantity, quality)) return 0
     const totalPrice = calculateSellPrice(itemId, quantity, quality)
     playerStore.earnMoney(totalPrice)
@@ -250,7 +366,13 @@ export const useShopStore = defineStore('shop', () => {
   const buyFromTraveler = (itemId: string): boolean => {
     const item = travelingStock.value.find(s => s.itemId === itemId)
     if (!item || item.quantity <= 0) return false
-    if (inventoryStore.isAllFull && !inventoryStore.items.some(s => s.itemId === itemId && s.quantity < 999)) return false
+    if (
+      !inventoryStore.isSeedItem(itemId) &&
+      inventoryStore.isAllFull &&
+      !inventoryStore.items.some(s => s.itemId === itemId && s.quantity < 999)
+    ) {
+      return false
+    }
     const finalPrice = applyDiscount(item.price)
     if (!playerStore.spendMoney(finalPrice)) return false
     if (!inventoryStore.addItem(itemId)) {
@@ -268,6 +390,8 @@ export const useShopStore = defineStore('shop', () => {
 
   /** 添加物品到出货箱 */
   const addToShippingBox = (itemId: string, quantity: number, quality: Quality): boolean => {
+    // 出货箱等同于隔夜出售，同样要挡住限定物品
+    if (isProtectedItem(itemId)) return false
     if (!inventoryStore.removeItem(itemId, quantity, quality)) return false
     const existing = shippingBox.value.find(s => s.itemId === itemId && s.quality === quality)
     if (existing) {
@@ -284,15 +408,19 @@ export const useShopStore = defineStore('shop', () => {
     if (idx === -1) return false
     const entry = shippingBox.value[idx]!
     if (entry.quantity < quantity) return false
-    // 先计算背包可用空间，避免 addItem 部分添加的副作用
+    // 先计算背包可用空间，避免 addItem 部分添加的副作用（种子回种子袋，不受格数限制）
     const MAX_STACK = 999
     let space = 0
-    for (const s of inventoryStore.items) {
-      if (s.itemId === itemId && s.quality === quality && s.quantity < MAX_STACK) {
-        space += MAX_STACK - s.quantity
+    if (inventoryStore.isSeedItem(itemId)) {
+      space = quantity
+    } else {
+      for (const s of inventoryStore.items) {
+        if (s.itemId === itemId && s.quality === quality && s.quantity < MAX_STACK) {
+          space += MAX_STACK - s.quantity
+        }
       }
+      space += (inventoryStore.capacity - inventoryStore.items.length) * MAX_STACK
     }
-    space += (inventoryStore.capacity - inventoryStore.items.length) * MAX_STACK
     const toTransfer = Math.min(quantity, space)
     if (toTransfer <= 0) return false
     // 先从出货箱移除，再添加到背包
@@ -308,7 +436,9 @@ export const useShopStore = defineStore('shop', () => {
   const processShippingBox = (): number => {
     let total = 0
     const dayKey = `${gameStore.year}-${gameStore.seasonIndex}-${gameStore.day}`
-    const dayRecord: Record<string, number> = { ...(shippingHistory.value[dayKey] ?? {}) }
+    const dayRecord: Record<string, number> = {
+      ...(shippingHistory.value[dayKey] ?? {})
+    }
     for (const entry of shippingBox.value) {
       total += calculateSellPrice(entry.itemId, entry.quantity, entry.quality)
       // 记录出货收集

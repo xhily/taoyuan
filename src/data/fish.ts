@@ -1,13 +1,29 @@
 import type { FishDef, FishingLocation } from '@/types'
 
 /** 钓鱼地点定义 */
-export const FISHING_LOCATIONS: { id: FishingLocation; name: string; description: string }[] = [
+export const FISHING_LOCATIONS: {
+  id: FishingLocation
+  name: string
+  description: string
+}[] = [
   { id: 'creek', name: '溪流', description: '村旁清澈的小溪，适合新手垂钓。' },
   { id: 'pond', name: '池塘', description: '宁静的村中池塘，水面平静如镜。' },
   { id: 'river', name: '江河', description: '湍急的大河，有更大的鱼出没。' },
-  { id: 'mine', name: '矿洞暗河', description: '矿洞深处的地下水域，鱼类不受季节影响。' },
-  { id: 'waterfall', name: '瀑布', description: '山间瀑布下的深潭，只有好手才能在此收获。' },
-  { id: 'swamp', name: '沼泽', description: '桃源乡外的湿地，栖息着奇特的水生生物。' }
+  {
+    id: 'mine',
+    name: '矿洞暗河',
+    description: '矿洞深处的地下水域，鱼类不受季节影响。'
+  },
+  {
+    id: 'waterfall',
+    name: '瀑布',
+    description: '山间瀑布下的深潭，只有好手才能在此收获。'
+  },
+  {
+    id: 'swamp',
+    name: '沼泽',
+    description: '桃源乡外的湿地，栖息着奇特的水生生物。'
+  }
 ]
 
 /** 所有鱼类定义 (60种) */

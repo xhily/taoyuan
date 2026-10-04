@@ -6,6 +6,8 @@ export const DAY_START_HOUR = 6
 export const DAY_END_HOUR = 26 // 凌晨2点
 export const MIDNIGHT_HOUR = 24
 export const PASSOUT_HOUR = 26
+/** 凌晨1点：主动询问玩家是否回去休息，给出昏倒后果预告 */
+export const BEDTIME_PROMPT_HOUR = 25
 
 // === 星期系统 ===
 export const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -67,15 +69,15 @@ export const ACTION_TIME_COSTS = {
   water: 0.08,
   harvest: 0.17,
   // 钓鱼
-  fishStart: 1,
+  fishStart: 0.5,
   // 挖矿
   mineOre: 0.25,
   combat: 0.25,
   nextFloor: 0.17,
   revealTile: 0.05,
-  // 采集
-  forage: 1,
-  chopTree: 1,
+  // 采集：一小时一次的话一天做不了几回、体力都花不完，半小时更合节奏
+  forage: 0.5,
+  chopTree: 0.5,
   // 烹饪
   cook: 0.5,
   eat: 0,
@@ -104,8 +106,8 @@ export const ACTION_TIME_COSTS = {
   batchWater: 0.17,
   batchTill: 0.25,
   batchHarvest: 0.5,
-  // 淘金
-  pan: 1,
+  // 淘金：与钓鱼同为溪边活动，保持同档
+  pan: 0.5,
   // UI
   checkInventory: 0,
   checkSkills: 0,
@@ -140,6 +142,7 @@ export const TAB_TO_LOCATION_GROUP: Record<string, LocationGroup | null> = {
   cottage: 'farm',
   village: 'village_area',
   shop: 'village_area',
+  trade: 'village_area',
   cooking: 'village_area',
   workshop: 'farm',
   breeding: 'farm',
@@ -152,6 +155,8 @@ export const TAB_TO_LOCATION_GROUP: Record<string, LocationGroup | null> = {
   skills: null,
   achievement: null,
   charinfo: null,
+  wallet: null,
+  quest: null,
   museum: 'village_area',
   guild: 'village_area',
   hanhai: 'hanhai'
@@ -227,8 +232,20 @@ export interface ShopSchedule {
 }
 
 export const SHOP_SCHEDULES: ShopSchedule[] = [
-  { tabKey: 'shop', name: '桃源商圈', closedDays: [], openHour: 6, closeHour: 24 },
-  { tabKey: 'upgrade', name: '工坊', closedDays: ['sun'], openHour: 8, closeHour: 20 }
+  {
+    tabKey: 'shop',
+    name: '桃源商圈',
+    closedDays: [],
+    openHour: 6,
+    closeHour: 24
+  },
+  {
+    tabKey: 'upgrade',
+    name: '工坊',
+    closedDays: ['sun'],
+    openHour: 8,
+    closeHour: 20
+  }
 ]
 
 export const isShopOpen = (tabKey: string, day: number, hour: number): { open: boolean; reason?: string } => {
@@ -236,13 +253,22 @@ export const isShopOpen = (tabKey: string, day: number, hour: number): { open: b
   if (!schedule) return { open: true }
   const weekday = getWeekday(day)
   if (schedule.closedDays.includes(weekday)) {
-    return { open: false, reason: `${schedule.name}今天（${WEEKDAY_NAMES[weekday]}）休息。` }
+    return {
+      open: false,
+      reason: `${schedule.name}今天（${WEEKDAY_NAMES[weekday]}）休息。`
+    }
   }
   if (hour < schedule.openHour) {
-    return { open: false, reason: `${schedule.name}还没开门（${formatHour(schedule.openHour)}开门）。` }
+    return {
+      open: false,
+      reason: `${schedule.name}还没开门（${formatHour(schedule.openHour)}开门）。`
+    }
   }
   if (hour >= schedule.closeHour) {
-    return { open: false, reason: `${schedule.name}已经打烊了（${formatHour(schedule.closeHour)}关门）。` }
+    return {
+      open: false,
+      reason: `${schedule.name}已经打烊了（${formatHour(schedule.closeHour)}关门）。`
+    }
   }
   return { open: true }
 }
@@ -256,41 +282,161 @@ export interface NpcScheduleEntry {
 
 export const NPC_SCHEDULES: NpcScheduleEntry[] = [
   // 原有 NPC
-  { npcId: 'chen_bo', availableDays: 'all', availableHours: { from: 8, to: 20 } },
-  { npcId: 'liu_niang', availableDays: 'all', availableHours: { from: 9, to: 21 } },
-  { npcId: 'a_shi', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'], availableHours: { from: 7, to: 18 } },
-  { npcId: 'qiu_yue', availableDays: 'all', availableHours: { from: 6, to: 22 } },
-  { npcId: 'lin_lao', availableDays: 'all', availableHours: { from: 8, to: 19 } },
-  { npcId: 'xiao_man', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'], availableHours: { from: 9, to: 17 } },
+  {
+    npcId: 'chen_bo',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 20 }
+  },
+  {
+    npcId: 'liu_niang',
+    availableDays: 'all',
+    availableHours: { from: 9, to: 21 }
+  },
+  {
+    npcId: 'a_shi',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    availableHours: { from: 7, to: 18 }
+  },
+  {
+    npcId: 'qiu_yue',
+    availableDays: 'all',
+    availableHours: { from: 6, to: 22 }
+  },
+  {
+    npcId: 'lin_lao',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 19 }
+  },
+  {
+    npcId: 'xiao_man',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+    availableHours: { from: 9, to: 17 }
+  },
   // 新增可婚 NPC
-  { npcId: 'chun_lan', availableDays: 'all', availableHours: { from: 7, to: 20 } },
-  { npcId: 'xue_qin', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'], availableHours: { from: 10, to: 19 } },
+  {
+    npcId: 'chun_lan',
+    availableDays: 'all',
+    availableHours: { from: 7, to: 20 }
+  },
+  {
+    npcId: 'xue_qin',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    availableHours: { from: 10, to: 19 }
+  },
   { npcId: 'su_su', availableDays: 'all', availableHours: { from: 8, to: 20 } },
-  { npcId: 'hong_dou', availableDays: 'all', availableHours: { from: 10, to: 23 } },
-  { npcId: 'dan_qing', availableDays: 'all', availableHours: { from: 8, to: 21 } },
-  { npcId: 'a_tie', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'], availableHours: { from: 7, to: 18 } },
-  { npcId: 'yun_fei', availableDays: ['tue', 'thu', 'sat', 'sun'], availableHours: { from: 6, to: 16 } },
-  { npcId: 'da_niu', availableDays: 'all', availableHours: { from: 6, to: 19 } },
-  { npcId: 'mo_bai', availableDays: 'all', availableHours: { from: 12, to: 23 } },
+  {
+    npcId: 'hong_dou',
+    availableDays: 'all',
+    availableHours: { from: 10, to: 23 }
+  },
+  {
+    npcId: 'dan_qing',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 21 }
+  },
+  {
+    npcId: 'a_tie',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+    availableHours: { from: 7, to: 18 }
+  },
+  {
+    npcId: 'yun_fei',
+    availableDays: ['tue', 'thu', 'sat', 'sun'],
+    availableHours: { from: 6, to: 16 }
+  },
+  {
+    npcId: 'da_niu',
+    availableDays: 'all',
+    availableHours: { from: 6, to: 19 }
+  },
+  {
+    npcId: 'mo_bai',
+    availableDays: 'all',
+    availableHours: { from: 12, to: 23 }
+  },
   // 新增不可婚 NPC
-  { npcId: 'wang_dashen', availableDays: 'all', availableHours: { from: 6, to: 19 } },
-  { npcId: 'zhao_mujiang', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'], availableHours: { from: 7, to: 18 } },
-  { npcId: 'sun_tiejiang', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'], availableHours: { from: 7, to: 18 } },
-  { npcId: 'zhang_popo', availableDays: 'all', availableHours: { from: 8, to: 17 } },
+  {
+    npcId: 'wang_dashen',
+    availableDays: 'all',
+    availableHours: { from: 6, to: 19 }
+  },
+  {
+    npcId: 'zhao_mujiang',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+    availableHours: { from: 7, to: 18 }
+  },
+  {
+    npcId: 'sun_tiejiang',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+    availableHours: { from: 7, to: 18 }
+  },
+  {
+    npcId: 'zhang_popo',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 17 }
+  },
   { npcId: 'li_yu', availableDays: 'all', availableHours: { from: 6, to: 20 } },
-  { npcId: 'zhou_xiucai', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'], availableHours: { from: 8, to: 17 } },
-  { npcId: 'wu_shen', availableDays: 'all', availableHours: { from: 8, to: 20 } },
-  { npcId: 'ma_liu', availableDays: ['wed', 'sat', 'sun'], availableHours: { from: 9, to: 18 } },
-  { npcId: 'lao_song', availableDays: 'all', availableHours: { from: 18, to: 26 } },
-  { npcId: 'pang_shen', availableDays: 'all', availableHours: { from: 5, to: 16 } },
+  {
+    npcId: 'zhou_xiucai',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    availableHours: { from: 8, to: 17 }
+  },
+  {
+    npcId: 'wu_shen',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 20 }
+  },
+  {
+    npcId: 'ma_liu',
+    availableDays: ['wed', 'sat', 'sun'],
+    availableHours: { from: 9, to: 18 }
+  },
+  {
+    npcId: 'lao_song',
+    availableDays: 'all',
+    availableHours: { from: 18, to: 26 }
+  },
+  {
+    npcId: 'pang_shen',
+    availableDays: 'all',
+    availableHours: { from: 5, to: 16 }
+  },
   { npcId: 'a_hua', availableDays: 'all', availableHours: { from: 9, to: 18 } },
-  { npcId: 'shi_tou', availableDays: 'all', availableHours: { from: 8, to: 20 } },
-  { npcId: 'hui_niang', availableDays: 'all', availableHours: { from: 8, to: 19 } },
-  { npcId: 'lao_lu', availableDays: 'all', availableHours: { from: 10, to: 22 } },
-  { npcId: 'liu_cunzhang', availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'], availableHours: { from: 8, to: 18 } },
-  { npcId: 'qian_niang', availableDays: 'all', availableHours: { from: 8, to: 18 } },
-  { npcId: 'he_zhanggui', availableDays: 'all', availableHours: { from: 9, to: 22 } },
-  { npcId: 'qin_dashu', availableDays: 'all', availableHours: { from: 6, to: 18 } },
+  {
+    npcId: 'shi_tou',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 20 }
+  },
+  {
+    npcId: 'hui_niang',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 19 }
+  },
+  {
+    npcId: 'lao_lu',
+    availableDays: 'all',
+    availableHours: { from: 10, to: 22 }
+  },
+  {
+    npcId: 'liu_cunzhang',
+    availableDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    availableHours: { from: 8, to: 18 }
+  },
+  {
+    npcId: 'qian_niang',
+    availableDays: 'all',
+    availableHours: { from: 8, to: 18 }
+  },
+  {
+    npcId: 'he_zhanggui',
+    availableDays: 'all',
+    availableHours: { from: 9, to: 22 }
+  },
+  {
+    npcId: 'qin_dashu',
+    availableDays: 'all',
+    availableHours: { from: 6, to: 18 }
+  },
   { npcId: 'a_fu', availableDays: 'all', availableHours: { from: 7, to: 18 } }
 ]
 
@@ -325,6 +471,12 @@ export const getNpcUnavailableReason = (npcId: string, day: number, hour: number
   if (hour >= schedule.availableHours.to) return '已经回家了'
   return null
 }
+
+// === 体力预警 ===
+/** 体力低于该比例时给出「留意体力」提示 */
+export const STAMINA_WARN_RATIO = 0.3
+/** 体力低于该比例时给出「即将力竭」强提示 */
+export const STAMINA_CRITICAL_RATIO = 0.15
 
 // === 深夜惩罚 ===
 /** 渐进式晚睡恢复：根据就寝时间线性递减 */

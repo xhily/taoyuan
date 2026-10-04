@@ -63,19 +63,19 @@
 
 ```bash
 # 安装依赖
-pnpm install
+bun install
 
 # 启动开发服务器
-pnpm dev
+bun dev
 
 # 类型检查 + 生产构建
-pnpm build
+bun run build
 
 # 预览构建结果
-pnpm preview
+bun run preview
 
 # 构建 Electron 桌面客户端
-pnpm build:electron
+bun run build:electron
 ```
 
 ### Docker 部署

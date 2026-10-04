@@ -1,5 +1,6 @@
 <template>
   <div>
+    <VillagerPresence spot="forage" />
     <h3 class="text-accent text-sm mb-3">
       <TreePine :size="14" class="inline" />
       竹林采集
@@ -76,7 +77,9 @@
           </p>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs text-muted">{{ selectedResultDef.description }}</p>
+            <p class="text-xs text-muted">
+              {{ selectedResultDef.description }}
+            </p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2">
@@ -186,11 +189,15 @@
             <span class="text-[10px] text-muted/40">VS</span>
             <!-- 野兽 -->
             <div class="border border-danger/20 rounded-xs p-2">
-              <p class="text-xs text-center text-danger mb-1.5">{{ forestCombatMonster.name }}</p>
+              <p class="text-xs text-center text-danger mb-1.5">
+                {{ forestCombatMonster.name }}
+              </p>
               <div class="bg-bg rounded-xs h-1.5 mb-1">
                 <div
                   class="h-1.5 bg-danger rounded-xs transition-all"
-                  :style="{ width: `${(forestCombatMonsterHp / forestCombatMonster.hp) * 100}%` }"
+                  :style="{
+                    width: `${(forestCombatMonsterHp / forestCombatMonster.hp) * 100}%`
+                  }"
                 />
               </div>
               <p class="text-[10px] text-muted">{{ forestCombatMonsterHp }}/{{ forestCombatMonster.hp }}</p>
@@ -246,6 +253,7 @@
 </template>
 
 <script setup lang="ts">
+  import VillagerPresence from '@/components/game/VillagerPresence.vue'
   import { ref, computed } from 'vue'
   import { TreePine, Search, X, Swords, Shield, MoveRight } from 'lucide-vue-next'
   import { useAchievementStore } from '@/stores/useAchievementStore'
@@ -429,7 +437,12 @@
         useQuestStore().onItemObtained(item.itemId, finalQty)
         const itemDef = getItemById(item.itemId)
         const name = itemDef?.name ?? item.itemId
-        gathered.push({ label: `获得了${finalQty > 1 ? `${name}×${finalQty}` : name}`, itemId: item.itemId, quantity: finalQty, quality })
+        gathered.push({
+          label: `获得了${finalQty > 1 ? `${name}×${finalQty}` : name}`,
+          itemId: item.itemId,
+          quantity: finalQty,
+          quality
+        })
         skillStore.addExp('foraging', Math.floor(item.expReward * forestXpBonus))
       }
     }
@@ -450,7 +463,12 @@
       achievementStore.discoverItem(randomItem.itemId)
       const itemDef = getItemById(randomItem.itemId)
       const name = itemDef?.name ?? randomItem.itemId
-      gathered.push({ label: `获得了${name}`, itemId: randomItem.itemId, quantity: 1, quality })
+      gathered.push({
+        label: `获得了${name}`,
+        itemId: randomItem.itemId,
+        quantity: 1,
+        quality
+      })
     }
 
     // 仙缘能力：月华（yue_tu_3）采集8%概率获得月草
@@ -539,7 +557,10 @@
     if (!encounter.value || encounter.value.type !== 'friendly') return
     const animal = encounter.value.animal
     const { leveledUp, newLevel } = skillStore.addExp('foraging', animal.chaseExp)
-    lastResults.value.push({ label: `驱赶了${animal.name}（+${animal.chaseExp}经验）`, quantity: 0 })
+    lastResults.value.push({
+      label: `驱赶了${animal.name}（+${animal.chaseExp}经验）`,
+      quantity: 0
+    })
     let msg = `在竹林遇到${animal.name}，将其驱赶了。（+${animal.chaseExp}采集经验）`
     if (leveledUp) msg += ` 采集提升到${newLevel}级！`
     addLog(msg)
@@ -634,7 +655,8 @@
     const bruteBonus = skillStore.getSkill('combat').perk10 === 'brute' ? 1.25 : 1.0
 
     const playerDmg = Math.max(1, Math.floor(baseAttack * critMultiplier * bruteBonus) - monster.defense)
-    forestCombatMonsterHp.value -= playerDmg
+    // 夹在 0 以上：致死一击若让血量变成负数，胜利弹窗停留期间血条会停在旧宽度
+    forestCombatMonsterHp.value = Math.max(0, forestCombatMonsterHp.value - playerDmg)
     let atkMsg = isCrit ? `暴击！对${monster.name}造成${playerDmg}点伤害！` : `对${monster.name}造成${playerDmg}点伤害。`
 
     // 吸血附魔
@@ -665,7 +687,7 @@
     // 杂技师反击
     if (skillStore.getSkill('combat').perk10 === 'acrobat' && Math.random() < 0.25) {
       const counterDmg = Math.floor(monsterDmg * 0.5)
-      forestCombatMonsterHp.value -= counterDmg
+      forestCombatMonsterHp.value = Math.max(0, forestCombatMonsterHp.value - counterDmg)
       forestCombatLog.value.push(`杂技师闪避反击！造成${counterDmg}点伤害！`)
       if (forestCombatMonsterHp.value <= 0) {
         handleForestVictory()

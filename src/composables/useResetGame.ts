@@ -8,6 +8,7 @@ import { useFishingStore } from '@/stores/useFishingStore'
 import { useGameStore } from '@/stores/useGameStore'
 import { useGuildStore } from '@/stores/useGuildStore'
 import { useHanhaiStore } from '@/stores/useHanhaiStore'
+import { useHiddenNpcStore } from '@/stores/useHiddenNpcStore'
 import { useHomeStore } from '@/stores/useHomeStore'
 import { useInventoryStore } from '@/stores/useInventoryStore'
 import { useMiningStore } from '@/stores/useMiningStore'
@@ -20,6 +21,7 @@ import { useSecretNoteStore } from '@/stores/useSecretNoteStore'
 import { useShopStore } from '@/stores/useShopStore'
 import { useSkillStore } from '@/stores/useSkillStore'
 import { useTutorialStore } from '@/stores/useTutorialStore'
+import { useTradeStore } from '@/stores/useTradeStore'
 import { useWalletStore } from '@/stores/useWalletStore'
 import { useWarehouseStore } from '@/stores/useWarehouseStore'
 
@@ -52,4 +54,6 @@ export const resetAllStoresForNewGame = () => {
   useHanhaiStore().$reset()
   useFishPondStore().$reset()
   useTutorialStore().$reset()
+  useHiddenNpcStore().$reset()
+  useTradeStore().$reset()
 }

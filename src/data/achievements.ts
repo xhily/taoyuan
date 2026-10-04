@@ -95,7 +95,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '深渊勇者',
     description: '骷髅矿穴到达第100层。',
     condition: { type: 'skullCavernFloor', floor: 100 },
-    reward: { money: 10000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 10000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
   // 金钱
   {
@@ -215,7 +218,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '万魔之敌',
     description: '累计击杀1000只怪物。',
     condition: { type: 'monstersKilled', count: 1000 },
-    reward: { money: 5000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 5000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
   // 出货
   {
@@ -369,7 +375,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '全知全能',
     description: '发现150种不同物品。',
     condition: { type: 'itemCount', count: 150 },
-    reward: { money: 8000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 8000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
 
   // 农耕
@@ -415,7 +424,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '鱼龙百变',
     description: '累计钓到500条鱼。',
     condition: { type: 'fishCaught', count: 500 },
-    reward: { money: 5000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 5000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
 
   // 金钱
@@ -452,7 +464,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '金山银海',
     description: '累计获得1000000文。',
     condition: { type: 'moneyEarned', amount: 1000000 },
-    reward: { money: 30000, items: [{ itemId: 'prismatic_shard', quantity: 3 }] }
+    reward: {
+      money: 30000,
+      items: [{ itemId: 'prismatic_shard', quantity: 3 }]
+    }
   },
 
   // 烹饪
@@ -648,7 +663,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '无尽深渊',
     description: '骷髅矿穴到达第150层。',
     condition: { type: 'skullCavernFloor', floor: 150 },
-    reward: { money: 20000, items: [{ itemId: 'prismatic_shard', quantity: 2 }] }
+    reward: {
+      money: 20000,
+      items: [{ itemId: 'prismatic_shard', quantity: 2 }]
+    }
   },
 
   // 好感
@@ -810,7 +828,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '万种图录',
     description: '发现100个杂交品种。',
     condition: { type: 'hybridsDiscovered', count: 100 },
-    reward: { money: 10000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 10000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
   {
     id: 'tier_3',
@@ -838,7 +859,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '登峰造极',
     description: '培育出十代杂交品种。',
     condition: { type: 'hybridTier', tier: 10 },
-    reward: { money: 15000, items: [{ itemId: 'prismatic_shard', quantity: 2 }] }
+    reward: {
+      money: 15000,
+      items: [{ itemId: 'prismatic_shard', quantity: 2 }]
+    }
   },
 
   // 育种出货
@@ -875,7 +899,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '杂交出货全鉴',
     description: '出货50种杂交作物。',
     condition: { type: 'hybridsShipped', count: 50 },
-    reward: { money: 10000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 10000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
   // 博物馆
   {
@@ -890,7 +917,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '博物馆之星',
     description: '向博物馆捐赠36件物品。',
     condition: { type: 'museumDonations', count: 36 },
-    reward: { money: 5000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 5000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
   {
     id: 'museum_40',
@@ -934,7 +964,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: '万灵归心',
     description: '发现全部6位仙灵。',
     condition: { type: 'hiddenNpcRevealed', count: 6 },
-    reward: { money: 5000, items: [{ itemId: 'prismatic_shard', quantity: 1 }] }
+    reward: {
+      money: 5000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }]
+    }
   },
   {
     id: 'spirit_bonded',
@@ -978,7 +1011,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'bamboo_shoot', quantity: 3 },
       { itemId: 'tea', quantity: 2 }
     ],
-    reward: { money: 500, items: [{ itemId: 'seed_peach', quantity: 3 }], description: '500文 + 桃种子×3' }
+    reward: {
+      money: 500,
+      items: [{ itemId: 'seed_peach', quantity: 3 }],
+      description: '500文 + 桃种子×3'
+    }
   },
   {
     id: 'summer_bundle',
@@ -990,7 +1027,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'lotus_root', quantity: 2 },
       { itemId: 'chili', quantity: 3 }
     ],
-    reward: { money: 800, items: [{ itemId: 'seed_lotus_seed', quantity: 2 }], description: '800文 + 莲子种子×2' }
+    reward: {
+      money: 800,
+      items: [{ itemId: 'seed_lotus_seed', quantity: 2 }],
+      description: '800文 + 莲子种子×2'
+    }
   },
   {
     id: 'autumn_bundle',
@@ -1002,7 +1043,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'jujube', quantity: 3 },
       { itemId: 'persimmon', quantity: 2 }
     ],
-    reward: { money: 800, items: [{ itemId: 'seed_snow_lotus', quantity: 1 }], description: '800文 + 雪莲种子×1' }
+    reward: {
+      money: 800,
+      items: [{ itemId: 'seed_snow_lotus', quantity: 1 }],
+      description: '800文 + 雪莲种子×1'
+    }
   },
   {
     id: 'winter_bundle',
@@ -1063,7 +1108,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'koi', quantity: 1 },
       { itemId: 'eel', quantity: 1 }
     ],
-    reward: { money: 2500, items: [{ itemId: 'iridium_ore', quantity: 3 }], description: '2500文 + 铱矿×3' }
+    reward: {
+      money: 2500,
+      items: [{ itemId: 'iridium_ore', quantity: 3 }],
+      description: '2500文 + 铱矿×3'
+    }
   },
   // 矿石与宝石
   {
@@ -1088,7 +1137,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'moonstone', quantity: 1 },
       { itemId: 'obsidian', quantity: 1 }
     ],
-    reward: { money: 3000, items: [{ itemId: 'dragon_jade', quantity: 1 }], description: '3000文 + 龙玉×1' }
+    reward: {
+      money: 3000,
+      items: [{ itemId: 'dragon_jade', quantity: 1 }],
+      description: '3000文 + 龙玉×1'
+    }
   },
   // 畜产品
   {
@@ -1213,7 +1266,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'gold_bar', quantity: 2 },
       { itemId: 'charcoal', quantity: 5 }
     ],
-    reward: { money: 2000, items: [{ itemId: 'iridium_bar', quantity: 1 }], description: '2000文 + 铱锭×1' }
+    reward: {
+      money: 2000,
+      items: [{ itemId: 'iridium_bar', quantity: 1 }],
+      description: '2000文 + 铱锭×1'
+    }
   },
   // 育种
   {
@@ -1275,7 +1332,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'ice_lotus', quantity: 1 },
       { itemId: 'golden_dragon', quantity: 1 }
     ],
-    reward: { money: 5000, items: [{ itemId: 'iridium_ore', quantity: 5 }], description: '5000文 + 铱矿×5' }
+    reward: {
+      money: 5000,
+      items: [{ itemId: 'iridium_ore', quantity: 5 }],
+      description: '5000文 + 铱矿×5'
+    }
   },
   {
     id: 'hybrid_legendary_bundle',
@@ -1287,7 +1348,11 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
       { itemId: 'jade_golden_melon', quantity: 1 },
       { itemId: 'moonlight_frost', quantity: 1 }
     ],
-    reward: { money: 8000, items: [{ itemId: 'prismatic_shard', quantity: 1 }], description: '8000文 + 棱彩碎片×1' }
+    reward: {
+      money: 8000,
+      items: [{ itemId: 'prismatic_shard', quantity: 1 }],
+      description: '8000文 + 棱彩碎片×1'
+    }
   }
 ]
 

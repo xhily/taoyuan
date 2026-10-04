@@ -26,7 +26,9 @@
 
         <!-- 介绍 + 每级加成 -->
         <div class="border border-accent/20 rounded-xs px-2 py-1.5 mb-2">
-          <p class="text-[10px] text-muted leading-relaxed">{{ SKILL_DESCS[skill.type] }}</p>
+          <p class="text-[10px] text-muted leading-relaxed">
+            {{ SKILL_DESCS[skill.type] }}
+          </p>
           <p class="text-[10px] text-muted mt-0.5">每级：体力消耗-1%，{{ SKILL_LEVEL_BONUS[skill.type] }}</p>
         </div>
 

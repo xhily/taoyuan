@@ -34,6 +34,7 @@ import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 import { useGameStore } from './useGameStore'
 import { useWalletStore } from './useWalletStore'
+import { useAnimalStore } from './useAnimalStore'
 import { getCombinedItemCount, removeCombinedItem } from '@/composables/useCombinedInventory'
 import { addLog } from '@/composables/useGameLog'
 import type { TexasSetup, TexasTierId, BuckshotSetup, HanhaiShopItemDef, TradeSlot, Quality } from '@/types'
@@ -73,7 +74,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     if (unlocked.value) return { success: false, message: '瀚海已经解锁。' }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(HANHAI_UNLOCK_COST)) {
-      return { success: false, message: `金钱不足（需要${HANHAI_UNLOCK_COST}文）。` }
+      return {
+        success: false,
+        message: `金钱不足（需要${HANHAI_UNLOCK_COST}文）。`
+      }
     }
     unlocked.value = true
     addLog('修通了前往瀚海的商路！新的冒险等待着你。')
@@ -111,7 +115,11 @@ export const useHanhaiStore = defineStore('hanhai', () => {
   }
 
   /** 使用藏宝图寻宝 */
-  const useTreasureMap = (): { success: boolean; message: string; rewards: { name: string; quantity: number }[] } => {
+  const useTreasureMap = (): {
+    success: boolean
+    message: string
+    rewards: { name: string; quantity: number }[]
+  } => {
     const inventoryStore = useInventoryStore()
     if (!inventoryStore.removeItem('hanhai_map')) {
       return { success: false, message: '没有藏宝图。', rewards: [] }
@@ -149,14 +157,37 @@ export const useHanhaiStore = defineStore('hanhai', () => {
   }
 
   /** 玩幸运轮盘 */
-  const playRoulette = (betTier: number): { success: boolean; message: string; multiplier: number; winnings: number } => {
-    if (!canBet.value) return { success: false, message: '今天的赌博次数已用完。', multiplier: 0, winnings: 0 }
+  const playRoulette = (
+    betTier: number
+  ): {
+    success: boolean
+    message: string
+    multiplier: number
+    winnings: number
+  } => {
+    if (!canBet.value)
+      return {
+        success: false,
+        message: '今天的赌博次数已用完。',
+        multiplier: 0,
+        winnings: 0
+      }
     if (!ROULETTE_BET_TIERS.includes(betTier as (typeof ROULETTE_BET_TIERS)[number])) {
-      return { success: false, message: '无效的投注金额。', multiplier: 0, winnings: 0 }
+      return {
+        success: false,
+        message: '无效的投注金额。',
+        multiplier: 0,
+        winnings: 0
+      }
     }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(betTier)) {
-      return { success: false, message: '金钱不足。', multiplier: 0, winnings: 0 }
+      return {
+        success: false,
+        message: '金钱不足。',
+        multiplier: 0,
+        winnings: 0
+      }
     }
     casinoBetsToday.value++
     const outcome = spinRoulette()
@@ -169,17 +200,44 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     } else {
       addLog(`轮盘停在了"${outcome.label}"！赢得${winnings}文！`)
     }
-    return { success: true, message: `轮盘停在了"${outcome.label}"`, multiplier: outcome.multiplier, winnings }
+    return {
+      success: true,
+      message: `轮盘停在了"${outcome.label}"`,
+      multiplier: outcome.multiplier,
+      winnings
+    }
   }
 
   /** 玩骰子（猜大小） */
   const playDice = (
     guessBig: boolean
-  ): { success: boolean; message: string; dice1: number; dice2: number; won: boolean; winnings: number } => {
-    if (!canBet.value) return { success: false, message: '今天的赌博次数已用完。', dice1: 0, dice2: 0, won: false, winnings: 0 }
+  ): {
+    success: boolean
+    message: string
+    dice1: number
+    dice2: number
+    won: boolean
+    winnings: number
+  } => {
+    if (!canBet.value)
+      return {
+        success: false,
+        message: '今天的赌博次数已用完。',
+        dice1: 0,
+        dice2: 0,
+        won: false,
+        winnings: 0
+      }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(DICE_BET_AMOUNT)) {
-      return { success: false, message: '金钱不足。', dice1: 0, dice2: 0, won: false, winnings: 0 }
+      return {
+        success: false,
+        message: '金钱不足。',
+        dice1: 0,
+        dice2: 0,
+        won: false,
+        winnings: 0
+      }
     }
     casinoBetsToday.value++
     const result = rollDice()
@@ -195,15 +253,43 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     } else {
       addLog(`骰子${result.dice1}+${result.dice2}=${result.total}（${resultText}），你猜${guessText}——输了${DICE_BET_AMOUNT}文。`)
     }
-    return { success: true, message: won ? '赢了！' : '输了…', dice1: result.dice1, dice2: result.dice2, won, winnings }
+    return {
+      success: true,
+      message: won ? '赢了！' : '输了…',
+      dice1: result.dice1,
+      dice2: result.dice2,
+      won,
+      winnings
+    }
   }
 
   /** 玩猜杯 */
-  const playCup = (guess: number): { success: boolean; message: string; correctCup: number; won: boolean; winnings: number } => {
-    if (!canBet.value) return { success: false, message: '今天的赌博次数已用完。', correctCup: 0, won: false, winnings: 0 }
+  const playCup = (
+    guess: number
+  ): {
+    success: boolean
+    message: string
+    correctCup: number
+    won: boolean
+    winnings: number
+  } => {
+    if (!canBet.value)
+      return {
+        success: false,
+        message: '今天的赌博次数已用完。',
+        correctCup: 0,
+        won: false,
+        winnings: 0
+      }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(CUP_BET_AMOUNT)) {
-      return { success: false, message: '金钱不足。', correctCup: 0, won: false, winnings: 0 }
+      return {
+        success: false,
+        message: '金钱不足。',
+        correctCup: 0,
+        won: false,
+        winnings: 0
+      }
     }
     casinoBetsToday.value++
     const result = playCupRound()
@@ -215,18 +301,48 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     } else {
       addLog(`猜杯猜错了，球在第${result.correctCup + 1}号杯下，损失了${CUP_BET_AMOUNT}文。`)
     }
-    return { success: true, message: won ? '猜中了！' : '猜错了…', correctCup: result.correctCup, won, winnings }
+    return {
+      success: true,
+      message: won ? '猜中了！' : '猜错了…',
+      correctCup: result.correctCup,
+      won,
+      winnings
+    }
   }
 
   /** 玩斗蛐蛐 */
   const playCricketFight = (
     cricketId: string
-  ): { success: boolean; message: string; playerPower: number; opponentPower: number; won: boolean; draw: boolean; winnings: number } => {
+  ): {
+    success: boolean
+    message: string
+    playerPower: number
+    opponentPower: number
+    won: boolean
+    draw: boolean
+    winnings: number
+  } => {
     if (!canBet.value)
-      return { success: false, message: '今天的赌博次数已用完。', playerPower: 0, opponentPower: 0, won: false, draw: false, winnings: 0 }
+      return {
+        success: false,
+        message: '今天的赌博次数已用完。',
+        playerPower: 0,
+        opponentPower: 0,
+        won: false,
+        draw: false,
+        winnings: 0
+      }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(CRICKET_BET_AMOUNT)) {
-      return { success: false, message: '金钱不足。', playerPower: 0, opponentPower: 0, won: false, draw: false, winnings: 0 }
+      return {
+        success: false,
+        message: '金钱不足。',
+        playerPower: 0,
+        opponentPower: 0,
+        won: false,
+        draw: false,
+        winnings: 0
+      }
     }
     casinoBetsToday.value++
     const result = fightCricket()
@@ -255,11 +371,32 @@ export const useHanhaiStore = defineStore('hanhai', () => {
   }
 
   /** 玩翻牌寻宝 */
-  const playCardFlip = (pick: number): { success: boolean; message: string; treasures: number[]; won: boolean; winnings: number } => {
-    if (!canBet.value) return { success: false, message: '今天的赌博次数已用完。', treasures: [], won: false, winnings: 0 }
+  const playCardFlip = (
+    pick: number
+  ): {
+    success: boolean
+    message: string
+    treasures: number[]
+    won: boolean
+    winnings: number
+  } => {
+    if (!canBet.value)
+      return {
+        success: false,
+        message: '今天的赌博次数已用完。',
+        treasures: [],
+        won: false,
+        winnings: 0
+      }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(CARD_BET_AMOUNT)) {
-      return { success: false, message: '金钱不足。', treasures: [], won: false, winnings: 0 }
+      return {
+        success: false,
+        message: '金钱不足。',
+        treasures: [],
+        won: false,
+        winnings: 0
+      }
     }
     casinoBetsToday.value++
     const result = dealCards()
@@ -271,7 +408,13 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     } else {
       addLog(`翻牌寻宝翻到了空牌，损失了${CARD_BET_AMOUNT}文。`)
     }
-    return { success: true, message: won ? '翻到宝了！' : '空牌…', treasures: result.treasures, won, winnings }
+    return {
+      success: true,
+      message: won ? '翻到宝了！' : '空牌…',
+      treasures: result.treasures,
+      won,
+      winnings
+    }
   }
 
   /** 开始瀚海扑克（扣入场费+抽水，发牌） */
@@ -280,7 +423,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     const tier = getTexasTier(tierId)
     const playerStore = usePlayerStore()
     if (playerStore.money < tier.minMoney) {
-      return { success: false, message: `需要至少持有${tier.minMoney}文才能入场。` }
+      return {
+        success: false,
+        message: `需要至少持有${tier.minMoney}文才能入场。`
+      }
     }
     const totalCost = tier.entryFee + tier.rake
     if (!playerStore.spendMoney(totalCost)) {
@@ -308,7 +454,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
   }
 
   /** 开始恶魔轮盘（下注+生成初始状态） */
-  const startBuckshot = (): { success: boolean; message: string } & Partial<BuckshotSetup> => {
+  const startBuckshot = (): {
+    success: boolean
+    message: string
+  } & Partial<BuckshotSetup> => {
     if (!canBet.value) return { success: false, message: '今天的赌博次数已用完。' }
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(BUCKSHOT_BET_AMOUNT)) {
@@ -378,7 +527,9 @@ export const useHanhaiStore = defineStore('hanhai', () => {
   }
 
   /** 每日通商结算：减少剩余天数，到期的发放积分 */
-  const dailyTradeUpdate = (): { completed: { itemId: string; points: number }[] } => {
+  const dailyTradeUpdate = (): {
+    completed: { itemId: string; points: number }[]
+  } => {
     const completed: { itemId: string; points: number }[] = []
     const remaining: TradeSlot[] = []
     for (const slot of tradeSlots.value) {
@@ -409,7 +560,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
       const count = getCombinedItemCount(mat.itemId)
       if (count < mat.quantity) {
         const itemDef = getItemById(mat.itemId)
-        return { success: false, message: `材料不足：${itemDef?.name ?? mat.itemId} 需要${mat.quantity}个。` }
+        return {
+          success: false,
+          message: `材料不足：${itemDef?.name ?? mat.itemId} 需要${mat.quantity}个。`
+        }
       }
     }
     // 扣除
@@ -430,7 +584,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     if (exchangeDef.weeklyLimit) {
       const weeklyCount = weeklyExchangePurchases.value[itemId] ?? 0
       if (weeklyCount >= exchangeDef.weeklyLimit) {
-        return { success: false, message: `${exchangeDef.name}本周兑换已达上限。` }
+        return {
+          success: false,
+          message: `${exchangeDef.name}本周兑换已达上限。`
+        }
       }
     }
     // 检查总限购
@@ -442,7 +599,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     }
     // 检查积分
     if (tradePoints.value < exchangeDef.pointsCost) {
-      return { success: false, message: `积分不足（需要${exchangeDef.pointsCost}积分）。` }
+      return {
+        success: false,
+        message: `积分不足（需要${exchangeDef.pointsCost}积分）。`
+      }
     }
     // 扣除积分
     tradePoints.value -= exchangeDef.pointsCost
@@ -458,7 +618,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
       const walletStore = useWalletStore()
       walletStore.unlock(itemId)
       addLog(`兑换了${exchangeDef.name}，已加入钱袋！`)
-      return { success: true, message: `兑换了${exchangeDef.name}，已加入钱袋！` }
+      return {
+        success: true,
+        message: `兑换了${exchangeDef.name}，已加入钱袋！`
+      }
     }
     // 香料礼包特殊处理：直接给5个西域香料
     if (itemId === 'trade_spice_bundle') {
@@ -473,6 +636,63 @@ export const useHanhaiStore = defineStore('hanhai', () => {
       addLog(`用${exchangeDef.pointsCost}积分兑换了${exchangeDef.name}，获得西域香料×5。`)
       return { success: true, message: '获得西域香料×5！' }
     }
+    // 马匹升级：把现有的马换成更好的品种
+    if (exchangeDef.isHorseUpgrade) {
+      const animalStore = useAnimalStore()
+      const result = animalStore.setHorseBreed(exchangeDef.isHorseUpgrade)
+      if (!result.success) {
+        // 条件不满足则退还积分与次数
+        tradePoints.value += exchangeDef.pointsCost
+        if (exchangeDef.weeklyLimit) {
+          weeklyExchangePurchases.value[itemId] = (weeklyExchangePurchases.value[itemId] ?? 0) - 1
+        }
+        if (exchangeDef.totalLimit) {
+          totalExchangePurchases.value[itemId] = (totalExchangePurchases.value[itemId] ?? 0) - 1
+        }
+        return { success: false, message: result.message }
+      }
+      addLog(result.message)
+      return { success: true, message: result.message }
+    }
+
+    // 装备类兑换品：直接进装备栏。
+    // 这些物品在 weapons/rings/hats/shoes 里都有完整定义，塞进背包格子既占位又无法装备。
+    if (exchangeDef.equipType) {
+      const inventoryStore = useInventoryStore()
+      const added = (() => {
+        switch (exchangeDef.equipType) {
+          case 'weapon':
+            return inventoryStore.addWeapon(itemId)
+          case 'ring':
+            return inventoryStore.addRing(itemId)
+          case 'hat':
+            return inventoryStore.addHat(itemId)
+          case 'shoe':
+            return inventoryStore.addShoe(itemId)
+          default:
+            return false
+        }
+      })()
+
+      if (!added) {
+        // 兑换失败则退还积分与次数
+        tradePoints.value += exchangeDef.pointsCost
+        if (exchangeDef.weeklyLimit) {
+          weeklyExchangePurchases.value[itemId] = (weeklyExchangePurchases.value[itemId] ?? 0) - 1
+        }
+        if (exchangeDef.totalLimit) {
+          totalExchangePurchases.value[itemId] = (totalExchangePurchases.value[itemId] ?? 0) - 1
+        }
+        return { success: false, message: '兑换失败，请稍后再试。' }
+      }
+
+      addLog(`用${exchangeDef.pointsCost}积分兑换了${exchangeDef.name}，已放入装备栏。`)
+      return {
+        success: true,
+        message: `兑换了${exchangeDef.name}，可在背包的「装备」页签中装备。`
+      }
+    }
+
     // 普通物品加入背包
     const inventoryStore = useInventoryStore()
     if (!inventoryStore.addItem(itemId, 1)) {

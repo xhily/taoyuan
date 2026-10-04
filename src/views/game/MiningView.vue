@@ -1,5 +1,6 @@
 <template>
   <div>
+    <VillagerPresence spot="mining" />
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-accent text-sm">
         <Mountain :size="14" class="inline" />
@@ -7,7 +8,9 @@
       </h3>
       <Button class="py-0 px-1" :icon="Map" @click="showMapModal = true" />
     </div>
-    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">{{ tutorialHint }}</p>
+    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
+      {{ tutorialHint }}
+    </p>
 
     <!-- 骷髅矿穴 -->
     <div v-if="miningStore.isSkullCavernUnlocked()" class="border border-accent/20 rounded-xs p-3 mb-4">
@@ -72,14 +75,24 @@
 
     <!-- 进入矿洞 -->
     <div
-      class="border border-accent/20 rounded-xs px-3 py-2 mb-4 flex items-center justify-between cursor-pointer hover:bg-accent/5"
+      class="border border-accent/20 rounded-xs px-3 py-2 mb-4 cursor-pointer hover:bg-accent/5"
       @click="hasElevator ? (showElevatorModal = true) : handleEnterMine(undefined)"
     >
-      <div class="flex items-center space-x-1.5">
-        <Pickaxe :size="14" class="text-accent" />
-        <span class="text-sm text-accent">探索</span>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-1.5">
+          <Pickaxe :size="14" class="text-accent" />
+          <span class="text-sm text-accent">探索</span>
+        </div>
+        <span class="text-xs text-muted">第{{ miningStore.safePointFloor + 1 }}层</span>
       </div>
-      <span class="text-xs text-muted">第{{ miningStore.safePointFloor + 1 }}层</span>
+      <div class="flex items-center justify-between mt-1">
+        <span class="text-[10px] text-muted">BOSS 层：每 20 层一处（第 20/40/60/80/100/120 层）</span>
+        <span v-if="nextBossFloor" class="text-[10px] text-danger">
+          <Skull :size="10" class="inline" />
+          下一个 BOSS：第{{ nextBossFloor }}层
+        </span>
+        <span v-else class="text-[10px] text-success">BOSS 已全部击败</span>
+      </div>
     </div>
 
     <!-- 已击败BOSS -->
@@ -137,6 +150,13 @@
                   <Lock :size="12" class="inline" />
                 </span>
               </div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-[10px]" :class="zone.bossDefeated ? 'text-muted/50' : 'text-danger'">
+                  <Skull :size="10" class="inline" />
+                  BOSS 第{{ zone.bossFloor }}层
+                </span>
+                <span class="text-[10px] text-muted/50">{{ zone.bossDefeated ? '已击败（再战为弱化版）' : '需击败才能继续下行' }}</span>
+              </div>
               <div class="bg-bg rounded-xs h-1.5">
                 <div class="h-1.5 rounded-xs transition-all" :class="zone.barColor" :style="{ width: zone.progress + '%' }" />
               </div>
@@ -173,12 +193,22 @@
             <span class="text-xs text-muted">第{{ miningStore.safePointFloor + 1 }}层</span>
           </div>
 
-          <!-- 电梯楼层（按区域分组网格） -->
+          <!-- 电梯楼层（按区域分组网格，BOSS 层标红） -->
           <div v-if="elevatorZones.length > 0" class="max-h-48 overflow-y-auto mb-2">
+            <p class="text-[10px] text-muted/50 mb-1">
+              <Skull :size="10" class="inline text-danger" />
+              标红为 BOSS 层
+            </p>
             <div v-for="zone in elevatorZones" :key="zone.name" class="mb-2 last:mb-0">
               <p class="text-[10px] text-muted mb-1">{{ zone.name }}</p>
               <div class="flex flex-wrap space-x-1">
-                <Button v-for="sp in zone.floors" :key="sp" class="py-0.5 px-0 min-w-9 justify-center" @click="handleEnterMine(sp)">
+                <Button
+                  v-for="sp in zone.floors"
+                  :key="sp"
+                  class="py-0.5 px-0 min-w-9 justify-center"
+                  :class="isBossFloor(sp + 1) ? '!border-danger/50 !text-danger' : ''"
+                  @click="handleEnterMine(sp)"
+                >
                   {{ sp + 1 }}
                 </Button>
               </div>
@@ -234,13 +264,42 @@
             <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="showLeaveConfirm = true" />
           </div>
 
-          <!-- 武器信息 -->
-          <div class="text-xs text-muted mb-2 border-b border-accent/20 pb-2 space-y-0.5">
-            <p>
-              <Swords :size="12" class="inline" />
-              {{ weaponDisplayName }}（{{ weaponTypeName }} · 攻击 {{ weaponAttack }} · 暴击 {{ critRateDisplay }}）
+          <!-- 状态条：下矿时 HP 与体力必须随时可见 -->
+          <div class="border-b border-accent/20 pb-2 mb-2 space-y-1">
+            <div class="flex items-center">
+              <span class="text-[10px] text-muted w-6 flex-shrink-0">HP</span>
+              <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10 mx-1.5">
+                <div
+                  class="h-full rounded-xs transition-all"
+                  :class="playerStore.getIsLowHp() ? 'bg-danger' : 'bg-success'"
+                  :style="{ width: playerStore.getHpPercent() + '%' }"
+                />
+              </div>
+              <span class="text-[10px] w-14 text-right flex-shrink-0" :class="playerStore.getIsLowHp() ? 'text-danger' : 'text-muted'">
+                {{ playerStore.hp }}/{{ playerStore.getMaxHp() }}
+              </span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-[10px] text-muted w-6 flex-shrink-0">体力</span>
+              <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10 mx-1.5">
+                <div
+                  class="h-full rounded-xs transition-all"
+                  :class="staminaBarClass"
+                  :style="{ width: playerStore.staminaPercent + '%' }"
+                />
+              </div>
+              <span class="text-[10px] w-14 text-right flex-shrink-0" :class="staminaTextClass">
+                {{ playerStore.stamina }}/{{ playerStore.maxStamina }}
+              </span>
+            </div>
+            <p v-if="staminaHint" class="text-[10px] text-danger">
+              {{ staminaHint }}
             </p>
-            <p v-if="weaponEnchantName" class="text-success">附魔：{{ weaponEnchantName }}</p>
+            <p class="text-[10px] text-muted">
+              <Swords :size="10" class="inline" />
+              {{ weaponDisplayName }}（{{ weaponTypeName }} · 攻击 {{ weaponAttack }} · 暴击 {{ critRateDisplay }}）
+              <span v-if="weaponEnchantName" class="text-success">· {{ weaponEnchantName }}</span>
+            </p>
           </div>
 
           <!-- 感染层提示 -->
@@ -317,6 +376,10 @@
               <span class="text-xs text-success">
                 <ChevronDown :size="12" class="inline" />
                 下一层
+                <span v-if="nextFloorIsBoss" class="text-danger ml-1">
+                  <Skull :size="10" class="inline" />
+                  下层是 BOSS 层
+                </span>
               </span>
               <span v-if="!miningStore.stairsUsable" class="text-xs text-muted">楼梯不可用</span>
             </div>
@@ -331,9 +394,11 @@
             </div>
           </div>
 
-          <!-- 探索日志 -->
-          <div class="text-xs text-muted space-y-0.5 max-h-24 overflow-y-auto">
-            <p v-for="(msg, i) in recentLog" :key="i" :class="{ 'text-text': i === recentLog.length - 1 }">{{ msg }}</p>
+          <!-- 探索日志（行数可在设置中调整，0 行则完全隐藏） -->
+          <div v-if="settingsStore.mineLogLines > 0" class="text-xs text-muted space-y-0.5 max-h-24 overflow-y-auto">
+            <p v-for="(msg, i) in recentLog" :key="i" :class="{ 'text-text': i === recentLog.length - 1 }">
+              {{ msg }}
+            </p>
           </div>
         </div>
       </div>
@@ -732,9 +797,13 @@
           <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showEquipPropertyModal = false">
             <X :size="14" />
           </button>
-          <p class="text-[10px] text-muted mb-0.5">{{ equipPropertyInfo.category }}</p>
+          <p class="text-[10px] text-muted mb-0.5">
+            {{ equipPropertyInfo.category }}
+          </p>
           <p class="text-sm text-accent mb-1">{{ equipPropertyInfo.name }}</p>
-          <p class="text-xs text-muted mb-2">{{ equipPropertyInfo.description }}</p>
+          <p class="text-xs text-muted mb-2">
+            {{ equipPropertyInfo.description }}
+          </p>
           <div v-if="equipPropertyInfo.effects.length > 0" class="flex flex-col space-y-1">
             <div
               v-for="(eff, i) in equipPropertyInfo.effects"
@@ -752,6 +821,7 @@
 </template>
 
 <script setup lang="ts">
+  import VillagerPresence from '@/components/game/VillagerPresence.vue'
   import { ref, computed } from 'vue'
   import {
     Mountain,
@@ -778,11 +848,14 @@
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useTutorialStore } from '@/stores/useTutorialStore'
+  import { useSettingsStore } from '@/stores/useSettingsStore'
   import { ZONE_NAMES, getFloor, BOSS_MONSTERS } from '@/data'
+  import { MAX_MINE_FLOOR } from '@/data/mine'
   import { getWeaponById, getEnchantmentById, getWeaponDisplayName, WEAPON_TYPE_NAMES } from '@/data/weapons'
+  import { formatEnhanceName } from '@/data/enhance'
   import { getRingById, getHatById, getShoeById } from '@/data'
   import type { EquipmentEffectType } from '@/types'
-  import { ACTION_TIME_COSTS } from '@/data/timeConstants'
+  import { ACTION_TIME_COSTS, STAMINA_WARN_RATIO, STAMINA_CRITICAL_RATIO } from '@/data/timeConstants'
   import { BOMBS } from '@/data/processing'
   import { getItemById } from '@/data/items'
   import type { CombatAction, MineTile } from '@/types'
@@ -798,6 +871,7 @@
   const skillStore = useSkillStore()
   const achievementStore = useAchievementStore()
   const tutorialStore = useTutorialStore()
+  const settingsStore = useSettingsStore()
   const { startBattleBgm, resumeNormalBgm } = useAudio()
 
   const tutorialHint = computed(() => {
@@ -888,14 +962,41 @@
     }
   }
 
-  const recentLog = computed(() => exploreLog.value.slice(-8))
+  const recentLog = computed(() => exploreLog.value.slice(-settingsStore.mineLogLines))
+
+  /** 体力条颜色：低于 15% 转红，低于 30% 转琥珀 */
+  const staminaBarClass = computed(() => {
+    const pct = playerStore.staminaPercent
+    if (pct <= STAMINA_CRITICAL_RATIO * 100) return 'bg-danger'
+    if (pct <= STAMINA_WARN_RATIO * 100) return 'bg-accent'
+    return 'bg-success'
+  })
+
+  const staminaTextClass = computed(() => {
+    const pct = playerStore.staminaPercent
+    if (pct <= STAMINA_CRITICAL_RATIO * 100) return 'text-danger'
+    if (pct <= STAMINA_WARN_RATIO * 100) return 'text-accent'
+    return 'text-muted'
+  })
+
+  /** 体力偏低时的行动建议 */
+  const staminaHint = computed(() => {
+    const pct = playerStore.staminaPercent
+    if (playerStore.stamina <= 0) return '体力已耗尽，再行动就会当场累倒并损失铜钱。'
+    if (pct <= STAMINA_CRITICAL_RATIO * 100) return '体力告急，建议吃点东西或撤出矿洞。'
+    return null
+  })
 
   const activeFloorNum = computed(() => {
     return miningStore.isInSkullCavern ? miningStore.skullCavernFloor : miningStore.currentFloor
   })
 
   const availableBombs = computed(() => {
-    return BOMBS.map(b => ({ id: b.id, name: b.name, count: inventoryStore.getItemCount(b.id) })).filter(b => b.count > 0)
+    return BOMBS.map(b => ({
+      id: b.id,
+      name: b.name,
+      count: inventoryStore.getItemCount(b.id)
+    })).filter(b => b.count > 0)
   })
 
   /** 战斗中可用道具列表 */
@@ -905,32 +1006,57 @@
     // 公会徽章
     const badgeCount = inventoryStore.getItemCount('guild_badge')
     if (badgeCount > 0) {
-      items.push({ itemId: 'guild_badge', name: '公会徽章', desc: '攻击力永久+3', count: badgeCount })
+      items.push({
+        itemId: 'guild_badge',
+        name: '公会徽章',
+        desc: '攻击力永久+3',
+        count: badgeCount
+      })
     }
 
     // 生命护符
     const talismanCount = inventoryStore.getItemCount('life_talisman')
     if (talismanCount > 0) {
-      items.push({ itemId: 'life_talisman', name: '生命护符', desc: '最大生命值永久+15', count: talismanCount })
+      items.push({
+        itemId: 'life_talisman',
+        name: '生命护符',
+        desc: '最大生命值永久+15',
+        count: talismanCount
+      })
     }
 
     // 幸运铜钱
     const coinCount = inventoryStore.getItemCount('lucky_coin')
     if (coinCount > 0) {
-      items.push({ itemId: 'lucky_coin', name: '幸运铜钱', desc: '掉落率永久+5%', count: coinCount })
+      items.push({
+        itemId: 'lucky_coin',
+        name: '幸运铜钱',
+        desc: '掉落率永久+5%',
+        count: coinCount
+      })
     }
 
     // 守护符
     const defenseCharmCount = inventoryStore.getItemCount('defense_charm')
     if (defenseCharmCount > 0) {
-      items.push({ itemId: 'defense_charm', name: '守护符', desc: '防御永久+3%', count: defenseCharmCount })
+      items.push({
+        itemId: 'defense_charm',
+        name: '守护符',
+        desc: '防御永久+3%',
+        count: defenseCharmCount
+      })
     }
 
     // 猎魔符
     if (!miningStore.slayerCharmActive) {
       const charmCount = inventoryStore.getItemCount('slayer_charm')
       if (charmCount > 0) {
-        items.push({ itemId: 'slayer_charm', name: '猎魔符', desc: '掉落率+20%（本次探索）', count: charmCount })
+        items.push({
+          itemId: 'slayer_charm',
+          name: '猎魔符',
+          desc: '掉落率+20%（本次探索）',
+          count: charmCount
+        })
       }
     }
 
@@ -973,8 +1099,20 @@
       { id: 'frost', name: '冰窟·冰霜暗河', start: 21, end: 40, bossFloor: 40 },
       { id: 'lava', name: '熔岩层·地火暗涌', start: 41, end: 60, bossFloor: 60 },
       { id: 'crystal', name: '晶窟·水晶迷宫', start: 61, end: 80, bossFloor: 80 },
-      { id: 'shadow', name: '幽境·暗影裂隙', start: 81, end: 100, bossFloor: 100 },
-      { id: 'abyss', name: '深渊·无底深渊', start: 101, end: 120, bossFloor: 120 }
+      {
+        id: 'shadow',
+        name: '幽境·暗影裂隙',
+        start: 81,
+        end: 100,
+        bossFloor: 100
+      },
+      {
+        id: 'abyss',
+        name: '深渊·无底深渊',
+        start: 101,
+        end: 120,
+        bossFloor: 120
+      }
     ]
     const sp = miningStore.safePointFloor
     return zones.map(z => {
@@ -995,6 +1133,23 @@
     })
   })
 
+  /** 主矿洞 BOSS 层：每 20 层一处 */
+  const isBossFloor = (floor: number): boolean => floor > 0 && floor % 20 === 0 && floor <= MAX_MINE_FLOOR
+
+  /** 下一个尚未击败 BOSS 的楼层（全部击败则为 null） */
+  const nextBossFloor = computed((): number | null => {
+    for (const zone of mineZones.value) {
+      if (!zone.bossDefeated) return zone.bossFloor
+    }
+    return null
+  })
+
+  /** 当前探索层的下一层是否为 BOSS 层 */
+  const nextFloorIsBoss = computed(() => {
+    if (miningStore.isInSkullCavern) return (miningStore.skullCavernFloor + 1) % 25 === 0
+    return isBossFloor(miningStore.currentFloor + 1)
+  })
+
   /** 当前层是否为特殊楼层 */
   const currentFloorSpecial = computed(() => {
     const floor = miningStore.getActiveFloorData()
@@ -1012,7 +1167,7 @@
   /** 武器信息 */
   const weaponDisplayName = computed(() => {
     const owned = inventoryStore.getEquippedWeapon()
-    return getWeaponDisplayName(owned.defId, owned.enchantmentId)
+    return formatEnhanceName(getWeaponDisplayName(owned.defId, owned.enchantmentId), owned.enhance)
   })
   const weaponTypeName = computed(() => {
     const owned = inventoryStore.getEquippedWeapon()
@@ -1438,7 +1593,10 @@
         category: '戒指',
         name: def.name,
         description: def.description,
-        effects: def.effects.map(e => ({ label: EFFECT_NAMES[e.type], value: fmtEffect(e) }))
+        effects: def.effects.map(e => ({
+          label: EFFECT_NAMES[e.type],
+          value: fmtEffect(e)
+        }))
       }
     } else if (type === 'hat') {
       const def = getHatById(defId)
@@ -1447,7 +1605,10 @@
         category: '帽子',
         name: def.name,
         description: def.description,
-        effects: def.effects.map(e => ({ label: EFFECT_NAMES[e.type], value: fmtEffect(e) }))
+        effects: def.effects.map(e => ({
+          label: EFFECT_NAMES[e.type],
+          value: fmtEffect(e)
+        }))
       }
     } else {
       const def = getShoeById(defId)
@@ -1456,7 +1617,10 @@
         category: '鞋子',
         name: def.name,
         description: def.description,
-        effects: def.effects.map(e => ({ label: EFFECT_NAMES[e.type], value: fmtEffect(e) }))
+        effects: def.effects.map(e => ({
+          label: EFFECT_NAMES[e.type],
+          value: fmtEffect(e)
+        }))
       }
     }
     showEquipPropertyModal.value = true

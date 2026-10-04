@@ -5,7 +5,7 @@ import { isShopOpen, TAB_TO_LOCATION_GROUP } from '@/data/timeConstants'
 import { addLog, showFloat } from './useGameLog'
 import { handleEndDay } from './useEndDay'
 import { sfxClick, useAudio } from './useAudio'
-import { useGameClock } from './useGameClock'
+import { setClockBlocker } from './useGameClock'
 import { useTutorialStore } from '@/stores/useTutorialStore'
 import {
   Wheat,
@@ -31,7 +31,8 @@ import {
   Landmark,
   Swords,
   Tent,
-  Waves
+  Waves,
+  Handshake
 } from 'lucide-vue-next'
 import { useNpcStore } from '@/stores/useNpcStore'
 
@@ -59,16 +60,28 @@ export type PanelKey =
   | 'hanhai'
   | 'fishpond'
   | 'cottage'
+  | 'trade'
 
-export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: () => Component }[] = [
+export const TABS: {
+  key: PanelKey
+  label: string
+  icon: Component
+  getIcon?: () => Component
+}[] = [
   { key: 'farm', label: '农场', icon: Wheat },
   { key: 'animal', label: '牧场', icon: Egg },
-  { key: 'cottage', label: '小屋', icon: Home, getIcon: () => (useNpcStore().getSpouse() ? Heart : Home) },
+  {
+    key: 'cottage',
+    label: '小屋',
+    icon: Home,
+    getIcon: () => (useNpcStore().getSpouse() ? Heart : Home)
+  },
   { key: 'home', label: '设施', icon: Building },
   { key: 'breeding', label: '育种', icon: FlaskConical },
   { key: 'fishpond', label: '鱼塘', icon: Waves },
   { key: 'village', label: '桃源村', icon: Users },
   { key: 'shop', label: '商圈', icon: Store },
+  { key: 'trade', label: '商会', icon: Handshake },
   { key: 'forage', label: '竹林', icon: TreePine },
   { key: 'fishing', label: '清溪', icon: Fish },
   { key: 'mining', label: '矿洞', icon: Pickaxe },
@@ -94,9 +107,6 @@ export const navigateToPanel = (panelKey: PanelKey) => {
   if (gameStore.isPastBedtime) {
     addLog('已经凌晨2点了，你必须休息。')
     handleEndDay()
-    // 确保新一天时钟恢复运转
-    const { resumeClock: resumeAfterEnd } = useGameClock()
-    resumeAfterEnd()
     return
   }
 
@@ -122,14 +132,9 @@ export const navigateToPanel = (panelKey: PanelKey) => {
   void router.push({ name: panelKey })
   useTutorialStore().markPanelVisited(panelKey)
 
-  // UI 面板（无地点）暂停时钟，游戏面板恢复
-  const { pauseClock, resumeClock } = useGameClock()
+  // 纯 UI 面板（无对应地点）暂停时钟，回到游戏面板时解除
   const targetGroup = TAB_TO_LOCATION_GROUP[panelKey]
-  if (targetGroup === null || targetGroup === undefined) {
-    pauseClock()
-  } else {
-    resumeClock()
-  }
+  setClockBlocker('panel', targetGroup === null || targetGroup === undefined)
 }
 
 export const useNavigation = () => {

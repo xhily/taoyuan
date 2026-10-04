@@ -1,10 +1,13 @@
 <template>
   <div>
+    <VillagerPresence spot="fishing" />
     <h3 class="text-accent text-sm mb-3">
       <Fish :size="14" class="inline" />
       {{ currentLocationName }}钓鱼
     </h3>
-    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">{{ tutorialHint }}</p>
+    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
+      {{ tutorialHint }}
+    </p>
 
     <!-- 钓鱼地点 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-4">
@@ -81,10 +84,13 @@
       >
         <span class="text-xs">
           <Target :size="12" class="inline" />
-          抛竿
+          {{ settingsStore.autoFishing ? '一键抛竿' : '抛竿' }}
         </span>
         <span class="text-xs text-muted">消耗体力 · {{ fishTimeLabel }}</span>
       </div>
+      <p v-if="settingsStore.autoFishing" class="text-[10px] text-muted/50 mt-1">
+        一键钓鱼已开启：抛竿直接出结果，不进小游戏。可在设置中关闭。
+      </p>
     </div>
 
     <!-- 钓鱼结果 -->
@@ -373,7 +379,9 @@
           <button class="absolute top-2 right-2 text-muted hover:text-text" @click="selectedFish = null">
             <X :size="14" />
           </button>
-          <p class="text-sm mb-2" :class="DIFFICULTY_COLORS[selectedFish.difficulty]">{{ selectedFish.name }}</p>
+          <p class="text-sm mb-2" :class="DIFFICULTY_COLORS[selectedFish.difficulty]">
+            {{ selectedFish.name }}
+          </p>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs text-muted">{{ selectedFish.description }}</p>
@@ -406,6 +414,7 @@
 </template>
 
 <script setup lang="ts">
+  import VillagerPresence from '@/components/game/VillagerPresence.vue'
   import { ref, computed } from 'vue'
   import { Fish, X, Target, MapPin, Box, CircleDot } from 'lucide-vue-next'
   import { useAchievementStore } from '@/stores/useAchievementStore'
@@ -414,10 +423,11 @@
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useSkillStore } from '@/stores/useSkillStore'
+  import { useSettingsStore } from '@/stores/useSettingsStore'
   import { useTutorialStore } from '@/stores/useTutorialStore'
   import { getBaitById, getTackleById } from '@/data/processing'
   import { FISHING_LOCATIONS } from '@/data/fish'
-  import type { BaitType, TackleType, FishingLocation, FishDef, MiniGameParams, MiniGameResult, Quality } from '@/types'
+  import type { BaitType, TackleType, FishingLocation, FishDef, MiniGameParams, MiniGameRating, MiniGameResult, Quality } from '@/types'
   import { ACTION_TIME_COSTS, TOOL_TIME_SAVINGS, SKILL_TIME_REDUCTION_PER_LEVEL, MIN_ACTION_MINUTES } from '@/data/timeConstants'
   import { sfxFishCatch, sfxLineBroken, sfxClick } from '@/composables/useAudio'
   import { addLog } from '@/composables/useGameLog'
@@ -430,12 +440,17 @@
   const inventoryStore = useInventoryStore()
   const playerStore = usePlayerStore()
   const skillStore = useSkillStore()
+  const settingsStore = useSettingsStore()
   const achievementStore = useAchievementStore()
   const tutorialStore = useTutorialStore()
 
   const tutorialHint = computed(() => {
     if (!tutorialStore.enabled || gameStore.year > 1) return null
-    if (achievementStore.stats.totalFishCaught === 0) return '选择一个钓点后点击「开始钓鱼」。鱼上钩后需要完成小游戏来捕获。'
+    if (achievementStore.stats.totalFishCaught === 0) {
+      return settingsStore.autoFishing
+        ? '选择一个钓点后点击「一键抛竿」，鱼上钩后会自动收线出结果。'
+        : '选择一个钓点后点击「抛竿」。鱼上钩后需要完成收线小游戏来捕获；嫌麻烦可在设置里开启一键钓鱼。'
+    }
     return null
   })
 
@@ -495,7 +510,12 @@
 
   const rodTierName = computed(() => {
     const tier = inventoryStore.getTool?.('fishingRod')?.tier ?? 'basic'
-    const names: Record<string, string> = { basic: '竹竿', iron: '铁竿', steel: '钢竿', iridium: '铱金竿' }
+    const names: Record<string, string> = {
+      basic: '竹竿',
+      iron: '铁竿',
+      steel: '钢竿',
+      iridium: '铱金竿'
+    }
     return names[tier] ?? tier
   })
 
@@ -506,16 +526,22 @@
 
   const ALL_BAIT_TYPES: BaitType[] = ['standard_bait', 'wild_bait', 'magic_bait', 'deluxe_bait', 'targeted_bait']
   const availableBaits = computed(() => {
-    return ALL_BAIT_TYPES.map(id => ({ id, name: getBaitById(id)?.name ?? id, count: inventoryStore.getItemCount(id) })).filter(
-      b => b.count > 0
-    )
+    return ALL_BAIT_TYPES.map(id => ({
+      id,
+      name: getBaitById(id)?.name ?? id,
+      count: inventoryStore.getItemCount(id)
+    })).filter(b => b.count > 0)
   })
 
   const availableTackles = computed(() => {
     const tackleTypes: TackleType[] = ['spinner', 'trap_bobber', 'cork_bobber', 'quality_bobber', 'lead_bobber']
     if (!canEquipTackle.value) return []
     return tackleTypes
-      .map(id => ({ id, name: getTackleById(id)?.name ?? id, count: inventoryStore.getItemCount(id) }))
+      .map(id => ({
+        id,
+        name: getTackleById(id)?.name ?? id,
+        count: inventoryStore.getItemCount(id)
+      }))
       .filter(t => t.count > 0)
   })
 
@@ -526,7 +552,12 @@
     for (const loc of FISHING_LOCATIONS) {
       const info = fishingStore.crabPotsByLocation[loc.id as FishingLocation]
       if (info) {
-        result.push({ id: loc.id, name: loc.name, total: info.total, baited: info.baited })
+        result.push({
+          id: loc.id,
+          name: loc.name,
+          total: info.total,
+          baited: info.baited
+        })
       }
     }
     return result
@@ -553,7 +584,12 @@
     legendary: 'text-accent'
   }
 
-  const SEASON_LABEL: Record<string, string> = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' }
+  const SEASON_LABEL: Record<string, string> = {
+    spring: '春',
+    summer: '夏',
+    autumn: '秋',
+    winter: '冬'
+  }
   const WEATHER_LABEL: Record<string, string> = {
     any: '任意',
     sunny: '晴',
@@ -623,6 +659,13 @@
       if (result.junk) {
         // 垃圾直接入包，不进入小游戏
         lastResult.value = result.message
+      } else if (settingsStore.autoFishing) {
+        // 一键钓鱼：不开小游戏，直接掷评级出结果
+        addLog(result.message)
+        const auto = fishingStore.rollAutoFishingRating()
+        addLog(`自动收线（成功率${Math.round(auto.successChance * 100)}%）：${RATING_NAMES[auto.rating]}`)
+        resolveCatch(auto.rating)
+        return
       } else {
         miniGameParams.value = fishingStore.calculateMiniGameParams()
         miniGameCompleted.value = false
@@ -650,37 +693,39 @@
     supreme: 'text-quality-supreme'
   }
 
+  const RATING_NAMES: Record<MiniGameRating, string> = {
+    perfect: '完美',
+    excellent: '优秀',
+    good: '良好',
+    poor: '失败'
+  }
+
+  /** 按评级结算这一竿：入包、经验、宝箱、结果弹窗。小游戏和一键钓鱼共用。 */
+  const resolveCatch = (rating: MiniGameRating) => {
+    const catchData = fishingStore.completeFishing(rating)
+    if (!catchData) return
+    addLog(catchData.message)
+    lastResult.value = catchData.message
+    if (catchData.success) sfxFishCatch()
+    else sfxLineBroken()
+
+    catchResult.value = {
+      fishName: catchData.fishName ?? '',
+      fishId: catchData.fishId,
+      difficulty: catchData.difficulty,
+      sellPrice: catchData.sellPrice,
+      description: catchData.description,
+      quality: catchData.quality,
+      quantity: catchData.quantity,
+      success: catchData.success,
+      message: catchData.message
+    }
+  }
+
   const handleMiniGameComplete = (result: MiniGameResult) => {
     miniGameCompleted.value = true
-
-    const ratingNames: Record<string, string> = {
-      perfect: '完美',
-      excellent: '优秀',
-      good: '良好',
-      poor: '失败'
-    }
-    addLog(`小游戏评级：${ratingNames[result.rating]}！`)
-
-    const catchData = fishingStore.completeFishing(result.rating)
-    if (catchData) {
-      addLog(catchData.message)
-      lastResult.value = catchData.message
-      if (catchData.success) sfxFishCatch()
-      else sfxLineBroken()
-
-      // 显示结果弹窗
-      catchResult.value = {
-        fishName: catchData.fishName ?? '',
-        fishId: catchData.fishId,
-        difficulty: catchData.difficulty,
-        sellPrice: catchData.sellPrice,
-        description: catchData.description,
-        quality: catchData.quality,
-        quantity: catchData.quantity,
-        success: catchData.success,
-        message: catchData.message
-      }
-    }
+    addLog(`小游戏评级：${RATING_NAMES[result.rating]}！`)
+    resolveCatch(result.rating)
 
     showFishingModal.value = false
     showCloseConfirm.value = false
@@ -794,7 +839,8 @@
 
     inventoryStore.addItem(itemId, qty)
     achievementStore.discoverItem(itemId)
-    skillStore.addExp('mining', 5)
+    // 淘金无风险、不耗矿镐，经验低于下矿是合理的
+    skillStore.addExp('mining', 3)
     panResult.value = `淘到了${name}！(-${cost}体力)`
     addLog(`淘金获得了${name}。(-${cost}体力)`)
 

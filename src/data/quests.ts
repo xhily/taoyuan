@@ -7,16 +7,86 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
     type: 'delivery',
     targets: [
       // 常见作物 — 混合季节
-      { itemId: 'cabbage', name: '青菜', minQty: 2, maxQty: 5, seasons: ['spring'], unitPrice: 35 },
-      { itemId: 'radish', name: '萝卜', minQty: 2, maxQty: 4, seasons: ['spring'], unitPrice: 55 },
-      { itemId: 'potato', name: '土豆', minQty: 2, maxQty: 4, seasons: ['spring'], unitPrice: 50 },
-      { itemId: 'rice', name: '稻米', minQty: 2, maxQty: 5, seasons: ['summer'], unitPrice: 40 },
-      { itemId: 'watermelon', name: '西瓜', minQty: 1, maxQty: 3, seasons: ['summer'], unitPrice: 80 },
-      { itemId: 'chili', name: '辣椒', minQty: 2, maxQty: 4, seasons: ['summer'], unitPrice: 45 },
-      { itemId: 'pumpkin', name: '南瓜', minQty: 1, maxQty: 3, seasons: ['autumn'], unitPrice: 100 },
-      { itemId: 'sweet_potato', name: '红薯', minQty: 2, maxQty: 4, seasons: ['autumn'], unitPrice: 60 },
-      { itemId: 'winter_wheat', name: '冬小麦', minQty: 2, maxQty: 5, seasons: ['winter'], unitPrice: 45 },
-      { itemId: 'garlic', name: '大蒜', minQty: 2, maxQty: 4, seasons: ['winter'], unitPrice: 50 }
+      {
+        itemId: 'cabbage',
+        name: '青菜',
+        minQty: 2,
+        maxQty: 5,
+        seasons: ['spring'],
+        unitPrice: 35
+      },
+      {
+        itemId: 'radish',
+        name: '萝卜',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['spring'],
+        unitPrice: 55
+      },
+      {
+        itemId: 'potato',
+        name: '土豆',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['spring'],
+        unitPrice: 50
+      },
+      {
+        itemId: 'rice',
+        name: '稻米',
+        minQty: 2,
+        maxQty: 5,
+        seasons: ['summer'],
+        unitPrice: 40
+      },
+      {
+        itemId: 'watermelon',
+        name: '西瓜',
+        minQty: 1,
+        maxQty: 3,
+        seasons: ['summer'],
+        unitPrice: 80
+      },
+      {
+        itemId: 'chili',
+        name: '辣椒',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['summer'],
+        unitPrice: 45
+      },
+      {
+        itemId: 'pumpkin',
+        name: '南瓜',
+        minQty: 1,
+        maxQty: 3,
+        seasons: ['autumn'],
+        unitPrice: 100
+      },
+      {
+        itemId: 'sweet_potato',
+        name: '红薯',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['autumn'],
+        unitPrice: 60
+      },
+      {
+        itemId: 'winter_wheat',
+        name: '冬小麦',
+        minQty: 2,
+        maxQty: 5,
+        seasons: ['winter'],
+        unitPrice: 45
+      },
+      {
+        itemId: 'garlic',
+        name: '大蒜',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['winter'],
+        unitPrice: 50
+      }
     ],
     npcPool: ['chen_bo', 'liu_niang', 'lin_lao', 'xiao_man'],
     rewardMultiplier: 3,
@@ -25,14 +95,70 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
   {
     type: 'fishing',
     targets: [
-      { itemId: 'crucian', name: '鲫鱼', minQty: 1, maxQty: 3, seasons: [], unitPrice: 15 },
-      { itemId: 'carp', name: '鲤鱼', minQty: 1, maxQty: 2, seasons: ['spring', 'summer'], unitPrice: 25 },
-      { itemId: 'grass_carp', name: '草鱼', minQty: 1, maxQty: 2, seasons: ['summer', 'autumn'], unitPrice: 30 },
-      { itemId: 'catfish', name: '鲶鱼', minQty: 1, maxQty: 2, seasons: ['summer'], unitPrice: 40 },
-      { itemId: 'bass', name: '鲈鱼', minQty: 1, maxQty: 2, seasons: ['autumn'], unitPrice: 35 },
-      { itemId: 'loach', name: '泥鳅', minQty: 1, maxQty: 3, seasons: ['summer', 'autumn'], unitPrice: 20 },
-      { itemId: 'creek_shrimp', name: '溪虾', minQty: 2, maxQty: 4, seasons: ['spring', 'summer', 'autumn'], unitPrice: 30 },
-      { itemId: 'silver_carp', name: '白鲢', minQty: 1, maxQty: 2, seasons: ['summer'], unitPrice: 25 }
+      {
+        itemId: 'crucian',
+        name: '鲫鱼',
+        minQty: 1,
+        maxQty: 3,
+        seasons: [],
+        unitPrice: 15
+      },
+      {
+        itemId: 'carp',
+        name: '鲤鱼',
+        minQty: 1,
+        maxQty: 2,
+        seasons: ['spring', 'summer'],
+        unitPrice: 25
+      },
+      {
+        itemId: 'grass_carp',
+        name: '草鱼',
+        minQty: 1,
+        maxQty: 2,
+        seasons: ['summer', 'autumn'],
+        unitPrice: 30
+      },
+      {
+        itemId: 'catfish',
+        name: '鲶鱼',
+        minQty: 1,
+        maxQty: 2,
+        seasons: ['summer'],
+        unitPrice: 40
+      },
+      {
+        itemId: 'bass',
+        name: '鲈鱼',
+        minQty: 1,
+        maxQty: 2,
+        seasons: ['autumn'],
+        unitPrice: 35
+      },
+      {
+        itemId: 'loach',
+        name: '泥鳅',
+        minQty: 1,
+        maxQty: 3,
+        seasons: ['summer', 'autumn'],
+        unitPrice: 20
+      },
+      {
+        itemId: 'creek_shrimp',
+        name: '溪虾',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['spring', 'summer', 'autumn'],
+        unitPrice: 30
+      },
+      {
+        itemId: 'silver_carp',
+        name: '白鲢',
+        minQty: 1,
+        maxQty: 2,
+        seasons: ['summer'],
+        unitPrice: 25
+      }
     ],
     npcPool: ['qiu_yue', 'chen_bo', 'lin_lao'],
     rewardMultiplier: 3,
@@ -41,11 +167,46 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
   {
     type: 'mining',
     targets: [
-      { itemId: 'copper_ore', name: '铜矿', minQty: 3, maxQty: 8, seasons: [], unitPrice: 10 },
-      { itemId: 'iron_ore', name: '铁矿', minQty: 3, maxQty: 6, seasons: [], unitPrice: 20 },
-      { itemId: 'gold_ore', name: '金矿', minQty: 2, maxQty: 4, seasons: [], unitPrice: 40 },
-      { itemId: 'quartz', name: '石英', minQty: 1, maxQty: 3, seasons: [], unitPrice: 30 },
-      { itemId: 'jade', name: '翡翠', minQty: 1, maxQty: 2, seasons: [], unitPrice: 80 }
+      {
+        itemId: 'copper_ore',
+        name: '铜矿',
+        minQty: 3,
+        maxQty: 8,
+        seasons: [],
+        unitPrice: 10
+      },
+      {
+        itemId: 'iron_ore',
+        name: '铁矿',
+        minQty: 3,
+        maxQty: 6,
+        seasons: [],
+        unitPrice: 20
+      },
+      {
+        itemId: 'gold_ore',
+        name: '金矿',
+        minQty: 2,
+        maxQty: 4,
+        seasons: [],
+        unitPrice: 40
+      },
+      {
+        itemId: 'quartz',
+        name: '石英',
+        minQty: 1,
+        maxQty: 3,
+        seasons: [],
+        unitPrice: 30
+      },
+      {
+        itemId: 'jade',
+        name: '翡翠',
+        minQty: 1,
+        maxQty: 2,
+        seasons: [],
+        unitPrice: 80
+      }
     ],
     npcPool: ['a_shi', 'xiao_man', 'chen_bo'],
     rewardMultiplier: 2,
@@ -54,14 +215,70 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
   {
     type: 'gathering',
     targets: [
-      { itemId: 'wood', name: '木材', minQty: 5, maxQty: 10, seasons: [], unitPrice: 5 },
-      { itemId: 'herb', name: '草药', minQty: 2, maxQty: 5, seasons: ['spring', 'summer', 'autumn'], unitPrice: 15 },
-      { itemId: 'firewood', name: '柴火', minQty: 5, maxQty: 10, seasons: [], unitPrice: 3 },
-      { itemId: 'bamboo', name: '竹子', minQty: 3, maxQty: 6, seasons: ['spring', 'summer'], unitPrice: 10 },
-      { itemId: 'pine_cone', name: '松果', minQty: 2, maxQty: 4, seasons: ['autumn', 'winter'], unitPrice: 10 },
-      { itemId: 'wild_mushroom', name: '野蘑菇', minQty: 2, maxQty: 4, seasons: ['autumn'], unitPrice: 20 },
-      { itemId: 'wild_berry', name: '野果', minQty: 3, maxQty: 5, seasons: ['summer'], unitPrice: 10 },
-      { itemId: 'ginseng', name: '人参', minQty: 1, maxQty: 2, seasons: ['autumn', 'winter'], unitPrice: 50 }
+      {
+        itemId: 'wood',
+        name: '木材',
+        minQty: 5,
+        maxQty: 10,
+        seasons: [],
+        unitPrice: 5
+      },
+      {
+        itemId: 'herb',
+        name: '草药',
+        minQty: 2,
+        maxQty: 5,
+        seasons: ['spring', 'summer', 'autumn'],
+        unitPrice: 15
+      },
+      {
+        itemId: 'firewood',
+        name: '柴火',
+        minQty: 5,
+        maxQty: 10,
+        seasons: [],
+        unitPrice: 3
+      },
+      {
+        itemId: 'bamboo',
+        name: '竹子',
+        minQty: 3,
+        maxQty: 6,
+        seasons: ['spring', 'summer'],
+        unitPrice: 10
+      },
+      {
+        itemId: 'pine_cone',
+        name: '松果',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['autumn', 'winter'],
+        unitPrice: 10
+      },
+      {
+        itemId: 'wild_mushroom',
+        name: '野蘑菇',
+        minQty: 2,
+        maxQty: 4,
+        seasons: ['autumn'],
+        unitPrice: 20
+      },
+      {
+        itemId: 'wild_berry',
+        name: '野果',
+        minQty: 3,
+        maxQty: 5,
+        seasons: ['summer'],
+        unitPrice: 10
+      },
+      {
+        itemId: 'ginseng',
+        name: '人参',
+        minQty: 1,
+        maxQty: 2,
+        seasons: ['autumn', 'winter'],
+        unitPrice: 50
+      }
     ],
     npcPool: ['lin_lao', 'liu_niang', 'xiao_man'],
     rewardMultiplier: 3,

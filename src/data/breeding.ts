@@ -61,7 +61,7 @@ export const SEED_BOX_UPGRADE_INCREMENT = 15
 export const MAX_BREEDING_BOX = 30
 
 /** 育种加工天数 */
-export const BREEDING_DAYS = 2
+export const BREEDING_DAYS = 1
 
 /** 属性上限 */
 export const STAT_CAP = 100
@@ -70,7 +70,7 @@ export const STAT_CAP = 100
 export const BASE_MUTATION_MAGNITUDE = 8
 
 /** 每代稳定度增长 */
-export const GENERATIONAL_STABILITY_GAIN = 3
+export const GENERATIONAL_STABILITY_GAIN = 5
 
 /** 稳定度上限 */
 export const MAX_STABILITY = 95
@@ -82,14 +82,17 @@ export const MUTATION_JUMP_MAX = 30
 /** 变异时变异率自身浮动 */
 export const MUTATION_RATE_DRIFT = 5
 
-/** 变异正向概率（增加方向） */
-export const MUTATION_POSITIVE_CHANCE = 0.6
+/** 变异正向概率（增加方向）。偏向正向，避免玩家辛苦培育却越养越差 */
+export const MUTATION_POSITIVE_CHANCE = 0.72
 
-/** 收获育种作物时按品质返还种子的概率 */
+/**
+ * 收获育种作物时按品质返还种子的概率。
+ * 种子收不回来会直接打断培育链条，挫败感最强，因此普通品质也保证较高返还率。
+ */
 export const SEED_RETURN_CHANCE: Record<Quality, number> = {
-  normal: 0.5,
-  fine: 0.7,
-  excellent: 0.9,
+  normal: 0.75,
+  fine: 0.88,
+  excellent: 1.0,
   supreme: 1.0
 }
 
@@ -98,9 +101,15 @@ export const shouldReturnBreedingSeed = (quality: Quality): boolean => {
   return Math.random() < (SEED_RETURN_CHANCE[quality] ?? 0)
 }
 
-/** 育种台制造费用 */
+/**
+ * 杂交属性门槛的宽容系数。
+ * 差一两点就整批作废是最劝退的设计，实际判定按需求值的这个比例来。
+ */
+export const HYBRID_REQUIREMENT_TOLERANCE = 0.85
+
+/** 育种台制造费用：门槛过高会让整套玩法无人问津，这里压到中期可及的水平 */
 export const BREEDING_STATION_COST = {
-  money: 100000,
+  money: 25000,
   materials: [
     { itemId: 'wood', quantity: 30 },
     { itemId: 'iron_ore', quantity: 10 },

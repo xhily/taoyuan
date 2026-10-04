@@ -6,7 +6,11 @@
         <span class="text-accent font-bold">桃源乡</span>
         <span class="text-muted text-xs max-w-16 truncate">{{ playerStore.playerName }}</span>
         <span class="hidden md:inline">第{{ gameStore.year }}年</span>
-        <span>{{ SEASON_NAMES[gameStore.season] }} 第{{ gameStore.day }}天</span>
+        <!-- 点日期直接开时历：原先只能在小屋里翻到，很多人一个季节过完都没找到 -->
+        <button class="text-text hover:text-accent transition-colors" title="查看时历" @click="showCalendar = true">
+          {{ SEASON_NAMES[gameStore.season] }} 第{{ gameStore.day }}天
+          <Calendar :size="11" class="inline text-accent/70" />
+        </button>
         <span class="text-muted hidden md:inline">({{ gameStore.weekdayName }})</span>
         <span :class="{ 'text-danger': gameStore.isLateNight }">{{ gameStore.timeDisplay }}</span>
         <span class="text-muted">{{ WEATHER_NAMES[gameStore.weather] }}</span>
@@ -36,7 +40,11 @@
         </div>
         <!-- HP（矿洞或受伤时显示） -->
         <div v-if="showHpBar" class="flex items-center space-x-1">
-          <span :class="{ 'text-danger stamina-critical': playerStore.getIsLowHp() }">
+          <span
+            :class="{
+              'text-danger stamina-critical': playerStore.getIsLowHp()
+            }"
+          >
             <Heart :size="12" class="inline" />
             {{ playerStore.hp }}/{{ playerStore.getMaxHp() }}
           </span>
@@ -57,18 +65,24 @@
         </div>
       </div>
     </div>
+
+    <CalendarModal :open="showCalendar" @close="showCalendar = false" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { ref, computed } from 'vue'
   import { useGameStore, SEASON_NAMES, WEATHER_NAMES } from '@/stores/useGameStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { DAY_START_HOUR, DAY_END_HOUR } from '@/data/timeConstants'
-  import { Zap, Heart, Clock, Coins } from 'lucide-vue-next'
+  import { Zap, Heart, Clock, Coins, Calendar } from 'lucide-vue-next'
+  import CalendarModal from '@/components/game/CalendarModal.vue'
 
   const gameStore = useGameStore()
   const playerStore = usePlayerStore()
+
+  /** 时历弹窗 */
+  const showCalendar = ref(false)
 
   const staminaBarColor = computed(() => {
     const pct = playerStore.staminaPercent

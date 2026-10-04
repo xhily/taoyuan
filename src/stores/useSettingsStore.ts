@@ -11,6 +11,10 @@ export type QmsgLimitWidthWrap = 'no-wrap' | 'wrap' | 'ellipsis'
 const DEFAULT_FONT_SIZE = 16
 const DEFAULT_THEME: ThemeKey = 'dark'
 const DEFAULT_QMSG_POSITION: QmsgPosition = 'top'
+/** 矿洞行动描述默认显示行数 */
+const DEFAULT_MINE_LOG_LINES = 4
+/** 矿洞行动描述可选行数（0 表示不显示） */
+export const MINE_LOG_LINE_OPTIONS = [0, 2, 4, 8] as const
 
 export const useSettingsStore = defineStore('settings', () => {
   const fontSize = ref(DEFAULT_FONT_SIZE)
@@ -29,6 +33,21 @@ export const useSettingsStore = defineStore('settings', () => {
 
   /** 背包物品筛选：选中的分类（空数组 = 显示全部） */
   const inventoryFilter = ref<ItemCategory[]>([])
+
+  /** 矿洞探索日志显示行数（0 = 完全隐藏行动描述） */
+  const mineLogLines = ref(DEFAULT_MINE_LOG_LINES)
+
+  /**
+   * 桃源田庄换季是否自动施肥。
+   * 默认关闭：自动撒下的低级肥会占住地块，反而挡住玩家自己想施的好肥。
+   */
+  const autoFertilizeOnSeasonChange = ref(false)
+
+  /**
+   * 一键钓鱼：抛竿后跳过收线小游戏，按装备与鱼的难度直接掷出结果。
+   * 默认关闭，给不想被小游戏折磨的玩家一个出口。
+   */
+  const autoFishing = ref(false)
 
   const applyFontSize = () => {
     document.documentElement.style.fontSize = fontSize.value + 'px'
@@ -91,7 +110,10 @@ export const useSettingsStore = defineStore('settings', () => {
       qmsgShowClose: qmsgShowClose.value,
       qmsgShowIcon: qmsgShowIcon.value,
       qmsgShowReverse: qmsgShowReverse.value,
-      inventoryFilter: inventoryFilter.value
+      inventoryFilter: inventoryFilter.value,
+      mineLogLines: mineLogLines.value,
+      autoFertilizeOnSeasonChange: autoFertilizeOnSeasonChange.value,
+      autoFishing: autoFishing.value
     }
   }
 
@@ -112,6 +134,9 @@ export const useSettingsStore = defineStore('settings', () => {
     qmsgShowIcon.value = data?.qmsgShowIcon ?? false
     qmsgShowReverse.value = data?.qmsgShowReverse ?? false
     inventoryFilter.value = data?.inventoryFilter ?? []
+    mineLogLines.value = data?.mineLogLines ?? DEFAULT_MINE_LOG_LINES
+    autoFertilizeOnSeasonChange.value = data?.autoFertilizeOnSeasonChange ?? false
+    autoFishing.value = data?.autoFishing ?? false
     syncQmsgConfig()
     const { sfxEnabled, bgmEnabled } = useAudio()
     sfxEnabled.value = data?.sfxEnabled ?? true
@@ -138,6 +163,9 @@ export const useSettingsStore = defineStore('settings', () => {
     qmsgShowIcon,
     qmsgShowReverse,
     inventoryFilter,
+    mineLogLines,
+    autoFertilizeOnSeasonChange,
+    autoFishing,
     changeFontSize,
     changeTheme,
     changeQmsgPosition,

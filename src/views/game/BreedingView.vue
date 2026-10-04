@@ -60,7 +60,9 @@
               <div class="h-1 bg-bg rounded-xs border border-accent/10">
                 <div
                   class="h-full rounded-xs bg-accent transition-all"
-                  :style="{ width: (slot.daysProcessed / slot.totalDays) * 100 + '%' }"
+                  :style="{
+                    width: (slot.daysProcessed / slot.totalDays) * 100 + '%'
+                  }"
                 />
               </div>
             </template>
@@ -98,20 +100,29 @@
           <p class="text-xs text-muted">种子箱为空</p>
           <p class="text-xs text-muted/60">通过种子制造机收取产物时有概率获得育种种子</p>
         </div>
-        <div v-else class="grid grid-cols-3 md:grid-cols-5 gap-1 max-h-60 overflow-y-auto">
-          <button
-            v-for="seed in breedingStore.breedingBox"
-            :key="seed.genetics.id"
-            class="border rounded-xs px-1 py-1.5 text-center cursor-pointer hover:bg-accent/5 transition-colors mr-1"
-            :class="selectedSeedIds.includes(seed.genetics.id) ? 'border-accent bg-accent/10' : 'border-accent/20'"
-            @click="openSeedDetail(seed)"
-          >
-            <p class="text-xs truncate" :class="seedStarColor(seed.genetics)">{{ getCropName(seed.genetics.cropId) }}</p>
-            <p class="text-xs text-muted">G{{ seed.genetics.generation }}</p>
-            <p class="text-xs flex items-center justify-center space-x-px" :class="seedStarColor(seed.genetics)">
-              <Star v-for="n in getStarRating(seed.genetics)" :key="n" :size="10" />
-            </p>
-          </button>
+        <div v-else>
+          <div class="flex justify-end mb-1">
+            <Button class="py-0 px-1.5 text-[10px]" :icon="ArrowDownAZ" :icon-size="10" @click="breedingStore.sortBreedingBox()">
+              整理（按种类与属性）
+            </Button>
+          </div>
+          <div class="grid grid-cols-3 md:grid-cols-5 gap-1 max-h-60 overflow-y-auto">
+            <button
+              v-for="seed in breedingStore.breedingBox"
+              :key="seed.genetics.id"
+              class="border rounded-xs px-1 py-1.5 text-center cursor-pointer hover:bg-accent/5 transition-colors mr-1"
+              :class="selectedSeedIds.includes(seed.genetics.id) ? 'border-accent bg-accent/10' : 'border-accent/20'"
+              @click="openSeedDetail(seed)"
+            >
+              <p class="text-xs truncate" :class="seedStarColor(seed.genetics)">
+                {{ getCropName(seed.genetics.cropId) }}
+              </p>
+              <p class="text-xs text-muted">G{{ seed.genetics.generation }}</p>
+              <p class="text-xs flex items-center justify-center space-x-px" :class="seedStarColor(seed.genetics)">
+                <Star v-for="n in getStarRating(seed.genetics)" :key="n" :size="10" />
+              </p>
+            </button>
+          </div>
         </div>
       </div>
     </template>
@@ -310,7 +321,9 @@
             <X :size="14" />
           </button>
 
-          <p class="text-sm mb-2" :class="tierColor(activeHybrid.id)">{{ activeHybrid.name }}</p>
+          <p class="text-sm mb-2" :class="tierColor(activeHybrid.id)">
+            {{ activeHybrid.name }}
+          </p>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs text-muted">{{ activeHybrid.discoveryText }}</p>
@@ -398,7 +411,8 @@
               <div class="flex items-center justify-between">
                 <span class="text-xs text-muted">容量上限</span>
                 <span class="text-xs text-text">
-                  {{ breedingStore.maxSeedBox }} → {{ breedingStore.maxSeedBox + SEED_BOX_UPGRADE_INCREMENT }}
+                  {{ breedingStore.maxSeedBox }} →
+                  {{ breedingStore.maxSeedBox + SEED_BOX_UPGRADE_INCREMENT }}
                 </span>
               </div>
             </div>
@@ -529,7 +543,21 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { FlaskConical, Plus, Check, ChevronDown, X, Dna, Trash2, Sprout, PackageOpen, Star, Lock, ArrowUpCircle } from 'lucide-vue-next'
+  import {
+    FlaskConical,
+    Plus,
+    Check,
+    ChevronDown,
+    X,
+    Dna,
+    Trash2,
+    Sprout,
+    PackageOpen,
+    Star,
+    Lock,
+    ArrowUpCircle,
+    ArrowDownAZ
+  } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import { useBreedingStore } from '@/stores/useBreedingStore'
   import { useGameStore } from '@/stores/useGameStore'
@@ -614,11 +642,21 @@
   })
 
   const tierStats = computed(() => {
-    const stats: { tier: number; label: string; total: number; discovered: number }[] = []
+    const stats: {
+      tier: number
+      label: string
+      total: number
+      discovered: number
+    }[] = []
     for (let t = 1; t <= 10; t++) {
       const hybrids = HYBRID_DEFS.filter(h => getHybridTier(h.id) === t)
       const discovered = hybrids.filter(h => isDiscovered(h.id)).length
-      stats.push({ tier: t, label: `${TIER_LABELS[t]}代`, total: hybrids.length, discovered })
+      stats.push({
+        tier: t,
+        label: `${TIER_LABELS[t]}代`,
+        total: hybrids.length,
+        discovered
+      })
     }
     return stats
   })
@@ -657,11 +695,31 @@
     if (!detailSeed.value) return []
     const g = detailSeed.value.genetics
     return [
-      { key: 'sweetness', label: '甜度', value: g.sweetness, barClass: 'bg-accent' },
+      {
+        key: 'sweetness',
+        label: '甜度',
+        value: g.sweetness,
+        barClass: 'bg-accent'
+      },
       { key: 'yield', label: '产量', value: g.yield, barClass: 'bg-success' },
-      { key: 'resistance', label: '抗性', value: g.resistance, barClass: 'bg-water' },
-      { key: 'stability', label: '稳定', value: g.stability, barClass: 'bg-muted' },
-      { key: 'mutationRate', label: '变异', value: g.mutationRate, barClass: 'bg-danger' }
+      {
+        key: 'resistance',
+        label: '抗性',
+        value: g.resistance,
+        barClass: 'bg-water'
+      },
+      {
+        key: 'stability',
+        label: '稳定',
+        value: g.stability,
+        barClass: 'bg-muted'
+      },
+      {
+        key: 'mutationRate',
+        label: '变异',
+        value: g.mutationRate,
+        barClass: 'bg-danger'
+      }
     ]
   })
 

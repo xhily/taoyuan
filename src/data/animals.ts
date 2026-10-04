@@ -1,12 +1,18 @@
 import type { AnimalBuildingDef, AnimalDef, AnimalBuildingType, AnimalType } from '@/types'
 
+/**
+ * 每级畜舍容纳的牲畜数。
+ * 原先固定「等级 × 4」，满级也只有 12 只，牧场后期完全放不下。
+ */
+export const BUILDING_CAPACITY_PER_LEVEL = 6
+
 /** 畜舍定义 */
 export const ANIMAL_BUILDINGS: AnimalBuildingDef[] = [
   {
     type: 'coop',
     name: '鸡舍',
     description: '饲养鸡鸭等小型家禽。',
-    capacity: 4,
+    capacity: 6,
     cost: 4000,
     materialCost: [
       { itemId: 'wood', quantity: 100 },
@@ -17,7 +23,7 @@ export const ANIMAL_BUILDINGS: AnimalBuildingDef[] = [
     type: 'barn',
     name: '牲口棚',
     description: '饲养牛羊等大型牲畜。',
-    capacity: 4,
+    capacity: 6,
     cost: 6000,
     materialCost: [
       { itemId: 'wood', quantity: 150 },
@@ -255,11 +261,31 @@ export const NOURISHING_FEED_ID = 'nourishing_feed'
 export const VITALITY_FEED_ID = 'vitality_feed'
 
 /** 所有饲料定义（UI 遍历用） */
-export const FEED_DEFS: { id: string; name: string; price: number; description: string }[] = [
+export const FEED_DEFS: {
+  id: string
+  name: string
+  price: number
+  description: string
+}[] = [
   { id: 'hay', name: '干草', price: 50, description: '基础饲料' },
-  { id: 'premium_feed', name: '精饲料', price: 200, description: '心情+60，好感度翻倍' },
-  { id: 'nourishing_feed', name: '滋补饲料', price: 250, description: '产出天数-1' },
-  { id: 'vitality_feed', name: '活力饲料', price: 300, description: '100%治愈疾病' }
+  {
+    id: 'premium_feed',
+    name: '精饲料',
+    price: 200,
+    description: '心情+60，好感度翻倍'
+  },
+  {
+    id: 'nourishing_feed',
+    name: '滋补饲料',
+    price: 250,
+    description: '产出天数-1'
+  },
+  {
+    id: 'vitality_feed',
+    name: '活力饲料',
+    price: 300,
+    description: '100%治愈疾病'
+  }
 ]
 
 export const getAnimalDef = (type: string): AnimalDef | undefined => {
@@ -270,7 +296,7 @@ export const getBuildingDef = (type: string): AnimalBuildingDef | undefined => {
   return ANIMAL_BUILDINGS.find(b => b.type === type)
 }
 
-/** 畜舍升级定义: level 2 = 大型 (容量8), level 3 = 豪华 (容量12) */
+/** 畜舍升级定义：容量 = 等级 × BUILDING_CAPACITY_PER_LEVEL */
 export const BUILDING_UPGRADES: {
   type: AnimalBuildingType
   level: number
@@ -283,7 +309,7 @@ export const BUILDING_UPGRADES: {
     type: 'coop',
     level: 2,
     name: '大型鸡舍',
-    capacity: 8,
+    capacity: 12,
     cost: 10000,
     materialCost: [
       { itemId: 'wood', quantity: 200 },
@@ -294,7 +320,7 @@ export const BUILDING_UPGRADES: {
     type: 'coop',
     level: 3,
     name: '豪华鸡舍',
-    capacity: 12,
+    capacity: 18,
     cost: 20000,
     materialCost: [
       { itemId: 'wood', quantity: 300 },
@@ -305,7 +331,7 @@ export const BUILDING_UPGRADES: {
     type: 'barn',
     level: 2,
     name: '大型牲口棚',
-    capacity: 8,
+    capacity: 12,
     cost: 12000,
     materialCost: [
       { itemId: 'wood', quantity: 250 },
@@ -316,7 +342,7 @@ export const BUILDING_UPGRADES: {
     type: 'barn',
     level: 3,
     name: '豪华牲口棚',
-    capacity: 12,
+    capacity: 18,
     cost: 25000,
     materialCost: [
       { itemId: 'wood', quantity: 400 },

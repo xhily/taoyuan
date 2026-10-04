@@ -71,6 +71,10 @@ export interface CaveUpgradeDef {
   materialCost: { itemId: string; quantity: number }[]
   mushroomPool: { itemId: string; weight: number }[]
   fruitPool: string[]
+  /** 品质档位提升：在「按天数积累」的基础上再抬几档 */
+  qualityBonus?: number
+  /** 单次产出上限（触发加成时最多产几个） */
+  maxQty?: number
 }
 
 export const CAVE_UPGRADES: CaveUpgradeDef[] = [
@@ -118,7 +122,31 @@ export const CAVE_UPGRADES: CaveUpgradeDef[] = [
       { itemId: 'herb', weight: 35 },
       { itemId: 'ginseng', weight: 15 }
     ],
-    fruitPool: ['tree_peach', 'lychee', 'mandarin', 'plum_blossom', 'apricot', 'pomegranate', 'persimmon', 'hawthorn']
+    fruitPool: ['tree_peach', 'lychee', 'mandarin', 'plum_blossom', 'apricot', 'pomegranate', 'persimmon', 'hawthorn'],
+    qualityBonus: 1,
+    maxQty: 2
+  },
+  {
+    level: 4,
+    name: '山洞·肆',
+    mushroomChance: 1.0,
+    fruitBatChance: 0.9,
+    doubleChance: 0.5,
+    cost: 90000,
+    materialCost: [
+      { itemId: 'wood', quantity: 300 },
+      { itemId: 'iridium_bar', quantity: 5 },
+      { itemId: 'crystal_ore', quantity: 20 }
+    ],
+    mushroomPool: [
+      { itemId: 'wild_mushroom', weight: 35 },
+      { itemId: 'herb', weight: 30 },
+      { itemId: 'ginseng', weight: 25 },
+      { itemId: 'truffle', weight: 10 }
+    ],
+    fruitPool: ['tree_peach', 'lychee', 'mandarin', 'plum_blossom', 'apricot', 'pomegranate', 'persimmon', 'hawthorn'],
+    qualityBonus: 2,
+    maxQty: 3
   }
 ]
 
@@ -207,7 +235,14 @@ export interface CellarUpgradeDef {
 }
 
 export const CELLAR_UPGRADES: CellarUpgradeDef[] = [
-  { level: 1, name: '酒窖', valuePerCycle: 100, maxSlots: 6, cost: 0, materialCost: [] },
+  {
+    level: 1,
+    name: '酒窖',
+    valuePerCycle: 100,
+    maxSlots: 6,
+    cost: 0,
+    materialCost: []
+  },
   {
     level: 2,
     name: '酒窖·贰',

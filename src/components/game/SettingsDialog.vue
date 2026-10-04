@@ -44,6 +44,58 @@
                 </div>
               </div>
 
+              <!-- 农事：换季自动施肥（仅桃源田庄有此特性） -->
+              <div v-if="gameStore.farmMapType === 'standard'" class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
+                <p class="text-xs text-muted mb-2">换季自动施肥</p>
+                <p class="text-[10px] text-muted/50 mb-2">
+                  桃源田庄特性：换季时给空闲耕地撒肥。开启后自动撒的肥会占住地块，但你仍可用更好的肥覆盖它。
+                </p>
+                <div class="flex items-center justify-center space-x-2">
+                  <Button
+                    class="py-1 px-3"
+                    :class="{
+                      '!bg-accent !text-bg': settingsStore.autoFertilizeOnSeasonChange
+                    }"
+                    @click="settingsStore.autoFertilizeOnSeasonChange = true"
+                  >
+                    开启
+                  </Button>
+                  <Button
+                    class="py-1 px-3"
+                    :class="{
+                      '!bg-accent !text-bg': !settingsStore.autoFertilizeOnSeasonChange
+                    }"
+                    @click="settingsStore.autoFertilizeOnSeasonChange = false"
+                  >
+                    关闭
+                  </Button>
+                </div>
+              </div>
+
+              <!-- 一键钓鱼：跳过收线小游戏 -->
+              <div class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
+                <p class="text-xs text-muted mb-2">一键钓鱼</p>
+                <p class="text-[10px] text-muted/50 mb-2">
+                  开启后抛竿直接出结果，不用玩收线小游戏。成功率仍看鱼竿、钓鱼等级、鱼饵浮漂和鱼的难度，只是完美评级比手动少见。
+                </p>
+                <div class="flex items-center justify-center space-x-2">
+                  <Button
+                    class="py-1 px-3"
+                    :class="{ '!bg-accent !text-bg': settingsStore.autoFishing }"
+                    @click="settingsStore.autoFishing = true"
+                  >
+                    开启
+                  </Button>
+                  <Button
+                    class="py-1 px-3"
+                    :class="{ '!bg-accent !text-bg': !settingsStore.autoFishing }"
+                    @click="settingsStore.autoFishing = false"
+                  >
+                    关闭
+                  </Button>
+                </div>
+              </div>
+
               <!-- 新手提示 -->
               <div class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
                 <p class="text-xs text-muted mb-2">新手提示</p>
@@ -81,6 +133,49 @@
                     >
                       关
                     </Button>
+                  </div>
+                </div>
+
+                <!-- 新手说明：不解释清楚，小白根本不知道这四个输入框该填什么 -->
+                <div class="border border-accent/10 rounded-xs p-2 mb-2">
+                  <button class="flex items-center justify-between w-full" @click="showWebdavHelp = !showWebdavHelp">
+                    <span class="text-[10px] text-accent">
+                      <HelpCircle :size="10" class="inline" />
+                      这是什么？怎么用？
+                    </span>
+                    <span class="text-[10px] text-muted">{{ showWebdavHelp ? '收起' : '展开' }}</span>
+                  </button>
+                  <div v-if="showWebdavHelp" class="mt-2 space-y-1.5">
+                    <p class="text-[10px] text-muted leading-relaxed">
+                      存档默认只存在这台设备的浏览器里，换手机、清缓存就没了。WebDAV
+                      相当于你自己的网盘，开启后可以把存档上传上去，在别的设备上下载回来接着玩。
+                    </p>
+                    <p class="text-[10px] text-accent/80">三步就能用起来：</p>
+                    <p class="text-[10px] text-muted leading-relaxed">
+                      ① 找一个支持 WebDAV 的网盘，注册后在它的设置里找到「WebDAV」，拿到
+                      <span class="text-text">服务器地址</span>
+                      、
+                      <span class="text-text">账号</span>
+                      和
+                      <span class="text-text">密码</span>
+                      。常见的有：坚果云（国内，免费额度够用）、InfiniCLOUD、TeraCLOUD，或者自己用 Nextcloud / 群晖 NAS 搭。
+                    </p>
+                    <p class="text-[10px] text-muted leading-relaxed">
+                      ② 把这三项填进下面的输入框。
+                      <span class="text-text">存储路径</span>
+                      可以留空，也可以填一个文件夹名（例如
+                      <span class="text-text">taoyuan</span>
+                      ）把存档单独归置。
+                    </p>
+                    <p class="text-[10px] text-muted leading-relaxed">
+                      ③ 点「测试连接」，通了就说明配好了。之后用下面的「上传」把当前进度传上去，换设备时在同样的配置下点「下载」取回来。
+                    </p>
+                    <p class="text-[10px] text-muted/60 leading-relaxed">
+                      提醒：密码保存在本机浏览器中。建议在网盘里单独生成一个「应用密码」填在这里，不要用你的主账号密码。
+                    </p>
+                    <p class="text-[10px] text-muted/60 leading-relaxed">
+                      注意：坚果云等服务的 WebDAV 地址通常形如 https://dav.jianguoyun.com/dav/，要填完整（含 https:// 和结尾的 /）。
+                    </p>
                   </div>
                 </div>
                 <template v-if="webdavConfig.enabled">
@@ -176,6 +271,23 @@
                   @click="settingsStore.changeFontSize(1)"
                 />
               </div>
+            </div>
+
+            <!-- 矿洞行动描述 -->
+            <div class="border border-accent/20 rounded-xs p-3">
+              <p class="text-xs text-muted mb-2">矿洞行动描述</p>
+              <div class="flex items-center justify-center space-x-2">
+                <Button
+                  v-for="n in MINE_LOG_LINE_OPTIONS"
+                  :key="n"
+                  class="py-1 px-3"
+                  :class="settingsStore.mineLogLines === n ? '!bg-accent !text-bg' : ''"
+                  @click="settingsStore.mineLogLines = n"
+                >
+                  {{ n === 0 ? '不显示' : `${n}行` }}
+                </Button>
+              </div>
+              <p class="text-[10px] text-muted/50 mt-1.5 text-center">减少行数可让体力条和格子更容易看到</p>
             </div>
 
             <!-- 配色主题 -->
@@ -380,15 +492,17 @@
     ArrowDownRight,
     Settings,
     Palette,
-    Bell
+    Bell,
+    HelpCircle
   } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { useAudio } from '@/composables/useAudio'
   import { useGameClock } from '@/composables/useGameClock'
   import { useGameLog } from '@/composables/useGameLog'
-  import { useSettingsStore, type QmsgPosition, type QmsgLimitWidthWrap } from '@/stores/useSettingsStore'
+  import { useSettingsStore, MINE_LOG_LINE_OPTIONS, type QmsgPosition, type QmsgLimitWidthWrap } from '@/stores/useSettingsStore'
   import { useTutorialStore } from '@/stores/useTutorialStore'
+  import { useGameStore } from '@/stores/useGameStore'
   import { useWebdav } from '@/composables/useWebdav'
   import { THEMES } from '@/data/themes'
   import SaveManager from '@/components/game/SaveManager.vue'
@@ -404,7 +518,11 @@
     { key: 'notification', label: '通知', icon: Bell }
   ]
 
-  const QMSG_POSITIONS: { value: QmsgPosition; label: string; icon: Component }[] = [
+  const QMSG_POSITIONS: {
+    value: QmsgPosition
+    label: string
+    icon: Component
+  }[] = [
     { value: 'topleft', label: '左上', icon: ArrowUpLeft },
     { value: 'top', label: '上', icon: ArrowUp },
     { value: 'topright', label: '右上', icon: ArrowUpRight },
@@ -434,10 +552,13 @@
   defineEmits<{ close: [] }>()
 
   const activeTab = ref<SettingsTab>('general')
+  /** WebDAV 新手说明是否展开 */
+  const showWebdavHelp = ref(false)
   const { sfxEnabled, bgmEnabled, toggleSfx, toggleBgm } = useAudio()
   const { isPaused, gameSpeed, togglePause, cycleSpeed } = useGameClock()
   const { showFloat } = useGameLog()
   const settingsStore = useSettingsStore()
+  const gameStore = useGameStore()
   const tutorialStore = useTutorialStore()
   const {
     webdavConfig,

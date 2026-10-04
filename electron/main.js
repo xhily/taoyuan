@@ -28,7 +28,10 @@ const defaultSettings = {
 const loadSettings = () => {
   try {
     if (fs.existsSync(settingsPath)) {
-      return { ...defaultSettings, ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) }
+      return {
+        ...defaultSettings,
+        ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
+      }
     }
   } catch (e) {
     console.error('Failed to load settings:', e)

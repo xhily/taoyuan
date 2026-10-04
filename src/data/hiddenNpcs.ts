@@ -19,7 +19,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         phase: 'rumor',
         conditions: [{ type: 'fishCaught', fishId: 'jade_dragon' }],
         scenes: [
-          { text: '你仔细端详手中的翠龙鱼，鳞片在雨中泛着不寻常的光泽。一个念头掠过脑海——这真的只是一条鱼吗？' },
+          {
+            text: '你仔细端详手中的翠龙鱼，鳞片在雨中泛着不寻常的光泽。一个念头掠过脑海——这真的只是一条鱼吗？'
+          },
           { text: '远处的瀑布传来低沉的轰鸣，其中似乎夹杂着某种……呼唤。' }
         ],
         logMessage: '【仙缘】翠龙鱼的鳞片泛起异样光泽，瀑布深处似有灵息涌动……'
@@ -34,9 +36,15 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'location', panel: 'fishing' }
         ],
         scenes: [
-          { text: '春雨淅沥的夜晚，你独自在瀑布边垂钓。水面上突然泛起层层涟漪。' },
-          { text: '一道翠色的蛇形身影在瀑布帘幕后一闪而过，鳞光如碎玉洒落水面。' },
-          { text: '你揉了揉眼睛，水面已恢复平静。但空气中残留着淡淡的龙涎香气。' }
+          {
+            text: '春雨淅沥的夜晚，你独自在瀑布边垂钓。水面上突然泛起层层涟漪。'
+          },
+          {
+            text: '一道翠色的蛇形身影在瀑布帘幕后一闪而过，鳞光如碎玉洒落水面。'
+          },
+          {
+            text: '你揉了揉眼睛，水面已恢复平静。但空气中残留着淡淡的龙涎香气。'
+          }
         ],
         logMessage: '【仙缘】春雨夜的瀑布中，一道翠色身影一闪而逝……'
       },
@@ -50,12 +58,20 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'item', itemId: 'dragon_jade', quantity: 1 }
         ],
         scenes: [
-          { text: '你手持龙玉来到瀑布前。玉石突然散发出柔和的翠光，与瀑布中的某种力量遥相呼应。' },
-          { text: '瀑布缓缓分开，水帘后走出一名青衣女子。她的长发如瀑般垂落，眼瞳是深邃的翠绿色。' },
+          {
+            text: '你手持龙玉来到瀑布前。玉石突然散发出柔和的翠光，与瀑布中的某种力量遥相呼应。'
+          },
+          {
+            text: '瀑布缓缓分开，水帘后走出一名青衣女子。她的长发如瀑般垂落，眼瞳是深邃的翠绿色。'
+          },
           {
             text: '「持玉者……你有何所求？」她的声音如流水般清冽，带着千年的沉淀。',
             choices: [
-              { text: '我只是循着感召而来。', friendshipChange: 80, response: '她微微颔首：「纯粹之心，甚好。」翠色瞳孔中闪过一丝温柔。' },
+              {
+                text: '我只是循着感召而来。',
+                friendshipChange: 80,
+                response: '她微微颔首：「纯粹之心，甚好。」翠色瞳孔中闪过一丝温柔。'
+              },
               {
                 text: '请问……你是传说中的龙灵？',
                 friendshipChange: 40,
@@ -68,7 +84,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
               }
             ]
           },
-          { text: '话毕，她的身影化作水雾消散在瀑布间。但你知道，她还会再出现。' }
+          {
+            text: '话毕，她的身影化作水雾消散在瀑布间。但你知道，她还会再出现。'
+          }
         ],
         logMessage: '【仙缘】瀑布水帘后，龙灵沧澜初次现身。'
       },
@@ -81,7 +99,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           { text: '当你再次来到瀑布前时，龙灵已在水边等候。' },
-          { text: '「你的执念……不，是诚意，打动了吾。」她微微侧头，长发间露出细小的翠色鳞片。' },
+          {
+            text: '「你的执念……不，是诚意，打动了吾。」她微微侧头，长发间露出细小的翠色鳞片。'
+          },
           { text: '「吾名沧澜。此后，你若有心相见，来此处便可。」' }
         ],
         logMessage: '【仙缘】龙灵沧澜愿意与你往来了。'
@@ -132,8 +152,20 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         description: '瀑布钓鱼品质提升一级',
         passive: { type: 'quality_boost', value: 1 }
       },
-      { id: 'long_ling_2', affinityRequired: 1500, name: '唤雨', description: '下雨概率+15%', passive: { type: 'luck', value: 15 } },
-      { id: 'long_ling_3', affinityRequired: 2200, name: '龙瞳', description: '传说鱼捕获率+20%', passive: { type: 'luck', value: 20 } }
+      {
+        id: 'long_ling_2',
+        affinityRequired: 1500,
+        name: '唤雨',
+        description: '下雨概率+15%',
+        passive: { type: 'luck', value: 15 }
+      },
+      {
+        id: 'long_ling_3',
+        affinityRequired: 2200,
+        name: '龙瞳',
+        description: '传说鱼捕获率+20%',
+        passive: { type: 'luck', value: 20 }
+      }
     ],
     manifestationDay: { season: 'spring', day: 14 }
   },
@@ -169,8 +201,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'location', panel: 'farm' }
         ],
         scenes: [
-          { text: '春日清晨，晨雾尚未散去。你在果树间看到一个纤细的身影，正伸手抚摸桃树的枝干。' },
-          { text: '她似乎察觉到了你的视线，回头望了一眼——一张花瓣般精致的脸庞，转瞬化作漫天飞花消失不见。' }
+          {
+            text: '春日清晨，晨雾尚未散去。你在果树间看到一个纤细的身影，正伸手抚摸桃树的枝干。'
+          },
+          {
+            text: '她似乎察觉到了你的视线，回头望了一眼——一张花瓣般精致的脸庞，转瞬化作漫天飞花消失不见。'
+          }
         ],
         logMessage: '【仙缘】晨雾中的果树旁，花瓣飘舞的幻影一闪而逝。'
       },
@@ -183,8 +219,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'day', day: 14 }
         ],
         scenes: [
-          { text: '满月之夜，你带着桃子和蜂蜜来到最大的桃树下。月光洒落枝头，花瓣无风自舞。' },
-          { text: '一个少女从树干中走出，肌肤白皙如花瓣，发间簪着一朵永不凋零的桃花。' },
+          {
+            text: '满月之夜，你带着桃子和蜂蜜来到最大的桃树下。月光洒落枝头，花瓣无风自舞。'
+          },
+          {
+            text: '一个少女从树干中走出，肌肤白皙如花瓣，发间簪着一朵永不凋零的桃花。'
+          },
           {
             text: '「嘻嘻，终于来了呀！」她笑嘻嘻地说，「我闻到甜甜的味道，是给我的吗？」',
             choices: [
@@ -193,7 +233,11 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
                 friendshipChange: 80,
                 response: '她欢呼一声接过桃子和蜂蜜：「太好啦！我最喜欢甜的东西了！」'
               },
-              { text: '你是……桃树精？', friendshipChange: 40, response: '「花灵啦！桃林花灵！」她鼓起腮帮子纠正道，「叫桃夭就好。」' },
+              {
+                text: '你是……桃树精？',
+                friendshipChange: 40,
+                response: '「花灵啦！桃林花灵！」她鼓起腮帮子纠正道，「叫桃夭就好。」'
+              },
               {
                 text: '你一直在看着我种田吗？',
                 friendshipChange: 60,
@@ -214,8 +258,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           { text: '当你走进农场时，桃夭已经坐在树枝上荡着腿等你了。' },
-          { text: '「我想好啦！」她跳下树，裙摆扬起一片花瓣，「我叫灼华，是这片桃林的守护灵。」' },
-          { text: '「以后你什么时候来，我都在哦！」她的笑容灿烂得像春天本身。' }
+          {
+            text: '「我想好啦！」她跳下树，裙摆扬起一片花瓣，「我叫灼华，是这片桃林的守护灵。」'
+          },
+          {
+            text: '「以后你什么时候来，我都在哦！」她的笑容灿烂得像春天本身。'
+          }
         ],
         logMessage: '【仙缘】桃林花灵灼华愿意与你往来了。'
       }
@@ -257,7 +305,13 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
     ],
     bondBonuses: [{ type: 'crop_blessing', chance: 0.2 }],
     abilities: [
-      { id: 'tao_yao_1', affinityRequired: 600, name: '花泽', description: '果树每次+1产量', passive: { type: 'quality_boost', value: 1 } },
+      {
+        id: 'tao_yao_1',
+        affinityRequired: 600,
+        name: '花泽',
+        description: '果树每次+1产量',
+        passive: { type: 'quality_boost', value: 1 }
+      },
       {
         id: 'tao_yao_2',
         affinityRequired: 1200,
@@ -265,7 +319,13 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         description: '春季作物生长快15%',
         passive: { type: 'exp_boost', value: 15 }
       },
-      { id: 'tao_yao_3', affinityRequired: 2000, name: '灵桃', description: '桃树概率产出灵桃', passive: { type: 'luck', value: 10 } }
+      {
+        id: 'tao_yao_3',
+        affinityRequired: 2000,
+        name: '灵桃',
+        description: '桃树概率产出灵桃',
+        passive: { type: 'luck', value: 10 }
+      }
     ],
     manifestationDay: { season: 'spring', day: 3 }
   },
@@ -287,7 +347,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         phase: 'rumor',
         conditions: [{ type: 'skill', skillType: 'foraging', minLevel: 7 }],
         scenes: [
-          { text: '你的采集技艺已臻化境。今天采药时发现一块造型奇特的玉石碎片，像是某种器具的一部分。' },
+          {
+            text: '你的采集技艺已臻化境。今天采药时发现一块造型奇特的玉石碎片，像是某种器具的一部分。'
+          },
           { text: '碎片在月光下泛着银白色的光，上面隐约刻着一只兔子的纹样。' }
         ],
         logMessage: '【仙缘】采药时发现一块玉杵残片，上刻兔纹，月光下莹莹生辉……'
@@ -302,9 +364,15 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'location', panel: 'forage' }
         ],
         scenes: [
-          { text: '满月之夜，月华如银洒满竹林。你听到远处传来"咚、咚、咚"的有节奏的声响。' },
-          { text: '循声望去，月光下一个白色的小小身影正在捣弄什么。她头顶两只长长的耳朵一跳一跳的。' },
-          { text: '似乎察觉到你的目光，那身影"嗖"地消失在竹林深处，只留下几片散落的药草。' }
+          {
+            text: '满月之夜，月华如银洒满竹林。你听到远处传来"咚、咚、咚"的有节奏的声响。'
+          },
+          {
+            text: '循声望去，月光下一个白色的小小身影正在捣弄什么。她头顶两只长长的耳朵一跳一跳的。'
+          },
+          {
+            text: '似乎察觉到你的目光，那身影"嗖"地消失在竹林深处，只留下几片散落的药草。'
+          }
         ],
         logMessage: '【仙缘】满月竹林中，白影一闪，药草散落一地。'
       },
@@ -317,8 +385,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'location', panel: 'forage' }
         ],
         scenes: [
-          { text: '你带着人参和草药来到竹林。刚放下草药，一个声音从头顶传来——' },
-          { text: '「人参！是人参！」一个兔耳少女从竹子上跳下来，眼睛亮晶晶地盯着你手中的药材。' },
+          {
+            text: '你带着人参和草药来到竹林。刚放下草药，一个声音从头顶传来——'
+          },
+          {
+            text: '「人参！是人参！」一个兔耳少女从竹子上跳下来，眼睛亮晶晶地盯着你手中的药材。'
+          },
           {
             text: '「给、给我嘛！月宫的药我都捣腻了，人间的草药才好闻！」她伸出手，尾巴兴奋地摇个不停。',
             choices: [
@@ -339,7 +411,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
               }
             ]
           },
-          { text: '月兔抱着草药蹦蹦跳跳地消失在月光中，空气里留下淡淡的药香。' }
+          {
+            text: '月兔抱着草药蹦蹦跳跳地消失在月光中，空气里留下淡淡的药香。'
+          }
         ],
         logMessage: '【仙缘】竹林中邂逅了从月宫偷溜下凡的玉兔。'
       },
@@ -352,8 +426,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           { text: '你再次来到竹林，月兔正坐在石头上，面前摆着一排小药瓶。' },
-          { text: '「啊！你来啦！」她高兴地跳起来，耳朵一抖一抖，「我叫素问，是月宫的捣药玉兔。」' },
-          { text: '「嫦娥姐姐说人间不好玩，才不是呢！这里有好多好闻的草药，还有你！」' }
+          {
+            text: '「啊！你来啦！」她高兴地跳起来，耳朵一抖一抖，「我叫素问，是月宫的捣药玉兔。」'
+          },
+          {
+            text: '「嫦娥姐姐说人间不好玩，才不是呢！这里有好多好闻的草药，还有你！」'
+          }
         ],
         logMessage: '【仙缘】月兔素问决定留在桃源乡了。'
       }
@@ -401,8 +479,20 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         description: '草药采集数量翻倍',
         passive: { type: 'quality_boost', value: 2 }
       },
-      { id: 'yue_tu_2', affinityRequired: 1000, name: '药引', description: '茶与药的效果+50%', passive: { type: 'exp_boost', value: 50 } },
-      { id: 'yue_tu_3', affinityRequired: 1800, name: '月华', description: '采集概率获得月草', passive: { type: 'luck', value: 8 } }
+      {
+        id: 'yue_tu_2',
+        affinityRequired: 1000,
+        name: '药引',
+        description: '茶与药的效果+50%',
+        passive: { type: 'exp_boost', value: 50 }
+      },
+      {
+        id: 'yue_tu_3',
+        affinityRequired: 1800,
+        name: '月华',
+        description: '采集概率获得月草',
+        passive: { type: 'luck', value: 8 }
+      }
     ],
     manifestationDay: { season: 'autumn', day: 14 }
   },
@@ -439,8 +529,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           { text: '黄昏时分，你在村中散步。余晖将一切染成金色。' },
-          { text: '人群中有一个陌生的青年，容貌俊美得不像凡人，嘴角挂着意味深长的笑。' },
-          { text: '你想走近看清，但他已经消失了。只有一粒晶莹的红色珠子落在他站过的地方。' }
+          {
+            text: '人群中有一个陌生的青年，容貌俊美得不像凡人，嘴角挂着意味深长的笑。'
+          },
+          {
+            text: '你想走近看清，但他已经消失了。只有一粒晶莹的红色珠子落在他站过的地方。'
+          }
         ],
         logMessage: '【仙缘】黄昏村中，一个陌生的美男子一闪而逝。'
       },
@@ -453,16 +547,32 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           { text: '你带着宝石来到村口。那个青年突然出现在你身后——' },
-          { text: '「哟，被你找到了。」他笑着打了个响指，身后浮现出九条蓬松的尾巴。' },
+          {
+            text: '「哟，被你找到了。」他笑着打了个响指，身后浮现出九条蓬松的尾巴。'
+          },
           {
             text: '「来，回答我三个问题。答对了，就让你见识真正的狐仙。」他竖起三根手指。\n「第一问：什么东西越分越多？」',
             choices: [
-              { text: '快乐。', friendshipChange: 80, response: '「不错不错，有灵性。」他满意地点头，一条尾巴亮了起来。' },
-              { text: '金子？', friendshipChange: 20, response: '「庸俗。」他摇头叹气，但还是给了你一次机会。' },
-              { text: '烦恼。', friendshipChange: 40, response: '「嗯……也算对。但吾更喜欢乐观的答案。」' }
+              {
+                text: '快乐。',
+                friendshipChange: 80,
+                response: '「不错不错，有灵性。」他满意地点头，一条尾巴亮了起来。'
+              },
+              {
+                text: '金子？',
+                friendshipChange: 20,
+                response: '「庸俗。」他摇头叹气，但还是给了你一次机会。'
+              },
+              {
+                text: '烦恼。',
+                friendshipChange: 40,
+                response: '「嗯……也算对。但吾更喜欢乐观的答案。」'
+              }
             ]
           },
-          { text: '「有意思。」他收起尾巴，化作一个普通青年的模样。「你比我想象中有趣。后会有期。」' }
+          {
+            text: '「有意思。」他收起尾巴，化作一个普通青年的模样。「你比我想象中有趣。后会有期。」'
+          }
         ],
         logMessage: '【仙缘】谜语挑战之后，狐仙终于露出真容。'
       },
@@ -474,9 +584,13 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'item', itemId: 'fox_bead', quantity: 1 }
         ],
         scenes: [
-          { text: '你带着在矿洞深处找到的狐珠回到村中。那个青年已经靠在树上等着了。' },
+          {
+            text: '你带着在矿洞深处找到的狐珠回到村中。那个青年已经靠在树上等着了。'
+          },
           { text: '「你找到了我的狐珠。」他伸手接过，珠子在掌中闪耀赤光。' },
-          { text: '「看来缘分天定。吾乃灵狐一族，你可以叫我……狐仙就好。真名？那可要再多了解一些才会告诉你哦。」' }
+          {
+            text: '「看来缘分天定。吾乃灵狐一族，你可以叫我……狐仙就好。真名？那可要再多了解一些才会告诉你哦。」'
+          }
         ],
         logMessage: '【仙缘】归还狐珠后，狐仙愿意与你往来了。'
       }
@@ -516,9 +630,27 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
     ],
     bondBonuses: [{ type: 'sell_bonus', percent: 15 }],
     abilities: [
-      { id: 'hu_xian_1', affinityRequired: 700, name: '狐眼', description: '商店价格降低5%', passive: { type: 'sell_bonus', value: 5 } },
-      { id: 'hu_xian_2', affinityRequired: 1400, name: '灵探', description: '矿洞额外掉落概率提升', passive: { type: 'luck', value: 15 } },
-      { id: 'hu_xian_3', affinityRequired: 2100, name: '幻商', description: '旅行商人多1件稀有商品', passive: { type: 'luck', value: 10 } }
+      {
+        id: 'hu_xian_1',
+        affinityRequired: 700,
+        name: '狐眼',
+        description: '商店价格降低5%',
+        passive: { type: 'sell_bonus', value: 5 }
+      },
+      {
+        id: 'hu_xian_2',
+        affinityRequired: 1400,
+        name: '灵探',
+        description: '矿洞额外掉落概率提升',
+        passive: { type: 'luck', value: 15 }
+      },
+      {
+        id: 'hu_xian_3',
+        affinityRequired: 2100,
+        name: '幻商',
+        description: '旅行商人多1件稀有商品',
+        passive: { type: 'luck', value: 10 }
+      }
     ],
     manifestationDay: { season: 'autumn', day: 7 }
   },
@@ -543,8 +675,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'skill', skillType: 'mining', minLevel: 8 }
         ],
         scenes: [
-          { text: '矿洞深处，你发现了一本泛黄的古册，封面写着「清虚修炼手札」。' },
-          { text: '翻开第一页：「入山五百年，丹成九转。桃源之下，地脉灵气最盛处，吾将闭关于此。」' }
+          {
+            text: '矿洞深处，你发现了一本泛黄的古册，封面写着「清虚修炼手札」。'
+          },
+          {
+            text: '翻开第一页：「入山五百年，丹成九转。桃源之下，地脉灵气最盛处，吾将闭关于此。」'
+          }
         ],
         logMessage: '【仙缘】矿洞深处发现一本古老的修炼手札……'
       },
@@ -558,8 +694,12 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           { text: '冬日的矿洞深处，你听到一阵悠远的箫声，苍凉而古朴。' },
-          { text: '循着箫声走去，你隐约看到一位白发老者盘坐在矿脉旁，周身环绕着淡金色的灵气。' },
-          { text: '你踏前一步，脚下的碎石发出声响。老者睁开眼，你只觉一股浩然之气扑面而来，一晃神间他已消失不见。' }
+          {
+            text: '循着箫声走去，你隐约看到一位白发老者盘坐在矿脉旁，周身环绕着淡金色的灵气。'
+          },
+          {
+            text: '你踏前一步，脚下的碎石发出声响。老者睁开眼，你只觉一股浩然之气扑面而来，一晃神间他已消失不见。'
+          }
         ],
         logMessage: '【仙缘】矿洞深处，一位白发老者正在修炼，转瞬即逝。'
       },
@@ -571,17 +711,33 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'item', itemId: 'snow_lotus', quantity: 1 }
         ],
         scenes: [
-          { text: '你带着人参和雪莲进入矿洞，灵气明显比平时浓郁。那位老者坐在洞壁前，面前摆着一个古铜色的丹炉。' },
+          {
+            text: '你带着人参和雪莲进入矿洞，灵气明显比平时浓郁。那位老者坐在洞壁前，面前摆着一个古铜色的丹炉。'
+          },
           { text: '「来了。」他声音低沉而平静，仿佛早已预料到你的来访。' },
           {
             text: '「年轻人，你为何深入矿洞？」他睁开一只眼，浑浊的瞳孔中闪过精光。',
             choices: [
-              { text: '为了变得更强。', friendshipChange: 60, response: '「尚可。有志气，但不可执念太深。」他点了点头。' },
-              { text: '为了探索未知。', friendshipChange: 80, response: '「好。求知之心，是修行的根基。」他罕见地露出赞许的目光。' },
-              { text: '为了赚钱。', friendshipChange: 20, response: '「……」他沉默良久，摇了摇头，「凡夫俗子。不过坦诚倒也难得。」' }
+              {
+                text: '为了变得更强。',
+                friendshipChange: 60,
+                response: '「尚可。有志气，但不可执念太深。」他点了点头。'
+              },
+              {
+                text: '为了探索未知。',
+                friendshipChange: 80,
+                response: '「好。求知之心，是修行的根基。」他罕见地露出赞许的目光。'
+              },
+              {
+                text: '为了赚钱。',
+                friendshipChange: 20,
+                response: '「……」他沉默良久，摇了摇头，「凡夫俗子。不过坦诚倒也难得。」'
+              }
             ]
           },
-          { text: '「去吧。待你真正准备好了，再来此处。」他闭上眼，周身灵气再次涌动。' }
+          {
+            text: '「去吧。待你真正准备好了，再来此处。」他闭上眼，周身灵气再次涌动。'
+          }
         ],
         logMessage: '【仙缘】矿洞深处邂逅了一位修炼的老仙人。'
       },
@@ -595,7 +751,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         scenes: [
           { text: '你再次来到矿洞深处，老仙人正在煮茶。一壶清茶，两只杯子。' },
           { text: '「坐。」他指了指对面的石头。这是他第一次邀请你。' },
-          { text: '「吾号清虚，在此修行已逾五百年。既有缘，偶尔来坐坐也无妨。」他端起茶杯，嘴角微微上扬。' }
+          {
+            text: '「吾号清虚，在此修行已逾五百年。既有缘，偶尔来坐坐也无妨。」他端起茶杯，嘴角微微上扬。'
+          }
         ],
         logMessage: '【仙缘】仙翁清虚邀你共饮清茶，缘分由此开始。'
       }
@@ -677,9 +835,15 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         phase: 'rumor',
         conditions: [{ type: 'npcFriendship', npcId: 'su_su', minFriendship: 2000 }],
         scenes: [
-          { text: '素素今天显得有些心神不宁：「{player}，你有没有……在夜里听到过织机的声音？」' },
-          { text: '「我家旁边的旧屋子，每到月光好的夜晚就会传来吱呀吱呀的声音……好像有人在织布。」' },
-          { text: '「我去看过，里面什么都没有。但那声音……是真的。」素素的眼神中透着不安。' }
+          {
+            text: '素素今天显得有些心神不宁：「{player}，你有没有……在夜里听到过织机的声音？」'
+          },
+          {
+            text: '「我家旁边的旧屋子，每到月光好的夜晚就会传来吱呀吱呀的声音……好像有人在织布。」'
+          },
+          {
+            text: '「我去看过，里面什么都没有。但那声音……是真的。」素素的眼神中透着不安。'
+          }
         ],
         logMessage: '【仙缘】素素说夜里能听到织机声，旧屋中却空无一人……'
       },
@@ -692,10 +856,18 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'location', panel: 'village' }
         ],
         scenes: [
-          { text: '深夜的村庄万籁俱寂。你路过旧屋时，果然听到了那个声音——吱呀，吱呀。' },
-          { text: '透过窗棂，月光中一台古老的织机正自行运转，银白色的丝线在空中飞舞。' },
-          { text: '你看到一个模糊的女子身影坐在织机前，她的泪水化作银丝融入布匹中。' },
-          { text: '你手中的蚕丝微微发光，与织机上的丝线遥相呼应。那身影回过头来，但随即消散如烟。' }
+          {
+            text: '深夜的村庄万籁俱寂。你路过旧屋时，果然听到了那个声音——吱呀，吱呀。'
+          },
+          {
+            text: '透过窗棂，月光中一台古老的织机正自行运转，银白色的丝线在空中飞舞。'
+          },
+          {
+            text: '你看到一个模糊的女子身影坐在织机前，她的泪水化作银丝融入布匹中。'
+          },
+          {
+            text: '你手中的蚕丝微微发光，与织机上的丝线遥相呼应。那身影回过头来，但随即消散如烟。'
+          }
         ],
         logMessage: '【仙缘】深夜旧屋中，一位织女的幽影在月光下织布……'
       },
@@ -708,12 +880,20 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'item', itemId: 'moonstone', quantity: 1 }
         ],
         scenes: [
-          { text: '冬夜，你带着蚕丝和月光石走进旧屋。织机前空空如也，但你将蚕丝和月光石放在织机上。' },
-          { text: '银白色的光芒从月光石中涌出，丝线自行缠绕在织轴上。织机开始运转，一个身影从光芒中凝聚成形。' },
+          {
+            text: '冬夜，你带着蚕丝和月光石走进旧屋。织机前空空如也，但你将蚕丝和月光石放在织机上。'
+          },
+          {
+            text: '银白色的光芒从月光石中涌出，丝线自行缠绕在织轴上。织机开始运转，一个身影从光芒中凝聚成形。'
+          },
           {
             text: '一位面容清秀的女子坐在织机前，泪痕犹在。她看着你，轻声说：「你……能看见我？」',
             choices: [
-              { text: '我能看见你。你在哭吗？', friendshipChange: 80, response: '她怔了一下，擦去眼角的泪：「很久没有人……对我说话了。」' },
+              {
+                text: '我能看见你。你在哭吗？',
+                friendshipChange: 80,
+                response: '她怔了一下，擦去眼角的泪：「很久没有人……对我说话了。」'
+              },
               {
                 text: '你是谁？为什么在这里织布？',
                 friendshipChange: 60,
@@ -726,7 +906,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
               }
             ]
           },
-          { text: '天亮前她的身影再次变淡：「如果你愿意……明天再来陪我织一会儿吧。」' }
+          {
+            text: '天亮前她的身影再次变淡：「如果你愿意……明天再来陪我织一会儿吧。」'
+          }
         ],
         logMessage: '【仙缘】旧屋织机前，织梦归女终于愿意开口说话了。'
       },
@@ -738,9 +920,15 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: 'questComplete', questId: 'main_2_4' }
         ],
         scenes: [
-          { text: '你连续多日来到旧屋陪伴织女。今夜，她的身影比以往更加清晰。' },
-          { text: '「你的陪伴让我想起了很多事。」她放下梭子，第一次离开织机走到你面前。' },
-          { text: '「我叫锦归。归字是归乡的归。」她轻轻笑了，「或许……这里就是我的归处。」' }
+          {
+            text: '你连续多日来到旧屋陪伴织女。今夜，她的身影比以往更加清晰。'
+          },
+          {
+            text: '「你的陪伴让我想起了很多事。」她放下梭子，第一次离开织机走到你面前。'
+          },
+          {
+            text: '「我叫锦归。归字是归乡的归。」她轻轻笑了，「或许……这里就是我的归处。」'
+          }
         ],
         logMessage: '【仙缘】织梦归女锦归不再执着于回家的路，选择留在桃源。'
       }
@@ -780,9 +968,27 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
     ],
     bondBonuses: [{ type: 'animal_blessing', chance: 0.25 }],
     abilities: [
-      { id: 'gui_nv_1', affinityRequired: 500, name: '织速', description: '布料加工时间-30%', passive: { type: 'exp_boost', value: 30 } },
-      { id: 'gui_nv_2', affinityRequired: 1100, name: '梦丝', description: '织机概率产出梦丝', passive: { type: 'luck', value: 8 } },
-      { id: 'gui_nv_3', affinityRequired: 1900, name: '灵抚', description: '动物好感获取+25%', passive: { type: 'exp_boost', value: 25 } }
+      {
+        id: 'gui_nv_1',
+        affinityRequired: 500,
+        name: '织速',
+        description: '布料加工时间-30%',
+        passive: { type: 'exp_boost', value: 30 }
+      },
+      {
+        id: 'gui_nv_2',
+        affinityRequired: 1100,
+        name: '梦丝',
+        description: '织机概率产出梦丝',
+        passive: { type: 'luck', value: 8 }
+      },
+      {
+        id: 'gui_nv_3',
+        affinityRequired: 1900,
+        name: '灵抚',
+        description: '动物好感获取+25%',
+        passive: { type: 'exp_boost', value: 25 }
+      }
     ],
     manifestationDay: { season: 'winter', day: 21 }
   }

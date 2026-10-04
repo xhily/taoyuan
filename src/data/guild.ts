@@ -3,7 +3,14 @@ import type { MonsterGoalDef, GuildShopItemDef, GuildDonationDef, GuildLevelDef 
 /** 怪物讨伐目标 */
 export const MONSTER_GOALS: MonsterGoalDef[] = [
   // ===== 浅层 =====
-  { monsterId: 'mud_worm', monsterName: '泥虫', zone: 'shallow', killTarget: 25, reward: { money: 200 }, description: '清除浅层的泥虫。' },
+  {
+    monsterId: 'mud_worm',
+    monsterName: '泥虫',
+    zone: 'shallow',
+    killTarget: 25,
+    reward: { money: 200 },
+    description: '清除浅层的泥虫。'
+  },
   {
     monsterId: 'stone_crab',
     monsterName: '石蟹',
@@ -13,10 +20,31 @@ export const MONSTER_GOALS: MonsterGoalDef[] = [
     description: '消灭浅层的石蟹。'
   },
   // ===== 冰霜 =====
-  { monsterId: 'ice_bat', monsterName: '冰蝠', zone: 'frost', killTarget: 25, reward: { money: 500 }, description: '击落冰霜层的冰蝠。' },
-  { monsterId: 'ghost', monsterName: '幽灵', zone: 'frost', killTarget: 25, reward: { money: 500 }, description: '驱散冰霜层的幽灵。' },
+  {
+    monsterId: 'ice_bat',
+    monsterName: '冰蝠',
+    zone: 'frost',
+    killTarget: 25,
+    reward: { money: 500 },
+    description: '击落冰霜层的冰蝠。'
+  },
+  {
+    monsterId: 'ghost',
+    monsterName: '幽灵',
+    zone: 'frost',
+    killTarget: 25,
+    reward: { money: 500 },
+    description: '驱散冰霜层的幽灵。'
+  },
   // ===== 熔岩 =====
-  { monsterId: 'fire_bat', monsterName: '火蝠', zone: 'lava', killTarget: 50, reward: { money: 800 }, description: '击退熔岩层的火蝠。' },
+  {
+    monsterId: 'fire_bat',
+    monsterName: '火蝠',
+    zone: 'lava',
+    killTarget: 50,
+    reward: { money: 800 },
+    description: '击退熔岩层的火蝠。'
+  },
   {
     monsterId: 'shadow_warrior',
     monsterName: '暗影武士',
@@ -155,15 +183,74 @@ export const MONSTER_GOALS: MonsterGoalDef[] = [
 /** 公会商店物品 (与镖局互补，不重复) */
 export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   // --- 消耗品（铜钱购买，不限购）---
-  { itemId: 'combat_tonic', name: '战斗补剂', price: 200, description: '恢复30点HP。' },
-  { itemId: 'adventurer_ration', name: '冒险口粮', price: 350, description: '恢复25体力和25HP。', unlockGuildLevel: 2 },
-  { itemId: 'fortify_brew', name: '强化药水', price: 500, description: '恢复60点HP。' },
-  { itemId: 'ironhide_potion', name: '铁壁药剂', price: 800, description: '恢复全部HP。' },
-  { itemId: 'warriors_feast', name: '勇者盛宴', price: 1000, description: '恢复50体力和50HP。', unlockGuildLevel: 5 },
-  { itemId: 'slayer_charm', name: '猎魔符', price: 1500, description: '怪物掉落率+20%（当次探索）。', unlockGuildLevel: 3 },
-  { itemId: 'stamina_elixir', name: '精力药剂', price: 600, description: '恢复120点体力。', unlockGuildLevel: 4 },
-  { itemId: 'monster_lure', name: '怪物诱饵', price: 2000, description: '本层怪物数量翻倍。', unlockGuildLevel: 7 },
+  {
+    itemId: 'combat_tonic',
+    name: '战斗补剂',
+    price: 200,
+    description: '恢复30点HP。'
+  },
+  {
+    itemId: 'adventurer_ration',
+    name: '冒险口粮',
+    price: 350,
+    description: '恢复25体力和25HP。',
+    unlockGuildLevel: 2
+  },
+  {
+    itemId: 'fortify_brew',
+    name: '强化药水',
+    price: 500,
+    description: '恢复60点HP。'
+  },
+  {
+    itemId: 'ironhide_potion',
+    name: '铁壁药剂',
+    price: 800,
+    description: '恢复全部HP。'
+  },
+  {
+    itemId: 'warriors_feast',
+    name: '勇者盛宴',
+    price: 1000,
+    description: '恢复50体力和50HP。',
+    unlockGuildLevel: 5
+  },
+  {
+    itemId: 'slayer_charm',
+    name: '猎魔符',
+    price: 1500,
+    description: '怪物掉落率+20%（当次探索）。',
+    unlockGuildLevel: 3
+  },
+  {
+    itemId: 'stamina_elixir',
+    name: '精力药剂',
+    price: 600,
+    description: '恢复120点体力。',
+    unlockGuildLevel: 4
+  },
+  {
+    itemId: 'monster_lure',
+    name: '怪物诱饵',
+    price: 2000,
+    description: '本层怪物数量翻倍。',
+    unlockGuildLevel: 7
+  },
   // --- 装备（贡献点+材料，限购1件）---
+  {
+    itemId: 'guild_cloud_horse',
+    name: '踏云驹',
+    price: 0,
+    contributionCost: 600,
+    description: '公会驯养的神骏。把你的马升级为踏云驹：赶路极快，放牧时帮你照看畜群。',
+    unlockGuildLevel: 8,
+    totalLimit: 1,
+    horseUpgrade: 'cloud',
+    materials: [
+      { itemId: 'iridium_bar', quantity: 3 },
+      { itemId: 'hay', quantity: 50 }
+    ]
+  },
   {
     itemId: 'guild_war_ring',
     name: '公会战戒',

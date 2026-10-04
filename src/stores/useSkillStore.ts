@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { SkillType, SkillState, SkillPerk5, SkillPerk10 } from '@/types'
 import { useInventoryStore } from './useInventoryStore'
+import { triggerPerkCheck } from '@/composables/useGameLog'
 
 /** 各等级所需累计经验 **/
 const EXP_TABLE = [0, 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000]
@@ -48,6 +49,9 @@ export const useSkillStore = defineStore('skill', () => {
         break
       }
     }
+
+    // 升级即刻检查专精，不依赖后续是否恰好有日志写入
+    if (leveledUp) triggerPerkCheck()
 
     return { leveledUp, newLevel: skill.level }
   }

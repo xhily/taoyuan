@@ -530,10 +530,30 @@
     const g = detailFish.value.genetics
     return [
       { key: 'weight', label: '体重', value: g.weight, barClass: 'bg-accent' },
-      { key: 'growthRate', label: '生长', value: g.growthRate, barClass: 'bg-success' },
-      { key: 'diseaseRes', label: '抗病', value: g.diseaseRes, barClass: 'bg-water' },
-      { key: 'qualityGene', label: '品质', value: g.qualityGene, barClass: 'bg-quality-fine' },
-      { key: 'mutationRate', label: '变异', value: g.mutationRate, barClass: 'bg-danger' }
+      {
+        key: 'growthRate',
+        label: '生长',
+        value: g.growthRate,
+        barClass: 'bg-success'
+      },
+      {
+        key: 'diseaseRes',
+        label: '抗病',
+        value: g.diseaseRes,
+        barClass: 'bg-water'
+      },
+      {
+        key: 'qualityGene',
+        label: '品质',
+        value: g.qualityGene,
+        barClass: 'bg-quality-fine'
+      },
+      {
+        key: 'mutationRate',
+        label: '变异',
+        value: g.mutationRate,
+        barClass: 'bg-danger'
+      }
     ]
   })
 

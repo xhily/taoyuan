@@ -33,6 +33,8 @@ export interface FarmPlot {
   weedy: boolean
   /** 连续长草天数 */
   weedyDays: number
+  /** 地块等级（0-3），每级每次收获额外 +1；属于土地，清空作物不重置 */
+  level: number
 }
 
 /** 作物定义（配置数据用） */

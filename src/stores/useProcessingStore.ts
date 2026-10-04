@@ -1,8 +1,10 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { MachineType, ProcessingSlot, Quality } from '@/types'
+import type { MachineType, MachineUpgradeDef, ProcessingRecipeDef, ProcessingSlot, Quality } from '@/types'
 import {
   PROCESSING_MACHINES,
+  MACHINE_UPGRADES,
+  MAX_MACHINE_LEVEL,
   SPRINKLERS,
   FERTILIZERS,
   BAITS,
@@ -93,7 +95,8 @@ export const useProcessingStore = defineStore('processing', () => {
       inputItemId: null,
       daysProcessed: 0,
       totalDays: 0,
-      ready: false
+      ready: false,
+      level: 0
     })
     return true
   }
@@ -157,6 +160,69 @@ export const useProcessingStore = defineStore('processing', () => {
     return true
   }
 
+  // === 设备等级 ===
+
+  /** 设备等级（缺省 0，越界按边界处理） */
+  const getSlotLevel = (slot: ProcessingSlot): number => {
+    const level = Math.floor(slot.level ?? 0)
+    if (!Number.isFinite(level) || level < 0) return 0
+    return Math.min(level, MAX_MACHINE_LEVEL)
+  }
+
+  /** 某配方在该设备上一次的产出数量：配方产量 ×（1 + 设备等级） */
+  const getOutputQuantity = (recipe: ProcessingRecipeDef, slot: ProcessingSlot): number => {
+    return recipe.outputQuantity * (1 + getSlotLevel(slot))
+  }
+
+  /** 槽位当前配方完成后的产出数量（空闲为 0） */
+  const getSlotOutputQuantity = (slot: ProcessingSlot): number => {
+    if (!slot.recipeId) return 0
+    const recipe = getProcessingRecipeById(slot.recipeId)
+    return recipe ? getOutputQuantity(recipe, slot) : 0
+  }
+
+  /** 升到目标等级的费用，超出等级范围返回 null */
+  const getMachineUpgradeCost = (targetLevel: number): MachineUpgradeDef | null => {
+    return MACHINE_UPGRADES.find(u => u.level === targetLevel) ?? null
+  }
+
+  /** 指定设备能否升级：未满级且材料、铜钱足够 */
+  const canUpgradeMachine = (index: number): boolean => {
+    const slot = machines.value[index]
+    if (!slot) return false
+    const cost = getMachineUpgradeCost(getSlotLevel(slot) + 1)
+    return cost !== null && canCraft(cost.materials, cost.money)
+  }
+
+  /** 升级指定设备（index 为 machines 中的原始下标），加工中也可升级，收取时按新等级结算 */
+  const upgradeMachine = (index: number): { success: boolean; message: string } => {
+    const slot = machines.value[index]
+    if (!slot) return { success: false, message: '设备不存在。' }
+    const cost = getMachineUpgradeCost(getSlotLevel(slot) + 1)
+    if (!cost) return { success: false, message: '已满级。' }
+    if (!consumeCraftMaterials(cost.materials, cost.money)) return { success: false, message: '材料或铜钱不足。' }
+    slot.level = cost.level
+    const name = PROCESSING_MACHINES.find(m => m.id === slot.machineType)?.name ?? slot.machineType
+    return { success: true, message: `${name}升至Lv.${cost.level}。` }
+  }
+
+  /**
+   * 发放加工产物：优先放入虚空成品箱，放不下的部分进背包。
+   * 按实际入箱数量结算剩余，避免箱子只放下一部分时整批再进背包造成重复。
+   */
+  const deliverOutput = (itemId: string, quantity: number, quality: Quality) => {
+    if (quantity <= 0) return
+    const warehouseStore = useWarehouseStore()
+    const voidOutput = warehouseStore.getVoidOutputChest()
+    let remaining = quantity
+    if (voidOutput) {
+      const before = warehouseStore.getChestItemCount(voidOutput.id, itemId, quality)
+      warehouseStore.addItemToChest(voidOutput.id, itemId, quantity, quality)
+      remaining -= warehouseStore.getChestItemCount(voidOutput.id, itemId, quality) - before
+    }
+    if (remaining > 0) inventoryStore.addItem(itemId, remaining, quality)
+  }
+
   // === 加工操作 ===
 
   /** 检测背包+仓库中某物品的最低品质（removeItem 默认消耗顺序） */
@@ -204,13 +270,8 @@ export const useProcessingStore = defineStore('processing', () => {
     const recipe = getProcessingRecipeById(slot.recipeId)
     if (!recipe) return null
 
-    // 优先放入虚空成品箱，箱子满则回退到背包
-    const warehouseStore = useWarehouseStore()
-    const voidOutput = warehouseStore.getVoidOutputChest()
-    const outputQuality = slot.inputQuality ?? 'normal'
-    if (!voidOutput || !warehouseStore.addItemToChest(voidOutput.id, recipe.outputItemId, recipe.outputQuantity, outputQuality)) {
-      inventoryStore.addItem(recipe.outputItemId, recipe.outputQuantity, outputQuality)
-    }
+    // 优先放入虚空成品箱，箱子满则回退到背包；数量按设备等级结算
+    deliverOutput(recipe.outputItemId, getOutputQuantity(recipe, slot), slot.inputQuality ?? 'normal')
 
     // 种子制造机额外触发育种种子生成
     if (slot.machineType === 'seed_maker' && slot.inputItemId) {
@@ -232,21 +293,16 @@ export const useProcessingStore = defineStore('processing', () => {
     return recipe.outputItemId
   }
 
-  /** 拆除机器（退回加工原料 + 已完成产物 + 机器制作材料） */
+  /** 拆除机器（退回加工原料 + 已完成产物 + 机器制作材料；升级投入不退还） */
   const removeMachine = (slotIndex: number): boolean => {
     const slot = machines.value[slotIndex]
     if (!slot) return false
 
-    // 如果已完成：先收取产物
+    // 如果已完成：先收取产物（按设备等级结算）
     if (slot.recipeId && slot.ready) {
       const recipe = getProcessingRecipeById(slot.recipeId)
       if (recipe) {
-        const warehouseStore = useWarehouseStore()
-        const voidOutput = warehouseStore.getVoidOutputChest()
-        const outputQuality = slot.inputQuality ?? 'normal'
-        if (!voidOutput || !warehouseStore.addItemToChest(voidOutput.id, recipe.outputItemId, recipe.outputQuantity, outputQuality)) {
-          inventoryStore.addItem(recipe.outputItemId, recipe.outputQuantity, outputQuality)
-        }
+        deliverOutput(recipe.outputItemId, getOutputQuantity(recipe, slot), slot.inputQuality ?? 'normal')
       }
     }
     // 如果正在加工：退回原料
@@ -296,13 +352,157 @@ export const useProcessingStore = defineStore('processing', () => {
     return getRecipesForMachine(machineType)
   }
 
+  // === 加工站（同类设备并行槽位）===
+
+  /** 加工站统计：把同类设备视作一个拥有 N 个并行槽位的工站 */
+  interface StationStats {
+    /** 槽位总数 */
+    total: number
+    /** 空闲槽位数 */
+    idle: number
+    /** 运行中槽位数 */
+    running: number
+    /** 可收取槽位数 */
+    ready: number
+  }
+
+  /** 统计某类设备的槽位占用情况 */
+  const getStationStats = (machineType: MachineType): StationStats => {
+    let total = 0
+    let idle = 0
+    let running = 0
+    let ready = 0
+    for (const slot of machines.value) {
+      if (slot.machineType !== machineType) continue
+      total++
+      if (!slot.recipeId) idle++
+      else if (slot.ready) ready++
+      else running++
+    }
+    return { total, idle, running, ready }
+  }
+
+  /** 取得某类设备的槽位在 machines 中的下标（按原始顺序） */
+  const getStationSlotIndexes = (machineType: MachineType): number[] => {
+    const result: number[] = []
+    for (let i = 0; i < machines.value.length; i++) {
+      if (machines.value[i]!.machineType === machineType) result.push(i)
+    }
+    return result
+  }
+
+  /**
+   * 批量投料：把同一配方分配到该加工站的空闲槽位上。
+   * 逐个尝试，材料不足时自动停止，返回实际开工的槽位数。
+   */
+  const startProcessingBatch = (machineType: MachineType, recipeId: string, count: number, specifiedQuality?: Quality): number => {
+    if (count <= 0) return 0
+    let started = 0
+    for (const index of getStationSlotIndexes(machineType)) {
+      if (started >= count) break
+      if (machines.value[index]!.recipeId !== null) continue
+      if (!startProcessing(index, recipeId, specifiedQuality)) break
+      started++
+    }
+    return started
+  }
+
+  /** 收取某加工站（省略则全部工站）已完成的产物，返回收取数量 */
+  const collectAllReady = (machineType?: MachineType): number => {
+    let collected = 0
+    for (let i = 0; i < machines.value.length; i++) {
+      const slot = machines.value[i]!
+      if (machineType && slot.machineType !== machineType) continue
+      if (!slot.ready) continue
+      if (collectProduct(i)) collected++
+    }
+    return collected
+  }
+
+  /** 取消某加工站全部进行中的加工，返回取消数量 */
+  const cancelAllProcessing = (machineType: MachineType): number => {
+    let cancelled = 0
+    for (const index of getStationSlotIndexes(machineType)) {
+      const slot = machines.value[index]!
+      if (!slot.recipeId || slot.ready) continue
+      if (cancelProcessing(index)) cancelled++
+    }
+    return cancelled
+  }
+
+  /**
+   * 选出加工站里拆除哪一台：优先空闲槽位（避免误毁进行中的加工），其中再挑等级最低的。
+   * 同等级时空闲槽位取靠前一台，全忙时取靠后一台。
+   */
+  const getStationRemoveIndex = (machineType: MachineType): number | null => {
+    const indexes = getStationSlotIndexes(machineType)
+    if (indexes.length === 0) return null
+    const idle = indexes.filter(i => machines.value[i]!.recipeId === null)
+    const candidates = idle.length > 0 ? idle : indexes.slice().reverse()
+    let best = candidates[0]!
+    for (const i of candidates) {
+      if (getSlotLevel(machines.value[i]!) < getSlotLevel(machines.value[best]!)) best = i
+    }
+    return best
+  }
+
+  /** 拆除该加工站的一个槽位（选择规则见 getStationRemoveIndex） */
+  const removeOneFromStation = (machineType: MachineType): boolean => {
+    const index = getStationRemoveIndex(machineType)
+    return index === null ? false : removeMachine(index)
+  }
+
+  // === 排序与命名 ===
+
+  /**
+   * 加工站自定义名称。
+   * 设备多了以后「酒坊」「酒坊」「酒坊」很难区分各自在干什么，允许起个诸如「果酒专用」的名字。
+   */
+  const stationNames = ref<Record<string, string>>({})
+
+  /** 加工站显示顺序（存放 machineType，未列出的按默认顺序排在后面） */
+  const stationOrder = ref<MachineType[]>([])
+
+  /** 取加工站显示名（未命名则用设备原名） */
+  const getStationName = (machineType: MachineType, defaultName: string): string => {
+    return stationNames.value[machineType] || defaultName
+  }
+
+  /** 重命名加工站；传空字符串恢复默认名 */
+  const renameStation = (machineType: MachineType, name: string) => {
+    const trimmed = name.trim()
+    if (trimmed) stationNames.value[machineType] = trimmed
+    else delete stationNames.value[machineType]
+  }
+
+  /** 在显示顺序中把某个加工站上移/下移 */
+  const moveStation = (machineType: MachineType, direction: -1 | 1, allTypes: MachineType[]) => {
+    // 以当前完整列表为基准补全顺序表，避免新造的设备无法参与排序
+    const order = allTypes.slice()
+    const from = order.indexOf(machineType)
+    const to = from + direction
+    if (from < 0 || to < 0 || to >= order.length) return
+    ;[order[from], order[to]] = [order[to]!, order[from]!]
+    stationOrder.value = order
+  }
+
+  /** 按自定义顺序排序加工站类型 */
+  const sortStationTypes = (types: MachineType[]): MachineType[] => {
+    if (stationOrder.value.length === 0) return types
+    const rank = new Map(stationOrder.value.map((t, i) => [t, i]))
+    return types.slice().sort((a, b) => (rank.get(a) ?? 999) - (rank.get(b) ?? 999))
+  }
+
   // === 每日更新 ===
 
   const dailyUpdate = () => {
-    const collected: string[] = []
+    /** 自动收取汇总：配方名 → 实际产出数量（含设备等级加成） */
+    const collected = new Map<string, number>()
+    const addCollected = (name: string, quantity: number) => {
+      collected.set(name, (collected.get(name) ?? 0) + quantity)
+    }
     const readyNames: string[] = []
     const warehouseStore = useWarehouseStore()
-    const voidOutput = warehouseStore.getVoidOutputChest()
     for (const slot of machines.value) {
       if (!slot.recipeId || slot.ready) continue
       slot.daysProcessed++
@@ -312,16 +512,14 @@ export const useProcessingStore = defineStore('processing', () => {
           // 仙缘能力：梦织（gui_nv_2）织布机8%概率额外产出梦丝
           if (slot.machineType === 'loom' && useHiddenNpcStore().isAbilityActive('gui_nv_2') && Math.random() < 0.08) {
             inventoryStore.addItem('dream_silk', 1)
-            collected.push('梦丝')
+            addCollected('梦丝', 1)
           }
           const machineDef = PROCESSING_MACHINES.find(m => m.id === slot.machineType)
           if (recipe.inputItemId === null || machineDef?.autoCollect) {
             // 自动收取：无需原料的机器（蜂箱/蚯蚓箱）或标记了 autoCollect 的机器（熔炉）
-            const outputQuality = slot.inputQuality ?? 'normal'
-            if (!voidOutput || !warehouseStore.addItemToChest(voidOutput.id, recipe.outputItemId, recipe.outputQuantity, outputQuality)) {
-              inventoryStore.addItem(recipe.outputItemId, recipe.outputQuantity, outputQuality)
-            }
-            collected.push(recipe.name)
+            const outputQuantity = getOutputQuantity(recipe, slot)
+            deliverOutput(recipe.outputItemId, outputQuantity, slot.inputQuality ?? 'normal')
+            addCollected(recipe.name, outputQuantity)
             // 无需原料的机器自动重启，有原料的机器回到空闲
             if (recipe.inputItemId === null) {
               slot.daysProcessed = 0
@@ -339,12 +537,10 @@ export const useProcessingStore = defineStore('processing', () => {
             // 需要原料的机器：检查虚空原料箱是否可自动续产
             const voidInput = warehouseStore.getVoidInputChest()
             if (voidInput && recipe.inputItemId) {
-              // 自动收取当前产物
-              const outputQuality = slot.inputQuality ?? 'normal'
-              if (!voidOutput || !warehouseStore.addItemToChest(voidOutput.id, recipe.outputItemId, recipe.outputQuantity, outputQuality)) {
-                inventoryStore.addItem(recipe.outputItemId, recipe.outputQuantity, outputQuality)
-              }
-              collected.push(recipe.name)
+              // 自动收取当前产物（按设备等级结算）
+              const outputQuantity = getOutputQuantity(recipe, slot)
+              deliverOutput(recipe.outputItemId, outputQuantity, slot.inputQuality ?? 'normal')
+              addCollected(recipe.name, outputQuantity)
 
               // 种子制造机额外触发育种种子生成
               if (slot.machineType === 'seed_maker' && slot.inputItemId) {
@@ -385,12 +581,8 @@ export const useProcessingStore = defineStore('processing', () => {
         }
       }
     }
-    if (collected.length > 0) {
-      const counts = new Map<string, number>()
-      for (const name of collected) {
-        counts.set(name, (counts.get(name) ?? 0) + 1)
-      }
-      const summary = Array.from(counts.entries())
+    if (collected.size > 0) {
+      const summary = Array.from(collected.entries())
         .map(([name, count]) => (count > 1 ? `${name}x${count}` : name))
         .join('、')
       addLog(`工坊自动收取了：${summary}。`)
@@ -416,7 +608,10 @@ export const useProcessingStore = defineStore('processing', () => {
     if (!upgrade) return { success: false, message: '工坊已达到最高等级。' }
     if (!consumeCraftMaterials(upgrade.materials, upgrade.cost)) return { success: false, message: '材料或铜钱不足。' }
     workshopLevel.value = next
-    return { success: true, message: `工坊扩建完成！机器上限提升至${maxMachines.value}台。` }
+    return {
+      success: true,
+      message: `工坊扩建完成！机器上限提升至${maxMachines.value}台。`
+    }
   }
 
   /** 获取下一级升级信息 */
@@ -427,6 +622,16 @@ export const useProcessingStore = defineStore('processing', () => {
 
   /** 工坊分组折叠状态（参与存档） */
   const collapsedGroups = ref(new Set<MachineType>())
+
+  /** 只显示有足够材料的配方（参与存档，默认 false） */
+  const onlyAvailable = ref(false)
+
+  /**
+   * 加工区视图模式（参与存档）。
+   * station：同类设备合并成一座加工站，统一投料；
+   * individual：每台设备各自一块面板，逐台操作。
+   */
+  const viewMode = ref<'station' | 'individual'>('station')
 
   const toggleGroup = (type: MachineType) => {
     if (collapsedGroups.value.has(type)) {
@@ -442,14 +647,23 @@ export const useProcessingStore = defineStore('processing', () => {
     return {
       machines: machines.value,
       workshopLevel: workshopLevel.value,
-      collapsedGroups: [...collapsedGroups.value]
+      collapsedGroups: [...collapsedGroups.value],
+      viewMode: viewMode.value,
+      onlyAvailable: onlyAvailable.value,
+      stationNames: stationNames.value,
+      stationOrder: stationOrder.value
     }
   }
 
   const deserialize = (data: ReturnType<typeof serialize>) => {
-    machines.value = data.machines ?? []
+    // 旧存档的设备没有 level 字段，按 0 级读入
+    machines.value = (data.machines ?? []).map(m => ({ ...m, level: m.level ?? 0 }))
     workshopLevel.value = (data as any).workshopLevel ?? 0
     collapsedGroups.value = new Set((data as any).collapsedGroups ?? [])
+    viewMode.value = (data as any).viewMode ?? 'station'
+    onlyAvailable.value = (data as any).onlyAvailable ?? false
+    stationNames.value = (data as any).stationNames ?? {}
+    stationOrder.value = (data as any).stationOrder ?? []
   }
 
   return {
@@ -472,11 +686,31 @@ export const useProcessingStore = defineStore('processing', () => {
     cancelProcessing,
     removeMachine,
     getAvailableRecipes,
+    getSlotLevel,
+    getSlotOutputQuantity,
+    getMachineUpgradeCost,
+    canUpgradeMachine,
+    upgradeMachine,
+    getStationStats,
+    getStationSlotIndexes,
+    startProcessingBatch,
+    collectAllReady,
+    cancelAllProcessing,
+    getStationRemoveIndex,
+    removeOneFromStation,
     dailyUpdate,
     upgradeWorkshop,
     getNextUpgrade,
     WORKSHOP_UPGRADES,
     collapsedGroups,
+    viewMode,
+    onlyAvailable,
+    stationNames,
+    stationOrder,
+    getStationName,
+    renameStation,
+    moveStation,
+    sortStationTypes,
     toggleGroup,
     serialize,
     deserialize

@@ -9,10 +9,34 @@ export interface ThemeDef {
 }
 
 export const THEMES: ThemeDef[] = [
-  { key: 'dark', name: '墨夜', bg: '#1a1a1a', panel: '#2b2d3c', text: '#e8e4d9' },
-  { key: 'warm', name: '暖灯', bg: '#2a2318', panel: '#3d3528', text: '#efe6d0' },
-  { key: 'ink', name: '水墨', bg: '#f0ece4', panel: '#e0dbd0', text: '#2c2c2c' },
-  { key: 'parchment', name: '素笺', bg: '#e8dcc8', panel: '#d8ccb4', text: '#3a3028' }
+  {
+    key: 'dark',
+    name: '墨夜',
+    bg: '#1a1a1a',
+    panel: '#2b2d3c',
+    text: '#e8e4d9'
+  },
+  {
+    key: 'warm',
+    name: '暖灯',
+    bg: '#2a2318',
+    panel: '#3d3528',
+    text: '#efe6d0'
+  },
+  {
+    key: 'ink',
+    name: '水墨',
+    bg: '#f0ece4',
+    panel: '#e0dbd0',
+    text: '#2c2c2c'
+  },
+  {
+    key: 'parchment',
+    name: '素笺',
+    bg: '#e8dcc8',
+    panel: '#d8ccb4',
+    text: '#3a3028'
+  }
 ]
 
 /** 将 hex 颜色转换为空格分隔的 RGB 数值，用于 CSS 变量 + Tailwind 透明度支持 */

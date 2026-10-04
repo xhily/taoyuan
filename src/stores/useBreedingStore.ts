@@ -17,6 +17,7 @@ import {
   MAX_BREEDING_STATIONS,
   generateGeneticsId,
   clampStat,
+  HYBRID_REQUIREMENT_TOLERANCE,
   clampMutationRate,
   getDefaultGenetics,
   getStarRating,
@@ -157,7 +158,10 @@ export const useBreedingStore = defineStore('breeding', () => {
       removeItem(mat.itemId, mat.quantity)
     }
     seedBoxLevel.value++
-    return { success: true, message: `种子箱扩容完成！容量提升至${maxSeedBox.value}格。` }
+    return {
+      success: true,
+      message: `种子箱扩容完成！容量提升至${maxSeedBox.value}格。`
+    }
   }
 
   const startBreeding = (slotIndex: number, seedAId: string, seedBId: string): boolean => {
@@ -317,7 +321,11 @@ export const useBreedingStore = defineStore('breeding', () => {
     const avgSweetness = (a.sweetness + b.sweetness) / 2
     const avgYield = (a.yield + b.yield) / 2
 
-    if (hybrid && avgSweetness >= hybrid.minSweetness && avgYield >= hybrid.minYield) {
+    // 门槛留出宽容度：差一两点就整批作废最容易劝退，这里按需求的 85% 判定
+    const sweetnessNeeded = hybrid ? Math.ceil(hybrid.minSweetness * HYBRID_REQUIREMENT_TOLERANCE) : 0
+    const yieldNeeded = hybrid ? Math.ceil(hybrid.minYield * HYBRID_REQUIREMENT_TOLERANCE) : 0
+
+    if (hybrid && avgSweetness >= sweetnessNeeded && avgYield >= yieldNeeded) {
       // 匹配成功，产出杂交种
       const avgStability = (a.stability + b.stability) / 2
       const avgMutationRate = (a.mutationRate + b.mutationRate) / 2
@@ -364,23 +372,23 @@ export const useBreedingStore = defineStore('breeding', () => {
 
       return result
     } else {
-      // 匹配失败，返回随机亲本种子的副本并微降属性
+      // 匹配失败：保留亲本属性不再倒扣，否则连续失败会让玩家越试越差
       const source = Math.random() < 0.5 ? a : b
-      const statToReduce: ('sweetness' | 'yield' | 'resistance')[] = ['sweetness', 'yield', 'resistance']
-      const randomStat = statToReduce[Math.floor(Math.random() * 3)]!
 
       const failed: SeedGenetics = {
         ...source,
-        id: generateGeneticsId(),
-        [randomStat]: clampStat(source[randomStat] - 5)
-      } as SeedGenetics
+        id: generateGeneticsId()
+      }
 
       if (hybrid) {
-        addLog(
-          `杂交失败：亲本平均甜度${Math.round(avgSweetness)}（需≥${hybrid.minSweetness}），平均产量${Math.round(avgYield)}（需≥${hybrid.minYield}）。请先通过同种培育提升属性。`
-        )
+        const lackSweet = Math.max(0, sweetnessNeeded - Math.round(avgSweetness))
+        const lackYield = Math.max(0, yieldNeeded - Math.round(avgYield))
+        const gaps: string[] = []
+        if (lackSweet > 0) gaps.push(`甜度还差${lackSweet}点（${Math.round(avgSweetness)}/${sweetnessNeeded}）`)
+        if (lackYield > 0) gaps.push(`产量还差${lackYield}点（${Math.round(avgYield)}/${yieldNeeded}）`)
+        addLog(`杂交未成：${gaps.join('，')}。种子已原样返还，先用同种培育把属性顶上去再试。`)
       } else {
-        addLog('这两个品种无法杂交，返回了一颗种子。')
+        addLog('这两个品种无法杂交，种子已原样返还。')
       }
 
       return failed
@@ -422,6 +430,23 @@ export const useBreedingStore = defineStore('breeding', () => {
   }
 
   // === 序列化 ===
+
+  /**
+   * 整理种子箱。
+   * 种子多起来以后同类散落各处，找一颗要翻半天。
+   * 按「作物种类 → 综合属性 → 代数」排序，同类自然聚在一起，好的排在前面。
+   */
+  const sortBreedingBox = () => {
+    breedingBox.value.sort((a, b) => {
+      const ga = a.genetics
+      const gb = b.genetics
+      if (ga.cropId !== gb.cropId) return ga.cropId.localeCompare(gb.cropId)
+      const totalA = ga.sweetness + ga.yield + ga.resistance
+      const totalB = gb.sweetness + gb.yield + gb.resistance
+      if (totalA !== totalB) return totalB - totalA
+      return gb.generation - ga.generation
+    })
+  }
 
   const serialize = () => ({
     breedingBox: breedingBox.value.map(s => ({
@@ -473,6 +498,7 @@ export const useBreedingStore = defineStore('breeding', () => {
   return {
     // 状态
     breedingBox,
+    sortBreedingBox,
     stations,
     stationCount,
     seedBoxLevel,

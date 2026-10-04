@@ -4,6 +4,18 @@ import { getItemById } from './items'
 /** 矿洞总层数 */
 export const MAX_MINE_FLOOR = 120
 
+/**
+ * 每份矿石的基础挖矿经验。
+ * 原先固定 5 点，与零风险的淘金完全相同，玩家自然都去刷淘金。
+ */
+export const MINE_BASE_ORE_EXP = 8
+
+/** 每深入 10 层额外增加的单份矿石经验 */
+export const MINE_DEPTH_EXP_STEP = 2
+
+/** 下探一层给予的探索经验（鼓励往深处走） */
+export const MINE_DESCEND_EXP = 6
+
 /** 区域矿石/宝石映射（铜1-40/铁41-80/金81-120，各区附加特色矿石） */
 const ZONE_ORES: Record<MineFloorDef['zone'], string[]> = {
   shallow: ['copper_ore', 'quartz'],
@@ -773,7 +785,12 @@ export const generateFloorGrid = (
   floorNum: number,
   isSkullCavern: boolean,
   scaleFactor: number
-): { tiles: MineTile[]; entryIndex: number; totalMonsters: number; stairsUsable: boolean } => {
+): {
+  tiles: MineTile[]
+  entryIndex: number
+  totalMonsters: number
+  stairsUsable: boolean
+} => {
   const dist = getFloorDistribution(floorData.specialType)
   const tiles: MineTile[] = []
 
@@ -876,7 +893,10 @@ export const generateFloorGrid = (
     const treasureCount = randInt(dist.treasureCount[0], dist.treasureCount[1])
     for (let i = 0; i < treasureCount; i++) {
       const rewards = getTreasureRewards(floorNum)
-      placeRandom('treasure', { treasureItems: rewards.items, treasureMoney: rewards.money })
+      placeRandom('treasure', {
+        treasureItems: rewards.items,
+        treasureMoney: rewards.money
+      })
     }
   }
 
@@ -887,11 +907,20 @@ export const generateFloorGrid = (
       // 每格 1-2 个蘑菇/药草
       const items: { itemId: string; quantity: number }[] = []
       if (floorNum <= 40) {
-        items.push({ itemId: Math.random() < 0.7 ? 'wild_mushroom' : 'herb', quantity: 1 })
+        items.push({
+          itemId: Math.random() < 0.7 ? 'wild_mushroom' : 'herb',
+          quantity: 1
+        })
       } else if (floorNum <= 80) {
-        items.push({ itemId: Math.random() < 0.5 ? 'wild_mushroom' : 'ginseng', quantity: 1 })
+        items.push({
+          itemId: Math.random() < 0.5 ? 'wild_mushroom' : 'ginseng',
+          quantity: 1
+        })
       } else {
-        items.push({ itemId: Math.random() < 0.4 ? 'ginseng' : 'wild_mushroom', quantity: 1 })
+        items.push({
+          itemId: Math.random() < 0.4 ? 'ginseng' : 'wild_mushroom',
+          quantity: 1
+        })
         if (Math.random() < 0.3) items.push({ itemId: 'herb', quantity: 1 })
       }
       placeRandom('mushroom', { mushroomItems: items })

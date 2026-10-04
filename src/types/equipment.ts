@@ -21,6 +21,8 @@ export interface HatDef {
 /** 拥有的帽子实例 */
 export interface OwnedHat {
   defId: string
+  /** 强化等级 0-10（缺省 0） */
+  enhance?: number
 }
 
 /** 鞋子定义 */
@@ -44,4 +46,16 @@ export interface ShoeDef {
 /** 拥有的鞋子实例 */
 export interface OwnedShoe {
   defId: string
+  /** 强化等级 0-10（缺省 0） */
+  enhance?: number
+}
+
+/** 可强化的装备种类 */
+export type EquipmentKind = 'weapon' | 'ring' | 'hat' | 'shoe'
+
+/** 装备强化费用（level 为目标等级） */
+export interface EnhanceCostDef {
+  level: number
+  money: number
+  materials: { itemId: string; quantity: number }[]
 }

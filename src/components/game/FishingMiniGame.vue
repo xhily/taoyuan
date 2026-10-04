@@ -30,7 +30,10 @@
         <div
           class="absolute w-full rounded-[1px]"
           :class="isOverlap ? 'bg-success/80' : 'bg-success/40'"
-          :style="{ top: CONTAINER_HEIGHT - hookPos - hookHeight + 'px', height: hookHeight + 'px' }"
+          :style="{
+            top: CONTAINER_HEIGHT - hookPos - hookHeight + 'px',
+            height: hookHeight + 'px'
+          }"
         />
         <!-- 鱼（顶层，始终可见） -->
         <div class="absolute w-full bg-accent/60 rounded-[1px]" :style="{ top: fishPos + 'px', height: FISH_HEIGHT + 'px' }" />

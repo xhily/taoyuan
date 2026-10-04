@@ -120,13 +120,13 @@
           仓库
         </p>
         <span v-if="warehouseStore.unlocked" class="text-xs text-muted">
-          箱子 {{ warehouseStore.chests.length }}/{{ warehouseStore.maxChests }}
+          箱子 {{ warehouseStore.craftedChestCount }}/{{ warehouseStore.maxChests }}
         </span>
       </div>
 
       <!-- 未解锁 -->
       <div v-if="!warehouseStore.unlocked">
-        <p class="text-xs text-muted mb-2">解锁仓库后可放置箱子分类存放物品。</p>
+        <p class="text-xs text-muted mb-2">解锁后即获得一座按类归档的总仓，可直接存放物品；另可额外打造箱子细分管理。</p>
         <div
           class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
           @click="showWarehouseUnlockModal = true"
@@ -138,10 +138,43 @@
 
       <!-- 已解锁 -->
       <template v-else>
-        <!-- 箱子列表 -->
-        <div v-if="warehouseStore.chests.length > 0" class="flex flex-col space-y-1.5 mb-2">
+        <!-- 总仓：解锁即有，按类归档，一键收纳 -->
+        <div v-if="warehouseStore.mainChest" class="border border-accent/30 rounded-xs p-2 mb-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center space-x-1.5">
+              <Warehouse :size="12" class="text-accent" />
+              <span class="text-xs text-accent">总仓</span>
+              <span class="text-[10px] text-muted">{{ warehouseStore.mainChest.items.length }}/{{ warehouseStore.mainChestCapacity }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <Button class="py-0 px-1.5 text-[10px]" :icon="ArrowDownToLine" :icon-size="10" @click="handleStowToMain(false)">
+                补货入仓
+              </Button>
+              <Button class="py-0 px-1.5 text-[10px]" :icon="ArrowDown" :icon-size="10" @click="handleStowToMain(true)">全部入仓</Button>
+              <Button class="py-0 px-1.5 text-[10px]" @click="openChestId = warehouseStore.mainChest.id">打开</Button>
+            </div>
+          </div>
+          <p class="text-[10px] text-muted/60 mb-1.5">
+            「补货入仓」只收总仓里已有的同类物品；「全部入仓」收走背包里所有可存物品（种子与限定品除外）。
+          </p>
+          <!-- 按类别分区概览 -->
+          <div v-if="mainChestGroups.length > 0" class="flex flex-wrap">
+            <span
+              v-for="g in mainChestGroups"
+              :key="g.category"
+              class="text-[10px] border border-accent/15 rounded-xs px-1.5 py-0.5 mr-1 mb-1 text-muted"
+            >
+              {{ g.name }}
+              <span class="text-text">{{ g.items.length }}</span>
+            </span>
+          </div>
+          <p v-else class="text-[10px] text-muted/50">总仓还是空的，点「全部入仓」把背包里的东西收进来。</p>
+        </div>
+
+        <!-- 自造箱子列表（不含总仓） -->
+        <div v-if="craftedChests.length > 0" class="flex flex-col space-y-1.5 mb-2">
           <div
-            v-for="(chest, chestIdx) in warehouseStore.chests"
+            v-for="(chest, chestIdx) in craftedChests"
             :key="chest.id"
             class="border border-accent/10 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
             @click="openChestId = chest.id"
@@ -173,16 +206,16 @@
                 </button>
               </div>
               <div class="flex items-center space-x-1.5">
-                <span class="text-[10px] text-muted">{{ chest.items.length }}/{{ CHEST_DEFS[chest.tier].capacity }}</span>
+                <span class="text-[10px] text-muted">{{ chest.items.length }}/{{ warehouseStore.getChestCapacity(chest.id) }}</span>
                 <button
-                  v-if="warehouseStore.chests.length > 1 && chestIdx > 0"
+                  v-if="craftedChests.length > 1 && chestIdx > 0"
                   class="text-muted hover:text-accent"
                   @click.stop="warehouseStore.moveChest(chest.id, 'up')"
                 >
                   <ChevronUp :size="12" />
                 </button>
                 <button
-                  v-if="warehouseStore.chests.length > 1 && chestIdx < warehouseStore.chests.length - 1"
+                  v-if="craftedChests.length > 1 && chestIdx < craftedChests.length - 1"
                   class="text-muted hover:text-accent"
                   @click.stop="warehouseStore.moveChest(chest.id, 'down')"
                 >
@@ -209,20 +242,17 @@
             </template>
           </div>
         </div>
-        <div v-else class="flex flex-col items-center justify-center py-4 text-muted mb-2">
-          <Warehouse :size="24" />
-          <p class="text-xs mt-1">仓库空空如也</p>
-        </div>
+        <p v-else class="text-[10px] text-muted/50 mb-2 px-0.5">暂无额外箱子。总仓已够日常使用；想按用途细分再造。</p>
 
-        <!-- 添加箱子 -->
+        <!-- 添加箱子：进阶细分用，总仓不占名额 -->
         <Button
-          v-if="warehouseStore.chests.length < warehouseStore.maxChests"
+          v-if="warehouseStore.craftedChestCount < warehouseStore.maxChests"
           class="w-full"
           :icon="Plus"
           :icon-size="12"
           @click="showAddChestModal = true"
         >
-          添加箱子
+          添加箱子（细分管理，可选）
         </Button>
       </template>
     </div>
@@ -336,33 +366,46 @@
               </span>
               <p class="text-sm text-accent">{{ currentOpenChest.label }}</p>
               <span class="text-[10px] text-muted">
-                {{ currentOpenChest.items.length }}/{{ CHEST_DEFS[currentOpenChest.tier].capacity }}
+                {{ currentOpenChest.items.length }}/{{ warehouseStore.getChestCapacity(currentOpenChest.id) }}
               </span>
             </div>
             <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="openChestId = null" />
           </div>
 
-          <!-- 箱子物品列表 -->
-          <div v-if="currentOpenChest.items.length > 0" class="flex flex-col space-y-1 mb-2 max-h-48 overflow-y-auto">
-            <div
-              v-for="(item, idx) in currentOpenChest.items"
-              :key="idx"
-              class="flex items-center justify-between border border-accent/10 rounded-xs px-2 py-1 mr-1"
-              @click="chestItemDetail = { itemId: item.itemId, quality: item.quality, quantity: item.quantity }"
-            >
-              <span class="text-xs truncate mr-2 cursor-pointer hover:underline" :class="qualityTextClass(item.quality)">
-                {{ getItemName(item.itemId) }}
-                <span class="text-xs text-muted">&times;{{ item.quantity }}</span>
-              </span>
-              <div class="flex items-center space-x-1.5">
-                <Button
-                  class="py-0 px-1"
-                  @click.stop="openChestQtyModal('withdraw', openChestId!, item.itemId, item.quality, item.quantity)"
-                >
-                  取出
-                </Button>
+          <!-- 箱子物品列表：总仓按类别分区显示，其它箱子平铺 -->
+          <div v-if="currentOpenChest.items.length > 0" class="flex flex-col space-y-1 mb-2 max-h-64 overflow-y-auto">
+            <template v-for="group in openChestGroups" :key="group.category">
+              <p v-if="currentOpenChest.tier === 'main'" class="text-[10px] text-accent/70 mt-1.5 first:mt-0 px-0.5">
+                {{ group.name }}
+                <span class="text-muted/50">({{ group.items.length }})</span>
+              </p>
+              <div
+                v-for="(item, idx) in group.items"
+                :key="group.category + ':' + idx"
+                class="flex items-center justify-between border border-accent/10 rounded-xs px-2 py-1 mr-1"
+                @click="
+                  chestItemDetail = {
+                    itemId: item.itemId,
+                    quality: item.quality,
+                    quantity: item.quantity
+                  }
+                "
+              >
+                <span class="text-xs truncate mr-2 cursor-pointer hover:underline" :class="qualityTextClass(item.quality)">
+                  {{ getItemName(item.itemId) }}
+                  <span v-if="item.quality !== 'normal'" class="text-[10px]">[{{ QUALITY_LABEL[item.quality] }}]</span>
+                  <span class="text-xs text-muted">&times;{{ item.quantity }}</span>
+                </span>
+                <div class="flex items-center space-x-1.5">
+                  <Button
+                    class="py-0 px-1"
+                    @click.stop="openChestQtyModal('withdraw', openChestId!, item.itemId, item.quality, item.quantity)"
+                  >
+                    取出
+                  </Button>
+                </div>
               </div>
-            </div>
+            </template>
           </div>
           <div v-else class="flex flex-col items-center justify-center py-6 mb-2">
             <Warehouse :size="36" class="text-accent/20 mb-2" />
@@ -437,7 +480,9 @@
       >
         <div class="game-panel max-w-xs w-full">
           <div class="flex items-center justify-between mb-2">
-            <p class="text-sm text-accent">{{ chestQtyModal.mode === 'withdraw' ? '取出' : '存入' }}</p>
+            <p class="text-sm text-accent">
+              {{ chestQtyModal.mode === 'withdraw' ? '取出' : '存入' }}
+            </p>
             <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="chestQtyModal = null" />
           </div>
           <p class="text-xs mb-2" :class="qualityTextClass(chestQtyModal.quality)">
@@ -585,7 +630,9 @@
                   制作
                 </Button>
               </div>
-              <p class="text-[10px] text-muted mb-1">{{ CHEST_DEFS[tier].description }}</p>
+              <p class="text-[10px] text-muted mb-1">
+                {{ CHEST_DEFS[tier].description }}
+              </p>
               <div class="flex flex-wrap gap-x-3 gap-y-0.5">
                 <span
                   v-for="mat in CHEST_DEFS[tier].craftCost"
@@ -593,7 +640,8 @@
                   class="text-[10px]"
                   :class="getCombinedItemCount(mat.itemId) >= mat.quantity ? 'text-muted' : 'text-danger'"
                 >
-                  {{ getItemName(mat.itemId) }} {{ getCombinedItemCount(mat.itemId) }}/{{ mat.quantity }}
+                  {{ getItemName(mat.itemId) }}
+                  {{ getCombinedItemCount(mat.itemId) }}/{{ mat.quantity }}
                 </span>
                 <span class="text-[10px]" :class="playerStore.money >= CHEST_DEFS[tier].craftMoney ? 'text-muted' : 'text-danger'">
                   {{ CHEST_DEFS[tier].craftMoney }}文
@@ -728,15 +776,19 @@
       removeCombinedItem(mat.itemId, mat.quantity)
     }
     playerStore.spendMoney(warehouseStore.UNLOCK_COST)
-    warehouseStore.unlocked = true
+    warehouseStore.unlock()
     showWarehouseUnlockModal.value = false
-    addLog(`仓库已解锁！（-${warehouseStore.UNLOCK_COST}文）`)
+    addLog(`仓库已解锁！总仓已备好，可直接存放物品。（-${warehouseStore.UNLOCK_COST}文）`)
   }
 
   // === 箱子管理 ===
 
   /** 箱子道具信息弹窗 */
-  const chestItemDetail = ref<{ itemId: string; quality: Quality; quantity: number } | null>(null)
+  const chestItemDetail = ref<{
+    itemId: string
+    quality: Quality
+    quantity: number
+  } | null>(null)
   const chestItemDef = computed(() => {
     if (!chestItemDetail.value) return null
     return getItemById(chestItemDetail.value.itemId) ?? null
@@ -766,6 +818,35 @@
     if (!openChestId.value) return null
     return warehouseStore.getChest(openChestId.value) ?? null
   })
+
+  /** 玩家自造的箱子（不含总仓，总仓单独展示） */
+  const craftedChests = computed(() => warehouseStore.chests.filter(c => c.tier !== 'main'))
+
+  /** 总仓的按类分区概览 */
+  const mainChestGroups = computed(() => warehouseStore.getMainChestGroups())
+
+  /**
+   * 打开的箱子按类别分组。
+   * 总仓分区展示；普通箱子归成单组平铺，共用同一段模板。
+   */
+  const openChestGroups = computed(() => {
+    const chest = currentOpenChest.value
+    if (!chest) return []
+    if (chest.tier === 'main') return warehouseStore.getMainChestGroups()
+    return [{ category: 'all', name: '', items: chest.items }]
+  })
+
+  /** 一键收纳到总仓 */
+  const handleStowToMain = (all: boolean) => {
+    const { kinds, total } = warehouseStore.stowToMain(all)
+    if (total > 0) {
+      addLog(`收纳了${kinds}种物品，共${total}个到总仓。`)
+    } else if (all) {
+      addLog('背包里没有可以入仓的物品，或总仓已满。')
+    } else {
+      addLog('背包里没有总仓已有的同类物品。想收新东西请用「全部入仓」。')
+    }
+  }
 
   /** 背包中可存入箱子的物品（排除种子和锁定物品） */
   const depositableItems = computed(() =>
@@ -821,7 +902,12 @@
         quantity: Math.floor(mat.quantity * 0.5)
       }))
       .filter(m => m.quantity > 0)
-    return { label: chest.label, tier: chest.tier, itemCount: chest.items.length, refund }
+    return {
+      label: chest.label,
+      tier: chest.tier,
+      itemCount: chest.items.length,
+      refund
+    }
   })
 
   const openDismantleConfirm = (chestId: string) => {
@@ -939,7 +1025,11 @@
   const handleDepositDuplicates = () => {
     if (!openChestId.value) return
     const chestId = openChestId.value
-    const snapshot = duplicateDepositItems.value.map(i => ({ itemId: i.itemId, quality: i.quality, quantity: i.quantity }))
+    const snapshot = duplicateDepositItems.value.map(i => ({
+      itemId: i.itemId,
+      quality: i.quality,
+      quantity: i.quantity
+    }))
     let totalDeposited = 0
     let kindCount = 0
     for (const item of snapshot) {

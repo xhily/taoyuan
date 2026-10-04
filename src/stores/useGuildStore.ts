@@ -4,6 +4,7 @@ import { MONSTER_GOALS, GUILD_SHOP_ITEMS, GUILD_DONATIONS, GUILD_LEVELS, GUILD_B
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 import { useGameStore } from './useGameStore'
+import { useAnimalStore } from './useAnimalStore'
 import { addLog } from '@/composables/useGameLog'
 
 export const useGuildStore = defineStore('guild', () => {
@@ -247,7 +248,11 @@ export const useGuildStore = defineStore('guild', () => {
 
     // 根据装备类型添加到对应栏位
     let addSuccess = true
-    if (item.equipType === 'weapon') {
+    if (item.horseUpgrade) {
+      // 马匹升级：不是进背包，而是把现有的马换成更好的品种。
+      // 失败（没有马等）时走下方统一的退款分支。
+      addSuccess = useAnimalStore().setHorseBreed(item.horseUpgrade).success
+    } else if (item.equipType === 'weapon') {
       addSuccess = inventoryStore.addWeapon(item.itemId, null)
     } else if (item.equipType === 'ring') {
       addSuccess = inventoryStore.addRing(item.itemId)

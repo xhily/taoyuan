@@ -14,9 +14,9 @@
                 <span>存档 {{ info.slot + 1 }}</span>
               </span>
               <span class="text-muted text-xs">
-                {{ info.playerName ?? '未命名' }} · 第{{ info.year }}年 {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }} 第{{
-                  info.day
-                }}天
+                {{ info.playerName ?? '未命名' }} · 第{{ info.year }}年
+                {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }}
+                第{{ info.day }}天
               </span>
             </button>
             <div v-else class="btn flex-1 !justify-between text-xs cursor-default">
@@ -25,9 +25,9 @@
                 <span>存档 {{ info.slot + 1 }}</span>
               </span>
               <span class="text-muted text-xs">
-                {{ info.playerName ?? '未命名' }} · 第{{ info.year }}年 {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }} 第{{
-                  info.day
-                }}天
+                {{ info.playerName ?? '未命名' }} · 第{{ info.year }}年
+                {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }}
+                第{{ info.day }}天
               </span>
             </div>
             <div class="relative">

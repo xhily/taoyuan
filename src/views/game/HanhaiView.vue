@@ -169,7 +169,9 @@
             >
               <div class="flex-1 min-w-0">
                 <p class="text-xs truncate">{{ exItem.name }}</p>
-                <p class="text-[10px] text-muted truncate">{{ exItem.description }}</p>
+                <p class="text-[10px] text-muted truncate">
+                  {{ exItem.description }}
+                </p>
               </div>
               <div class="flex flex-col items-end ml-2 shrink-0">
                 <span class="text-xs text-accent">{{ exItem.pointsCost }}积分</span>
@@ -392,7 +394,8 @@
             <div v-if="shopModalItem.weeklyLimit" class="flex items-center justify-between mt-0.5">
               <span class="text-xs text-muted">本周限购</span>
               <span class="text-xs" :class="hanhaiStore.getWeeklyRemaining(shopModalItem.itemId) > 0 ? '' : 'text-danger'">
-                剩余 {{ hanhaiStore.getWeeklyRemaining(shopModalItem.itemId) }}/{{ shopModalItem.weeklyLimit }}
+                剩余
+                {{ hanhaiStore.getWeeklyRemaining(shopModalItem.itemId) }}/{{ shopModalItem.weeklyLimit }}
               </span>
             </div>
           </div>
@@ -682,7 +685,9 @@
                   ?
                 </span>
               </template>
-              <p class="text-xs mt-0.5" :class="cardPick === i - 1 ? 'text-accent' : 'text-muted/30'">{{ i }}</p>
+              <p class="text-xs mt-0.5" :class="cardPick === i - 1 ? 'text-accent' : 'text-muted/30'">
+                {{ i }}
+              </p>
             </div>
           </div>
 
@@ -838,7 +843,9 @@
           </button>
           <p class="text-sm text-accent mb-2">{{ exchangeModalItem.name }}</p>
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs text-muted">{{ exchangeModalItem.description }}</p>
+            <p class="text-xs text-muted">
+              {{ exchangeModalItem.description }}
+            </p>
           </div>
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <div class="flex items-center justify-between">
@@ -988,21 +995,35 @@
   const cupPhase = ref<'shuffling' | 'done'>('shuffling')
   const cupGuess = ref(0)
   const cupShuffleIndex = ref(0)
-  const cupAnimResult = ref<{ correctCup: number; won: boolean; winnings: number } | null>(null)
+  const cupAnimResult = ref<{
+    correctCup: number
+    won: boolean
+    winnings: number
+  } | null>(null)
 
   // === 斗蛐蛐动画状态 ===
   const showCricketModal = ref(false)
   const cricketPhase = ref<'fighting' | 'done'>('fighting')
   const cricketChoiceName = ref('')
   const cricketDisplayPower = ref<number[]>([5, 5])
-  const cricketAnimResult = ref<{ playerPower: number; opponentPower: number; won: boolean; draw: boolean; winnings: number } | null>(null)
+  const cricketAnimResult = ref<{
+    playerPower: number
+    opponentPower: number
+    won: boolean
+    draw: boolean
+    winnings: number
+  } | null>(null)
 
   // === 翻牌动画状态 ===
   const showCardModal = ref(false)
   const cardPhase = ref<'flipping' | 'done'>('flipping')
   const cardPick = ref(0)
   const cardFlipIndex = ref(-1)
-  const cardAnimResult = ref<{ treasures: number[]; won: boolean; winnings: number } | null>(null)
+  const cardAnimResult = ref<{
+    treasures: number[]
+    won: boolean
+    winnings: number
+  } | null>(null)
 
   const handleBuyItem = (itemId: string) => {
     const result = hanhaiStore.buyShopItem(itemId)
@@ -1065,7 +1086,10 @@
     if (!result.success) return
 
     rouletteBetAmount.value = betTier
-    rouletteAnimResult.value = { multiplier: result.multiplier, winnings: result.winnings }
+    rouletteAnimResult.value = {
+      multiplier: result.multiplier,
+      winnings: result.winnings
+    }
     roulettePhase.value = 'spinning'
     rouletteHighlight.value = 0
     showRouletteModal.value = true
@@ -1146,7 +1170,11 @@
     if (!result.success) return
 
     cupGuess.value = guess
-    cupAnimResult.value = { correctCup: result.correctCup, won: result.won, winnings: result.winnings }
+    cupAnimResult.value = {
+      correctCup: result.correctCup,
+      won: result.won,
+      winnings: result.winnings
+    }
     cupPhase.value = 'shuffling'
     cupShuffleIndex.value = 0
     showCupModal.value = true
@@ -1235,7 +1263,11 @@
     if (!result.success) return
 
     cardPick.value = pick
-    cardAnimResult.value = { treasures: result.treasures, won: result.won, winnings: result.winnings }
+    cardAnimResult.value = {
+      treasures: result.treasures,
+      won: result.won,
+      winnings: result.winnings
+    }
     cardPhase.value = 'flipping'
     cardFlipIndex.value = -1
     showCardModal.value = true
@@ -1299,12 +1331,18 @@
     return ''
   }
 
-  /** 背包中可上架的物品（有售价的物品） */
+  /** 背包中可上架的物品（有售价的物品；种子存在种子袋里，也一并可卖） */
   const sellableItems = computed(() => {
-    const result: { id: string; name: string; quality: string; quantity: number; sellPrice: number }[] = []
-    for (const item of inventoryStore.items) {
+    const result: {
+      id: string
+      name: string
+      quality: string
+      quantity: number
+      sellPrice: number
+    }[] = []
+    for (const item of [...inventoryStore.items, ...inventoryStore.seedItems]) {
       const def = getItemById(item.itemId)
-      if (def && def.sellPrice > 0) {
+      if (def && def.sellPrice > 0 && !def.protected) {
         result.push({
           id: item.itemId,
           name: def.name,
@@ -1324,7 +1362,13 @@
   }
 
   // 数量选择相关
-  const tradeSelectedItem = ref<{ id: string; name: string; quality: string; quantity: number; sellPrice: number } | null>(null)
+  const tradeSelectedItem = ref<{
+    id: string
+    name: string
+    quality: string
+    quantity: number
+    sellPrice: number
+  } | null>(null)
   const tradeQuantity = ref(1)
 
   const selectTradeItem = (inv: { id: string; name: string; quality: string; quantity: number; sellPrice: number }) => {

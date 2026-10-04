@@ -10,6 +10,9 @@ import {
   BOSS_ORE_REWARDS,
   getWeakenedBoss,
   MAX_MINE_FLOOR,
+  MINE_BASE_ORE_EXP,
+  MINE_DEPTH_EXP_STEP,
+  MINE_DESCEND_EXP,
   generateSkullCavernFloor,
   scaleMonster,
   generateFloorGrid,
@@ -195,14 +198,29 @@ export const useMiningStore = defineStore('mining', () => {
   /** 与已揭示的怪物/BOSS重新交战（逃跑后或炸弹揭示后） */
   const engageRevealedMonster = (index: number): { success: boolean; message: string; startsCombat: boolean } => {
     if (!isExploring.value) return { success: false, message: '你不在矿洞中。', startsCombat: false }
-    if (inCombat.value) return { success: false, message: '战斗中无法探索。', startsCombat: false }
+    if (inCombat.value)
+      return {
+        success: false,
+        message: '战斗中无法探索。',
+        startsCombat: false
+      }
 
     const tile = floorGrid.value[index]
     if (!tile || tile.state !== 'revealed') return { success: false, message: '无法交战。', startsCombat: false }
-    if (tile.type !== 'monster' && tile.type !== 'boss') return { success: false, message: '该格子没有怪物。', startsCombat: false }
+    if (tile.type !== 'monster' && tile.type !== 'boss')
+      return {
+        success: false,
+        message: '该格子没有怪物。',
+        startsCombat: false
+      }
 
     const monster = tile.data?.monster
-    if (!monster) return { success: false, message: '该格子没有怪物。', startsCombat: false }
+    if (!monster)
+      return {
+        success: false,
+        message: '该格子没有怪物。',
+        startsCombat: false
+      }
 
     _combatTileIndex.value = tile.index
     combatMonster.value = { ...monster }
@@ -219,7 +237,11 @@ export const useMiningStore = defineStore('mining', () => {
     }
     inCombat.value = true
 
-    return { success: true, message: `与${monster.name}交战！`, startsCombat: true }
+    return {
+      success: true,
+      message: `与${monster.name}交战！`,
+      startsCombat: true
+    }
   }
 
   /** 检查格子是否可翻开 */
@@ -237,15 +259,34 @@ export const useMiningStore = defineStore('mining', () => {
   /** 翻开格子 — 核心交互入口 */
   const revealTile = (index: number): { success: boolean; message: string; startsCombat: boolean } => {
     if (!isExploring.value) return { success: false, message: '你不在矿洞中。', startsCombat: false }
-    if (inCombat.value) return { success: false, message: '战斗中无法探索。', startsCombat: false }
+    if (inCombat.value)
+      return {
+        success: false,
+        message: '战斗中无法探索。',
+        startsCombat: false
+      }
 
     const tile = floorGrid.value[index]
-    if (!tile || tile.state !== 'hidden') return { success: false, message: '无法翻开该格子。', startsCombat: false }
-    if (!canRevealTile(index)) return { success: false, message: '只能翻开已探索格子的相邻位置。', startsCombat: false }
+    if (!tile || tile.state !== 'hidden')
+      return {
+        success: false,
+        message: '无法翻开该格子。',
+        startsCombat: false
+      }
+    if (!canRevealTile(index))
+      return {
+        success: false,
+        message: '只能翻开已探索格子的相邻位置。',
+        startsCombat: false
+      }
 
     // 检查镐是否可用（未在升级中）
     if (!inventoryStore.isToolAvailable('pickaxe')) {
-      return { success: false, message: '镐正在升级中，无法探索矿洞。', startsCombat: false }
+      return {
+        success: false,
+        message: '镐正在升级中，无法探索矿洞。',
+        startsCombat: false
+      }
     }
 
     // 扣体力（1 点基础，受镐/技能/buff 减免）
@@ -272,7 +313,11 @@ export const useMiningStore = defineStore('mining', () => {
       )
     )
     if (!playerStore.consumeStamina(staminaCost)) {
-      return { success: false, message: '体力不足，无法探索。', startsCombat: false }
+      return {
+        success: false,
+        message: '体力不足，无法探索。',
+        startsCombat: false
+      }
     }
 
     // 3% 概率获得秘密笔记
@@ -307,7 +352,11 @@ export const useMiningStore = defineStore('mining', () => {
   /** 处理空格子 */
   const _handleEmptyTile = (tile: MineTile, staminaCost: number): { success: boolean; message: string; startsCombat: boolean } => {
     tile.state = 'revealed'
-    return { success: true, message: `探索了一个空区域。(-${staminaCost}体力)`, startsCombat: false }
+    return {
+      success: true,
+      message: `探索了一个空区域。(-${staminaCost}体力)`,
+      startsCombat: false
+    }
   }
 
   /** 处理矿石格子 */
@@ -342,12 +391,19 @@ export const useMiningStore = defineStore('mining', () => {
       sessionLoot.value.push({ itemId: herbId, quantity: 1 })
     }
 
-    // 经验
+    // 经验：按采集量与深度给，深层矿石更值钱也更难挖。
+    // 原先固定 5 点，和毫无风险的淘金一样多，导致大家宁可站在河边刷技能。
     const hilltopXpBonus = gameStore.farmMapType === 'hilltop' ? 1.25 : 1.0
-    skillStore.addExp('mining', Math.floor(5 * hilltopXpBonus))
+    const depth = isInSkullCavern.value ? MAX_MINE_FLOOR + skullCavernFloor.value : currentFloor.value
+    const expPerOre = MINE_BASE_ORE_EXP + Math.floor(depth / 10) * MINE_DEPTH_EXP_STEP
+    skillStore.addExp('mining', Math.floor(expPerOre * quantity * hilltopXpBonus))
 
     tile.state = 'collected'
-    return { success: true, message: `挖到了${quantity}个矿石！(-${staminaCost}体力)`, startsCombat: false }
+    return {
+      success: true,
+      message: `挖到了${quantity}个矿石！(-${staminaCost}体力)`,
+      startsCombat: false
+    }
   }
 
   /** 处理怪物格子 */
@@ -366,7 +422,11 @@ export const useMiningStore = defineStore('mining', () => {
     combatIsBoss.value = false
     inCombat.value = true
 
-    return { success: true, message: `遭遇了${monster.name}！`, startsCombat: true }
+    return {
+      success: true,
+      message: `遭遇了${monster.name}！`,
+      startsCombat: true
+    }
   }
 
   /** 处理 BOSS 格子 */
@@ -387,7 +447,11 @@ export const useMiningStore = defineStore('mining', () => {
     combatIsBoss.value = true
     inCombat.value = true
 
-    return { success: true, message: `BOSS层！${monster.name}挡住了去路！`, startsCombat: true }
+    return {
+      success: true,
+      message: `BOSS层！${monster.name}挡住了去路！`,
+      startsCombat: true
+    }
   }
 
   /** 处理楼梯格子 */
@@ -406,11 +470,19 @@ export const useMiningStore = defineStore('mining', () => {
         }
       }
       if (floor?.specialType === 'boss') {
-        return { success: true, message: `发现了楼梯！但需要先击败BOSS才能前进。(-${staminaCost}体力)`, startsCombat: false }
+        return {
+          success: true,
+          message: `发现了楼梯！但需要先击败BOSS才能前进。(-${staminaCost}体力)`,
+          startsCombat: false
+        }
       }
     }
 
-    return { success: true, message: `发现了楼梯！可以前往下一层。(-${staminaCost}体力)`, startsCombat: false }
+    return {
+      success: true,
+      message: `发现了楼梯！可以前往下一层。(-${staminaCost}体力)`,
+      startsCombat: false
+    }
   }
 
   /** 处理陷阱格子 */
@@ -421,10 +493,18 @@ export const useMiningStore = defineStore('mining', () => {
 
     if (playerStore.hp <= 0) {
       const defeatResult = handleDefeat()
-      return { success: true, message: `踩中了陷阱！受到${damage}点伤害。${defeatResult.message}`, startsCombat: false }
+      return {
+        success: true,
+        message: `踩中了陷阱！受到${damage}点伤害。${defeatResult.message}`,
+        startsCombat: false
+      }
     }
 
-    return { success: true, message: `踩中了陷阱！受到${damage}点伤害。(-${staminaCost}体力)`, startsCombat: false }
+    return {
+      success: true,
+      message: `踩中了陷阱！受到${damage}点伤害。(-${staminaCost}体力)`,
+      startsCombat: false
+    }
   }
 
   /** 处理宝箱格子 */
@@ -536,7 +616,11 @@ export const useMiningStore = defineStore('mining', () => {
     skillStore.addExp('foraging', 3)
 
     tile.state = 'collected'
-    return { success: true, message: `采集到了${getRewardNames(items)}！(+3采集经验, -${staminaCost}体力)`, startsCombat: false }
+    return {
+      success: true,
+      message: `采集到了${getRewardNames(items)}！(+3采集经验, -${staminaCost}体力)`,
+      startsCombat: false
+    }
   }
 
   // ==================== 炸弹 ====================
@@ -657,7 +741,11 @@ export const useMiningStore = defineStore('mining', () => {
       }
     }
 
-    if (oreCollected > 0) skillStore.addExp('mining', 5 * oreCollected)
+    if (oreCollected > 0) {
+      const bombDepth = isInSkullCavern.value ? MAX_MINE_FLOOR + skullCavernFloor.value : currentFloor.value
+      const bombExpPerOre = MINE_BASE_ORE_EXP + Math.floor(bombDepth / 10) * MINE_DEPTH_EXP_STEP
+      skillStore.addExp('mining', bombExpPerOre * oreCollected)
+    }
 
     let msg = `${bombDef.name}爆炸了！`
     if (oreCollected > 0) msg += `采集了${oreCollected}份矿石`
@@ -789,7 +877,11 @@ export const useMiningStore = defineStore('mining', () => {
       if (playerStore.hp <= 0) {
         return handleDefeat()
       }
-      return { message: `防御！受到${damage}点伤害。`, combatOver: false, won: false }
+      return {
+        message: `防御！受到${damage}点伤害。`,
+        combatOver: false,
+        won: false
+      }
     }
 
     // === 攻击 ===
@@ -818,7 +910,8 @@ export const useMiningStore = defineStore('mining', () => {
     const critMult = isCrit ? 1.5 : 1.0
 
     const damageToMonster = Math.max(1, Math.floor((baseAttack - monster.defense) * bruteBonus * critMult))
-    combatMonsterHp.value -= damageToMonster
+    // 夹在 0 以上：致死一击若让血量变成负数，战斗结算期间血条会显示成负宽度
+    combatMonsterHp.value = Math.max(0, combatMonsterHp.value - damageToMonster)
     const totalDamageDealt = damageToMonster
 
     let msg = `你攻击${monster.name}，造成${damageToMonster}点伤害。`
@@ -828,7 +921,7 @@ export const useMiningStore = defineStore('mining', () => {
     let extraDamage = 0
     if (weaponDef?.type === 'dagger' && Math.random() < 0.25) {
       const bonusDamage = Math.max(1, Math.floor(damageToMonster * 0.5))
-      combatMonsterHp.value -= bonusDamage
+      combatMonsterHp.value = Math.max(0, combatMonsterHp.value - bonusDamage)
       extraDamage = bonusDamage
       msg += ` 追加攻击！额外造成${bonusDamage}点伤害！`
     }
@@ -1124,7 +1217,11 @@ export const useMiningStore = defineStore('mining', () => {
   }
 
   /** 战斗失败处理 */
-  const handleDefeat = (): { message: string; combatOver: boolean; won: boolean } => {
+  const handleDefeat = (): {
+    message: string
+    combatOver: boolean
+    won: boolean
+  } => {
     inCombat.value = false
     combatIsBoss.value = false
     const wasInSkullCavern = isInSkullCavern.value
@@ -1192,13 +1289,19 @@ export const useMiningStore = defineStore('mining', () => {
       const floor = getActiveFloorData()
       if (floor?.specialType === 'infested') {
         const remaining = totalMonstersOnFloor.value - monstersDefeatedCount.value
-        return { success: false, message: `还有${remaining}只怪物未清除，无法前进！` }
+        return {
+          success: false,
+          message: `还有${remaining}只怪物未清除，无法前进！`
+        }
       }
       if (floor?.specialType === 'boss') {
         return { success: false, message: '必须击败BOSS才能前进！' }
       }
       return { success: false, message: '楼梯暂时无法使用。' }
     }
+
+    // 下探本身给一点经验：鼓励往深处走，而不是守在浅层反复刷
+    skillStore.addExp('mining', MINE_DESCEND_EXP)
 
     if (isInSkullCavern.value) {
       // 骷髅矿穴：无上限，每10层安全点
@@ -1222,9 +1325,15 @@ export const useMiningStore = defineStore('mining', () => {
           skullCavernFloor.value = 1
           cacheSkullFloor(1)
           _generateGrid()
-          return { success: true, message: '你穿过矿洞最深处的裂隙，进入了骷髅矿穴第1层！' }
+          return {
+            success: true,
+            message: '你穿过矿洞最深处的裂隙，进入了骷髅矿穴第1层！'
+          }
         }
-        return { success: false, message: '已经到达矿洞最深处！（击败60层BOSS可解锁骷髅矿穴）' }
+        return {
+          success: false,
+          message: '已经到达矿洞最深处！（击败60层BOSS可解锁骷髅矿穴）'
+        }
       }
 
       currentFloor.value++
@@ -1418,7 +1527,10 @@ export const useMiningStore = defineStore('mining', () => {
     const monstersToAdd = Math.min(existingMonsters, hiddenEmpty.length)
 
     if (monstersToAdd === 0) {
-      return { success: true, message: '使用了怪物诱饵，但本层没有空间放置更多怪物。' }
+      return {
+        success: true,
+        message: '使用了怪物诱饵，但本层没有空间放置更多怪物。'
+      }
     }
 
     // 随机打乱并放置怪物
@@ -1434,7 +1546,10 @@ export const useMiningStore = defineStore('mining', () => {
     }
 
     totalMonstersOnFloor.value += monstersToAdd
-    return { success: true, message: `使用了怪物诱饵！本层增加了${monstersToAdd}只怪物。` }
+    return {
+      success: true,
+      message: `使用了怪物诱饵！本层增加了${monstersToAdd}只怪物。`
+    }
   }
 
   // ==================== 序列化 ====================

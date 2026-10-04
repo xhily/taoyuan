@@ -72,7 +72,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 25,
       healthRestore: 25,
-      buff: { type: 'mining', value: 20, description: '挖矿体力消耗-20%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 20,
+        description: '挖矿体力消耗-20%（当天）'
+      }
     },
     unlockSource: '阿石好感「相识」',
     description: '实打实的矿工饭。'
@@ -187,7 +191,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 35,
       healthRestore: 30,
-      buff: { type: 'mining', value: 25, description: '挖矿体力消耗-25%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 25,
+        description: '挖矿体力消耗-25%（当天）'
+      }
     },
     unlockSource: '挖矿等级4',
     requiredSkill: { type: 'mining', level: 4 },
@@ -250,7 +258,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 60,
       healthRestore: 30,
-      buff: { type: 'farming', value: 20, description: '农耕体力消耗-20%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 20,
+        description: '农耕体力消耗-20%（当天）'
+      }
     },
     unlockSource: '采集等级5',
     requiredSkill: { type: 'foraging', level: 5 },
@@ -460,7 +472,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 45,
       healthRestore: 35,
-      buff: { type: 'mining', value: 30, description: '挖矿体力消耗-30%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 30,
+        description: '挖矿体力消耗-30%（当天）'
+      }
     },
     unlockSource: '阿石好感「相知」',
     description: '阿石在矿洞深处发明的炖菜。'
@@ -494,7 +510,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 70,
       healthRestore: 40,
-      buff: { type: 'farming', value: 25, description: '农耕体力消耗-25%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 25,
+        description: '农耕体力消耗-25%（当天）'
+      }
     },
     unlockSource: '陈伯好感「挚友」',
     description: '陈伯压箱底的农家大菜。'
@@ -604,7 +624,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 60,
       healthRestore: 50,
-      buff: { type: 'mining', value: 35, description: '挖矿体力消耗-35%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 35,
+        description: '挖矿体力消耗-35%（当天）'
+      }
     },
     unlockSource: '与阿石结婚后',
     description: '阿石婚后教你的熔岩铁锅料理。'
@@ -682,7 +706,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 70,
       healthRestore: 40,
-      buff: { type: 'farming', value: 30, description: '农作体力消耗-30%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 30,
+        description: '农作体力消耗-30%（当天）'
+      }
     },
     unlockSource: '与红豆结婚后',
     description: '红豆婚后传授的酒香名菜。'
@@ -714,7 +742,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 80,
       healthRestore: 50,
-      buff: { type: 'mining', value: 40, description: '挖矿体力消耗-40%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 40,
+        description: '挖矿体力消耗-40%（当天）'
+      }
     },
     unlockSource: '与阿铁结婚后',
     description: '阿铁婚后做的粗犷炖菜，量大管饱。'
@@ -746,7 +778,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 55,
       healthRestore: 35,
-      buff: { type: 'farming', value: 25, description: '农作体力消耗-25%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 25,
+        description: '农作体力消耗-25%（当天）'
+      }
     },
     unlockSource: '与大牛结婚后',
     description: '大牛婚后常做的香浓奶汤。'
@@ -779,7 +815,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 35,
       healthRestore: 15,
-      buff: { type: 'farming', value: 15, description: '农耕体力消耗-15%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 15,
+        description: '农耕体力消耗-15%（当天）'
+      }
     },
     unlockSource: '农耕等级6',
     requiredSkill: { type: 'farming', level: 6 },
@@ -796,7 +836,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 45,
       healthRestore: 20,
-      buff: { type: 'farming', value: 20, description: '农耕体力消耗-20%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 20,
+        description: '农耕体力消耗-20%（当天）'
+      }
     },
     unlockSource: '农耕等级7',
     requiredSkill: { type: 'farming', level: 7 },
@@ -814,7 +858,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 70,
       healthRestore: 35,
-      buff: { type: 'farming', value: 30, description: '农耕体力消耗-30%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 30,
+        description: '农耕体力消耗-30%（当天）'
+      }
     },
     unlockSource: '农耕等级9',
     requiredSkill: { type: 'farming', level: 9 },
@@ -929,7 +977,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 40,
       healthRestore: 25,
-      buff: { type: 'mining', value: 25, description: '挖矿体力消耗-25%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 25,
+        description: '挖矿体力消耗-25%（当天）'
+      }
     },
     unlockSource: '采矿等级5',
     requiredSkill: { type: 'mining', level: 5 },
@@ -962,7 +1014,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 55,
       healthRestore: 30,
-      buff: { type: 'mining', value: 30, description: '挖矿体力消耗-30%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 30,
+        description: '挖矿体力消耗-30%（当天）'
+      }
     },
     unlockSource: '采矿等级7',
     requiredSkill: { type: 'mining', level: 7 },
@@ -979,7 +1035,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 70,
       healthRestore: 40,
-      buff: { type: 'mining', value: 35, description: '挖矿体力消耗-35%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 35,
+        description: '挖矿体力消耗-35%（当天）'
+      }
     },
     unlockSource: '采矿等级8',
     requiredSkill: { type: 'mining', level: 8 },
@@ -1026,7 +1086,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 55,
       healthRestore: 30,
-      buff: { type: 'farming', value: 20, description: '农耕体力消耗-20%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 20,
+        description: '农耕体力消耗-20%（当天）'
+      }
     },
     unlockSource: '采集等级7',
     requiredSkill: { type: 'foraging', level: 7 },
@@ -1177,7 +1241,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 50,
       healthRestore: 25,
-      buff: { type: 'farming', value: 20, description: '农耕体力消耗-20%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 20,
+        description: '农耕体力消耗-20%（当天）'
+      }
     },
     unlockSource: '丰收宴奖励',
     description: '丰收宴上的传统大菜。'
@@ -1210,7 +1278,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 40,
       healthRestore: 15,
-      buff: { type: 'farming', value: 10, description: '农耕体力消耗-10%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 10,
+        description: '农耕体力消耗-10%（当天）'
+      }
     },
     unlockSource: '元日奖励',
     description: '「年年高」的吉祥年糕。'
@@ -1241,7 +1313,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 30,
       healthRestore: 10,
-      buff: { type: 'farming', value: 15, description: '农耕体力消耗-15%（当天）' }
+      buff: {
+        type: 'farming',
+        value: 15,
+        description: '农耕体力消耗-15%（当天）'
+      }
     },
     unlockSource: '上巳踏青奖励',
     description: '草药清香的踏青小食。'
@@ -1420,7 +1496,11 @@ export const RECIPES: RecipeDef[] = [
     effect: {
       staminaRestore: 50,
       healthRestore: 30,
-      buff: { type: 'mining', value: 25, description: '挖矿体力消耗-25%（当天）' }
+      buff: {
+        type: 'mining',
+        value: 25,
+        description: '挖矿体力消耗-25%（当天）'
+      }
     },
     unlockSource: '成就：到达矿洞30层',
     description: '矿工荣耀的象征。'

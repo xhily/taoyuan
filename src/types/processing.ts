@@ -59,6 +59,18 @@ export interface ProcessingSlot {
   daysProcessed: number
   totalDays: number
   ready: boolean
+  /** 设备等级 0-3（缺省 0），每级产出 +1 份 */
+  level?: number
+}
+
+/** 加工设备升级定义 */
+export interface MachineUpgradeDef {
+  /** 目标等级 */
+  level: number
+  /** 所需铜钱 */
+  money: number
+  /** 所需材料 */
+  materials: { itemId: string; quantity: number }[]
 }
 
 /** 洒水器类型 */
@@ -76,12 +88,7 @@ export interface SprinklerDef {
 
 /** 肥料类型 */
 export type FertilizerType =
-  | 'basic_fertilizer'
-  | 'quality_fertilizer'
-  | 'speed_gro'
-  | 'deluxe_speed_gro'
-  | 'retaining_soil'
-  | 'quality_retaining_soil'
+  'basic_fertilizer' | 'quality_fertilizer' | 'speed_gro' | 'deluxe_speed_gro' | 'retaining_soil' | 'quality_retaining_soil'
 
 /** 肥料定义 */
 export interface FertilizerDef {

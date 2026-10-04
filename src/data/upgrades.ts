@@ -10,16 +10,46 @@ export interface ToolUpgradeCost {
 
 /** 通用工具升级费用（水壶/锄头/镐/镰刀/斧头） */
 const STANDARD_COSTS: ToolUpgradeCost[] = [
-  { fromTier: 'basic', toTier: 'iron', money: 2000, materials: [{ itemId: 'copper_bar', quantity: 5 }] },
-  { fromTier: 'iron', toTier: 'steel', money: 5000, materials: [{ itemId: 'iron_bar', quantity: 5 }] },
-  { fromTier: 'steel', toTier: 'iridium', money: 10000, materials: [{ itemId: 'gold_bar', quantity: 5 }] }
+  {
+    fromTier: 'basic',
+    toTier: 'iron',
+    money: 2000,
+    materials: [{ itemId: 'copper_bar', quantity: 5 }]
+  },
+  {
+    fromTier: 'iron',
+    toTier: 'steel',
+    money: 5000,
+    materials: [{ itemId: 'iron_bar', quantity: 5 }]
+  },
+  {
+    fromTier: 'steel',
+    toTier: 'iridium',
+    money: 10000,
+    materials: [{ itemId: 'gold_bar', quantity: 5 }]
+  }
 ]
 
 /** 水壶升级费用（首次升级门槛降低） */
 const WATERING_CAN_COSTS: ToolUpgradeCost[] = [
-  { fromTier: 'basic', toTier: 'iron', money: 1200, materials: [{ itemId: 'copper_bar', quantity: 3 }] },
-  { fromTier: 'iron', toTier: 'steel', money: 5000, materials: [{ itemId: 'iron_bar', quantity: 5 }] },
-  { fromTier: 'steel', toTier: 'iridium', money: 10000, materials: [{ itemId: 'gold_bar', quantity: 5 }] }
+  {
+    fromTier: 'basic',
+    toTier: 'iron',
+    money: 1200,
+    materials: [{ itemId: 'copper_bar', quantity: 3 }]
+  },
+  {
+    fromTier: 'iron',
+    toTier: 'steel',
+    money: 5000,
+    materials: [{ itemId: 'iron_bar', quantity: 5 }]
+  },
+  {
+    fromTier: 'steel',
+    toTier: 'iridium',
+    money: 10000,
+    materials: [{ itemId: 'gold_bar', quantity: 5 }]
+  }
 ]
 
 /** 各工具的升级费用 */

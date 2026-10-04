@@ -104,7 +104,9 @@
           {{ gradeText }}
         </p>
         <div v-if="lastGrade !== 'escaped'" class="mt-2">
-          <p class="text-accent text-xs">{{ catches[catches.length - 1]?.name }}</p>
+          <p class="text-accent text-xs">
+            {{ catches[catches.length - 1]?.name }}
+          </p>
           <p class="text-xs text-muted">{{ catches[catches.length - 1]?.weight }}斤 · +{{ catches[catches.length - 1]?.score }}分</p>
         </div>
         <div v-else class="mt-2">
@@ -125,7 +127,15 @@
           class="flex items-center justify-between text-xs py-0.5 border-b border-accent/10 last:border-0"
         >
           <div>
-            <span class="mr-2" :class="{ 'text-accent': i === 0, 'text-success': entry.name === '你' }">第{{ i + 1 }}名</span>
+            <span
+              class="mr-2"
+              :class="{
+                'text-accent': i === 0,
+                'text-success': entry.name === '你'
+              }"
+            >
+              第{{ i + 1 }}名
+            </span>
             <span :class="{ 'text-success': entry.name === '你' }">{{ entry.name }}</span>
           </div>
           <span class="text-muted">{{ entry.score }} 分</span>

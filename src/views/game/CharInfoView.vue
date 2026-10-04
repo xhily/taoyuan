@@ -116,7 +116,7 @@
               >
                 <div class="min-w-0">
                   <span class="text-xs" :class="index === inventoryStore.equippedWeaponIndex ? 'text-accent' : ''">
-                    {{ getWeaponDisplayName(weapon.defId, weapon.enchantmentId) }}
+                    {{ inventoryStore.getEquipDisplayName('weapon', index) }}
                   </span>
                   <p class="text-[10px] text-muted truncate">
                     攻{{ getWeaponStats(weapon).attack }} · 暴击{{ Math.round(getWeaponStats(weapon).critRate * 100) }}%
@@ -151,7 +151,9 @@
                 >
                   <div class="min-w-0">
                     <span class="text-xs" :class="isRingInCurrentSlot(idx) ? 'text-accent' : ''">{{ ring.name }}</span>
-                    <p class="text-[10px] text-muted truncate">{{ ring.effectText }}</p>
+                    <p class="text-[10px] text-muted truncate">
+                      {{ ring.effectText }}
+                    </p>
                   </div>
                   <span v-if="isRingInCurrentSlot(idx)" class="text-[10px] text-accent shrink-0 ml-1">当前</span>
                   <span v-else-if="isRingInOtherSlot(idx)" class="text-[10px] text-muted shrink-0 ml-1">
@@ -184,7 +186,9 @@
                 >
                   <div class="min-w-0">
                     <span class="text-xs" :class="hat.index === inventoryStore.equippedHatIndex ? 'text-accent' : ''">{{ hat.name }}</span>
-                    <p class="text-[10px] text-muted truncate">{{ hat.effectText }}</p>
+                    <p class="text-[10px] text-muted truncate">
+                      {{ hat.effectText }}
+                    </p>
                   </div>
                   <span v-if="hat.index === inventoryStore.equippedHatIndex" class="text-[10px] text-accent shrink-0 ml-1">当前</span>
                 </div>
@@ -216,7 +220,9 @@
                     <span class="text-xs" :class="shoe.index === inventoryStore.equippedShoeIndex ? 'text-accent' : ''">
                       {{ shoe.name }}
                     </span>
-                    <p class="text-[10px] text-muted truncate">{{ shoe.effectText }}</p>
+                    <p class="text-[10px] text-muted truncate">
+                      {{ shoe.effectText }}
+                    </p>
                   </div>
                   <span v-if="shoe.index === inventoryStore.equippedShoeIndex" class="text-[10px] text-accent shrink-0 ml-1">当前</span>
                 </div>
@@ -305,11 +311,12 @@
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useWalletStore } from '@/stores/useWalletStore'
   import { TOOL_NAMES, TIER_NAMES, getNpcById } from '@/data'
-  import { getWeaponById, getEnchantmentById, getWeaponDisplayName } from '@/data/weapons'
+  import { getWeaponById, getEnchantmentById } from '@/data/weapons'
   import { getRingById } from '@/data/rings'
   import { getHatById } from '@/data/hats'
   import { getShoeById } from '@/data/shoes'
-  import type { EquipmentEffectType } from '@/types'
+  import { getEnhancedAttack, scaleEffectValue } from '@/data/enhance'
+  import type { EquipmentEffect, EquipmentEffectType } from '@/types'
   import { WALLET_ITEMS } from '@/data/wallet'
   import { navigateToPanel } from '@/composables/useNavigation'
   import type { SkillType, SkillPerk5, SkillPerk10, ChildStage, OwnedWeapon } from '@/types'
@@ -332,9 +339,9 @@
   // === 武器 ===
 
   const equippedWeaponName = computed(() => {
-    const weapon = inventoryStore.ownedWeapons[inventoryStore.equippedWeaponIndex]
-    if (!weapon) return '无'
-    return getWeaponDisplayName(weapon.defId, weapon.enchantmentId)
+    const index = inventoryStore.equippedWeaponIndex
+    if (!inventoryStore.ownedWeapons[index]) return '无'
+    return inventoryStore.getEquipDisplayName('weapon', index)
   })
 
   const getWeaponStats = (weapon: OwnedWeapon): { attack: number; critRate: number } => {
@@ -349,7 +356,7 @@
         critRate += enchant.critBonus
       }
     }
-    return { attack, critRate }
+    return { attack: getEnhancedAttack(attack, weapon.enhance), critRate }
   }
 
   const getEnchantName = (enchantmentId: string): string => {
@@ -358,9 +365,7 @@
 
   const handleEquipWeapon = (index: number) => {
     if (inventoryStore.equipWeapon(index)) {
-      const weapon = inventoryStore.ownedWeapons[index]!
-      const name = getWeaponDisplayName(weapon.defId, weapon.enchantmentId)
-      addLog(`装备了${name}。`)
+      addLog(`装备了${inventoryStore.getEquipDisplayName('weapon', index)}。`)
     }
   }
 
@@ -391,13 +396,13 @@
     travel_speed: '旅行加速'
   }
 
-  const formatRingEffects = (defId: string): string => {
-    const def = getRingById(defId)
-    if (!def) return ''
-    return def.effects
+  /** 效果简述，数值按强化等级放大 */
+  const formatEquipEffects = (effects: EquipmentEffect[], enhance?: number): string => {
+    return effects
       .map(e => {
         const label = RING_EFFECT_SHORT[e.type]
-        return e.value > 0 && e.value < 1 ? `${label}${Math.round(e.value * 100)}%` : `${label}+${e.value}`
+        const value = scaleEffectValue(e.type, e.value, enhance)
+        return e.value > 0 && e.value < 1 ? `${label}${Math.round(value * 1000) / 10}%` : `${label}+${value}`
       })
       .join(' ')
   }
@@ -407,25 +412,27 @@
     const ring = inventoryStore.ownedRings[index]!
     const def = getRingById(ring.defId)
     if (!def) return null
-    return { name: def.name, effectText: formatRingEffects(ring.defId) }
+    return { name: inventoryStore.getEquipDisplayName('ring', index), effectText: formatEquipEffects(def.effects, ring.enhance) }
   }
 
   const equippedRing1 = computed(() => getRingInfo(inventoryStore.equippedRingSlot1))
   const equippedRing2 = computed(() => getRingInfo(inventoryStore.equippedRingSlot2))
 
   const ownedRingList = computed(() =>
-    inventoryStore.ownedRings.map((ring, index) => ({
-      index,
-      name: getRingById(ring.defId)?.name ?? ring.defId,
-      effectText: formatRingEffects(ring.defId)
-    }))
+    inventoryStore.ownedRings.map((ring, index) => {
+      const def = getRingById(ring.defId)
+      return {
+        index,
+        name: def ? inventoryStore.getEquipDisplayName('ring', index) : ring.defId,
+        effectText: def ? formatEquipEffects(def.effects, ring.enhance) : ''
+      }
+    })
   )
 
   const handleEquipRingFromPopup = (ringIndex: number) => {
     const slot: 0 | 1 = activeSlot.value === 'ring1' ? 0 : 1
     if (inventoryStore.equipRing(ringIndex, slot)) {
-      const def = getRingById(inventoryStore.ownedRings[ringIndex]!.defId)
-      addLog(`将${def?.name ?? '戒指'}装备到槽位${slot + 1}。`)
+      addLog(`将${inventoryStore.getEquipDisplayName('ring', ringIndex) || '戒指'}装备到槽位${slot + 1}。`)
       activeSlot.value = null
     }
   }
@@ -433,9 +440,9 @@
   const handleUnequipRingFromPopup = () => {
     const slot: 0 | 1 = activeSlot.value === 'ring1' ? 0 : 1
     const idx = slot === 0 ? inventoryStore.equippedRingSlot1 : inventoryStore.equippedRingSlot2
-    const def = idx >= 0 ? getRingById(inventoryStore.ownedRings[idx]!.defId) : null
+    const name = inventoryStore.getEquipDisplayName('ring', idx)
     if (inventoryStore.unequipRing(slot)) {
-      addLog(`卸下了${def?.name ?? '戒指'}。`)
+      addLog(`卸下了${name || '戒指'}。`)
       activeSlot.value = null
     }
   }
@@ -453,44 +460,34 @@
   // === 帽子 ===
 
   const equippedHatName = computed(() => {
-    const hat = inventoryStore.ownedHats[inventoryStore.equippedHatIndex]
-    if (!hat) return null
-    return getHatById(hat.defId)?.name ?? null
+    const idx = inventoryStore.equippedHatIndex
+    if (!inventoryStore.ownedHats[idx]) return null
+    return inventoryStore.getEquipDisplayName('hat', idx)
   })
-
-  const formatEquipEffects = (effects: { type: EquipmentEffectType; value: number }[]): string => {
-    return effects
-      .map(e => {
-        const label = RING_EFFECT_SHORT[e.type]
-        return e.value > 0 && e.value < 1 ? `${label}${Math.round(e.value * 100)}%` : `${label}+${e.value}`
-      })
-      .join(' ')
-  }
 
   const ownedHatList = computed(() =>
     inventoryStore.ownedHats.map((hat, index) => {
       const def = getHatById(hat.defId)
       return {
         index,
-        name: def?.name ?? hat.defId,
-        effectText: def ? formatEquipEffects(def.effects) : ''
+        name: inventoryStore.getEquipDisplayName('hat', index),
+        effectText: def ? formatEquipEffects(def.effects, hat.enhance) : ''
       }
     })
   )
 
   const handleEquipHatFromPopup = (index: number) => {
     if (inventoryStore.equipHat(index)) {
-      const def = getHatById(inventoryStore.ownedHats[index]!.defId)
-      addLog(`装备了${def?.name ?? '帽子'}。`)
+      addLog(`装备了${inventoryStore.getEquipDisplayName('hat', index)}。`)
       activeSlot.value = null
     }
   }
 
   const handleUnequipHatFromPopup = () => {
     const idx = inventoryStore.equippedHatIndex
-    const def = idx >= 0 ? getHatById(inventoryStore.ownedHats[idx]!.defId) : null
+    const name = inventoryStore.getEquipDisplayName('hat', idx)
     if (inventoryStore.unequipHat()) {
-      addLog(`卸下了${def?.name ?? '帽子'}。`)
+      addLog(`卸下了${name || '帽子'}。`)
       activeSlot.value = null
     }
   }
@@ -498,9 +495,9 @@
   // === 鞋子 ===
 
   const equippedShoeName = computed(() => {
-    const shoe = inventoryStore.ownedShoes[inventoryStore.equippedShoeIndex]
-    if (!shoe) return null
-    return getShoeById(shoe.defId)?.name ?? null
+    const idx = inventoryStore.equippedShoeIndex
+    if (!inventoryStore.ownedShoes[idx]) return null
+    return inventoryStore.getEquipDisplayName('shoe', idx)
   })
 
   const ownedShoeList = computed(() =>
@@ -508,25 +505,24 @@
       const def = getShoeById(shoe.defId)
       return {
         index,
-        name: def?.name ?? shoe.defId,
-        effectText: def ? formatEquipEffects(def.effects) : ''
+        name: inventoryStore.getEquipDisplayName('shoe', index),
+        effectText: def ? formatEquipEffects(def.effects, shoe.enhance) : ''
       }
     })
   )
 
   const handleEquipShoeFromPopup = (index: number) => {
     if (inventoryStore.equipShoe(index)) {
-      const def = getShoeById(inventoryStore.ownedShoes[index]!.defId)
-      addLog(`装备了${def?.name ?? '鞋子'}。`)
+      addLog(`装备了${inventoryStore.getEquipDisplayName('shoe', index)}。`)
       activeSlot.value = null
     }
   }
 
   const handleUnequipShoeFromPopup = () => {
     const idx = inventoryStore.equippedShoeIndex
-    const def = idx >= 0 ? getShoeById(inventoryStore.ownedShoes[idx]!.defId) : null
+    const name = inventoryStore.getEquipDisplayName('shoe', idx)
     if (inventoryStore.unequipShoe()) {
-      addLog(`卸下了${def?.name ?? '鞋子'}。`)
+      addLog(`卸下了${name || '鞋子'}。`)
       activeSlot.value = null
     }
   }
@@ -581,7 +577,7 @@
     const spouseState = npcStore.getSpouse()
     if (!spouseState) return null
     const npcDef = getNpcById(spouseState.npcId)
-    return npcDef ? { name: npcDef.name } : null
+    return npcDef ? { name: npcStore.getNpcDisplayName(spouseState.npcId) } : null
   })
 
   const CHILD_STAGE_NAMES: Record<ChildStage, string> = {

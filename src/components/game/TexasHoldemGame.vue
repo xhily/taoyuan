@@ -53,7 +53,9 @@
           <span class="poker-card-rank">{{ RANK_LABELS[card.rank] }}</span>
         </span>
       </div>
-      <p v-if="playerHandResult" class="text-xs text-center mt-1 text-accent">{{ playerHandResult.label }}</p>
+      <p v-if="playerHandResult" class="text-xs text-center mt-1 text-accent">
+        {{ playerHandResult.label }}
+      </p>
     </div>
 
     <!-- 庄家手牌 + 筹码 -->
@@ -80,7 +82,9 @@
           <template v-else>?</template>
         </span>
       </div>
-      <p v-if="dealerHandResult" class="text-xs text-center mt-1 text-accent">{{ dealerHandResult.label }}</p>
+      <p v-if="dealerHandResult" class="text-xs text-center mt-1 text-accent">
+        {{ dealerHandResult.label }}
+      </p>
     </div>
 
     <!-- 操作按钮 -->
@@ -117,7 +121,9 @@
 
     <!-- 日志 -->
     <div class="border border-accent/10 rounded-xs p-2 mb-2 max-h-24 overflow-y-auto" ref="logRef">
-      <p v-for="(msg, i) in actionLog" :key="i" class="text-xs text-muted leading-relaxed">{{ msg }}</p>
+      <p v-for="(msg, i) in actionLog" :key="i" class="text-xs text-muted leading-relaxed">
+        {{ msg }}
+      </p>
     </div>
 
     <!-- 最终结算 -->
@@ -149,7 +155,9 @@
   const playerStore = usePlayerStore()
 
   const props = defineProps<{ setup: TexasSetup }>()
-  const emit = defineEmits<{ complete: [finalChips: number, tierName: string] }>()
+  const emit = defineEmits<{
+    complete: [finalChips: number, tierName: string]
+  }>()
 
   const tier = props.setup.tier
 
@@ -178,7 +186,11 @@
   const playerHandResult = ref<PokerHandResult | null>(null)
   const dealerHandResult = ref<PokerHandResult | null>(null)
   const sessionOver = ref(false)
-  const finalResult = ref<{ won: boolean; draw: boolean; netProfit: number } | null>(null)
+  const finalResult = ref<{
+    won: boolean
+    draw: boolean
+    netProfit: number
+  } | null>(null)
   const totalInvested = ref(0) // 场外累计投入（不含初始入场费）
   const actionLog = ref<string[]>([])
   const logRef = ref<HTMLElement | null>(null)

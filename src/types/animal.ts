@@ -61,17 +61,12 @@ export interface Animal {
   sick: boolean
   /** 连续生病天数，达到上限时死亡 */
   sickDays: number
+  /** 马匹品种（仅 type === 'horse' 时有意义，缺省按普通马处理） */
+  horseBreed?: 'common' | 'steppe' | 'cloud' | 'divine'
 }
 
 export type FruitTreeType =
-  | 'peach_tree'
-  | 'lychee_tree'
-  | 'mandarin_tree'
-  | 'plum_tree'
-  | 'apricot_tree'
-  | 'pomegranate_tree'
-  | 'persimmon_tree'
-  | 'hawthorn_tree'
+  'peach_tree' | 'lychee_tree' | 'mandarin_tree' | 'plum_tree' | 'apricot_tree' | 'pomegranate_tree' | 'persimmon_tree' | 'hawthorn_tree'
 
 export interface FruitTreeDef {
   type: FruitTreeType
@@ -104,6 +99,19 @@ export interface PetState {
   name: string
   friendship: number
   wasPetted: boolean
+}
+
+/** 宠物能力：叼物（猫狗通用）、看家（狗）、捕虫（猫） */
+export type PetAbilityId = 'fetch' | 'guard' | 'pest'
+
+export interface PetAbilityDef {
+  id: PetAbilityId
+  /** 能力标签名 */
+  name: string
+  /** 拥有该能力的宠物类型 */
+  petTypes: PetType[]
+  /** 解锁所需好感 */
+  unlockFriendship: number
 }
 
 export interface IncubationState {

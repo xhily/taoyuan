@@ -1,5 +1,6 @@
 <template>
   <div>
+    <VillagerPresence spot="cooking" />
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-accent text-sm">灶台</h3>
       <button
@@ -10,7 +11,9 @@
         {{ showOnlyMakeable ? '可制作' : '全部' }}
       </button>
     </div>
-    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">{{ tutorialHint }}</p>
+    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
+      {{ tutorialHint }}
+    </p>
 
     <!-- 当前增益 -->
     <div v-if="cookingStore.activeBuff" class="border border-water/20 rounded-xs px-3 py-1.5 mb-3">
@@ -40,7 +43,9 @@
             <span v-if="info.recipe.effect.healthRestore">+{{ info.recipe.effect.healthRestore }}生命</span>
           </span>
         </div>
-        <p v-if="info.recipe.effect.buff" class="text-[10px] text-water mt-0.5">{{ info.recipe.effect.buff.description }}</p>
+        <p v-if="info.recipe.effect.buff" class="text-[10px] text-water mt-0.5">
+          {{ info.recipe.effect.buff.description }}
+        </p>
       </div>
     </div>
     <div v-else class="flex flex-col items-center justify-center py-8 mb-4">
@@ -143,6 +148,7 @@
 </template>
 
 <script setup lang="ts">
+  import VillagerPresence from '@/components/game/VillagerPresence.vue'
   import { ref, computed } from 'vue'
   import { UtensilsCrossed, Zap, X, Minus, Plus } from 'lucide-vue-next'
   import { useAchievementStore } from '@/stores/useAchievementStore'

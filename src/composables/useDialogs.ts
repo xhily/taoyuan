@@ -183,7 +183,10 @@ export const closeFarmEvent = () => {
 const pendingDiscoveryScenes = ref<{ npcId: string; step: DiscoveryStep }[]>([])
 
 /** 当前显示的发现场景（队列头部） */
-const pendingDiscoveryScene = ref<{ npcId: string; step: DiscoveryStep } | null>(null)
+const pendingDiscoveryScene = ref<{
+  npcId: string
+  step: DiscoveryStep
+} | null>(null)
 
 /** 添加仙灵发现场景到队列 */
 export const showDiscoveryScene = (npcId: string, step: DiscoveryStep) => {

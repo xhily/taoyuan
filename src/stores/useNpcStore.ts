@@ -15,14 +15,25 @@ import type {
 import { NPCS, getNpcById, getHeartEventsForNpc, RECIPES } from '@/data'
 import { WEATHER_TIPS, getFortuneTip, getLivingTip, getRecipeTipMessage, NO_RECIPE_TIP, TIP_NPC_IDS } from '@/data/npcTips'
 import { getItemById } from '@/data/items'
+import { buildChatterPool } from '@/data/npcChatter'
+import {
+  CHILD_GIFT_CHANCE,
+  CHILD_GIFT_POOL,
+  TEEN_HELP_PLOTS,
+  fillChildText,
+  getChildStageByAge,
+  pickInteraction,
+  pickMilestone
+} from '@/data/childGrowth'
 import { useInventoryStore } from './useInventoryStore'
 import { useGameStore } from './useGameStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useCookingStore } from './useCookingStore'
-import { useFarmStore } from './useFarmStore'
+import { useFarmStore, formatExhaustedLog } from './useFarmStore'
 import { useAnimalStore } from './useAnimalStore'
 import { useFishPondStore } from './useFishPondStore'
 import { useFishingStore } from './useFishingStore'
+import { useProcessingStore } from './useProcessingStore'
 
 /** 好感等级阈值 (10心制, 每心250点, 上限2500) */
 const FRIENDSHIP_THRESHOLDS: { level: FriendshipLevel; min: number }[] = [
@@ -31,6 +42,20 @@ const FRIENDSHIP_THRESHOLDS: { level: FriendshipLevel; min: number }[] = [
   { level: 'acquaintance', min: 500 },
   { level: 'stranger', min: 0 }
 ]
+
+/** 好感等级的中文称谓与对应心数，供界面直接展示 */
+export const FRIENDSHIP_LEVEL_INFO: Record<FriendshipLevel, { name: string; min: number; hearts: number }> = {
+  stranger: { name: '陌生', min: 0, hearts: 0 },
+  acquaintance: { name: '相识', min: 500, hearts: 2 },
+  friendly: { name: '友好', min: 1000, hearts: 4 },
+  bestFriend: { name: '挚友', min: 2000, hearts: 8 }
+}
+
+/** 好感等级顺序（由低到高） */
+export const FRIENDSHIP_LEVEL_ORDER: FriendshipLevel[] = ['stranger', 'acquaintance', 'friendly', 'bestFriend']
+
+/** 村民备注最多字数 */
+export const NPC_NOTE_MAX_LENGTH = 8
 
 export const useNpcStore = defineStore('npc', () => {
   const npcStates = ref<NpcState[]>(
@@ -93,7 +118,8 @@ export const useNpcStore = defineStore('npc', () => {
     feed: 150,
     harvest: 200,
     weed: 100,
-    bait: 80
+    bait: 80,
+    collect: 150
   }
 
   /** 雇工任务名称 */
@@ -102,11 +128,26 @@ export const useNpcStore = defineStore('npc', () => {
     feed: '喂食',
     harvest: '收获',
     weed: '除草除虫',
-    bait: '装饵'
+    bait: '装饵',
+    collect: '收加工品'
+  }
+
+  /** 雇工任务说明：讲清楚每种活到底干什么，免得玩家雇了之后看不出效果 */
+  const HELPER_TASK_DESCRIPTIONS: Record<FarmHelperTask, string> = {
+    water: '清晨为未浇水的作物浇水（最多约4-6块，好感高时更多）',
+    feed: '喂饱畜舍里的牲畜和鱼塘的鱼',
+    harvest: '收割已成熟的作物并放进你的背包（最多约5块）',
+    weed: '清理田里的杂草与虫害',
+    bait: '给所有蟹笼补上鱼饵',
+    collect: '把加工坊中已完成的成品全部收起来'
   }
 
   /** 可雇佣的NPC列表（好感>=1000 且 未被雇佣 且 非配偶/知己） */
-  const getHireableNpcs = (): { npcId: string; name: string; friendship: number }[] => {
+  const getHireableNpcs = (): {
+    npcId: string
+    name: string
+    friendship: number
+  }[] => {
     return npcStates.value
       .filter(s => {
         if (s.friendship < 1000) return false
@@ -116,7 +157,11 @@ export const useNpcStore = defineStore('npc', () => {
       })
       .map(s => {
         const def = getNpcById(s.npcId)
-        return { npcId: s.npcId, name: def?.name ?? s.npcId, friendship: s.friendship }
+        return {
+          npcId: s.npcId,
+          name: def?.name ?? s.npcId,
+          friendship: s.friendship
+        }
       })
   }
 
@@ -132,7 +177,10 @@ export const useNpcStore = defineStore('npc', () => {
     const npcDef = getNpcById(npcId)
     const name = npcDef?.name ?? npcId
     hiredHelpers.value.push({ npcId, task, dailyWage: HELPER_WAGES[task] })
-    return { success: true, message: `${name}开始帮你${HELPER_TASK_NAMES[task]}了！(日薪${HELPER_WAGES[task]}文)` }
+    return {
+      success: true,
+      message: `${name}开始帮你${HELPER_TASK_NAMES[task]}了！(日薪${HELPER_WAGES[task]}文)`
+    }
   }
 
   /** 解雇 */
@@ -187,8 +235,14 @@ export const useNpcStore = defineStore('npc', () => {
           const unwatered = farmStore.plots.filter(p => (p.state === 'planted' || p.state === 'growing') && !p.watered)
           const count = Math.min(unwatered.length, Math.floor(4 * efficiency) + Math.floor(Math.random() * 3))
           for (let i = 0; i < count; i++) farmStore.waterPlot(unwatered[i]!.id)
-          if (count > 0) messages.push(`${name}帮你浇了${count}块地。(-${helper.dailyWage}文)`)
-          else messages.push(`${name}今天没什么可浇的。(-${helper.dailyWage}文)`)
+          if (count > 0) {
+            // 说清楚浇的是「今天这一轮」，否则玩家一早看到地是干的会以为雇工没干活
+            messages.push(`${name}一早帮你浇了${count}块地，今天这些地不用再浇了。(-${helper.dailyWage}文)`)
+          } else if (farmStore.plots.some(p => p.state === 'planted' || p.state === 'growing')) {
+            messages.push(`${name}来时地已经浇过了（下雨或洒水器），今天不用他动手。(-${helper.dailyWage}文)`)
+          } else {
+            messages.push(`${name}今天没什么可浇的——地里还没种东西。(-${helper.dailyWage}文)`)
+          }
           break
         }
         case 'feed': {
@@ -212,16 +266,47 @@ export const useNpcStore = defineStore('npc', () => {
         case 'harvest': {
           const harvestable = farmStore.plots.filter(p => p.state === 'harvestable')
           const count = Math.min(harvestable.length, Math.floor(5 * efficiency))
-          let harvested = 0
+          // 按作物名统计，让玩家清楚到底收回来了什么，而不是只看到一句「收了N块地」
+          const collected = new Map<string, number>()
+          // 多茬作物收满后地块清空，单独记一条
+          const exhaustedNames: string[] = []
+          let leftInField = 0
           for (let i = 0; i < count; i++) {
-            const result = farmStore.harvestPlot(harvestable[i]!.id)
-            if (result.cropId) {
-              inventoryStore.addItem(result.cropId, 1, 'normal')
-              harvested++
+            // 主背包和临时背包都满了就不再下地：作物留在田里，不会收了却放不进背包
+            if (inventoryStore.isAllFull) {
+              leftInField = count - i
+              break
             }
+            const result = farmStore.harvestPlot(harvestable[i]!.id)
+            if (!result.cropId) continue
+            const itemName = getItemById(result.cropId)?.name ?? result.cropId
+            // 地块等级：每级额外 +1，与主产出同为普通品质
+            const quantity = 1 + result.bonus
+            if (inventoryStore.addItem(result.cropId, quantity, 'normal')) {
+              collected.set(itemName, (collected.get(itemName) ?? 0) + quantity)
+            }
+            if (result.exhausted) exhaustedNames.push(itemName)
           }
-          if (harvested > 0) messages.push(`${name}帮你收了${harvested}块地的庄稼。(-${helper.dailyWage}文)`)
-          else messages.push(`${name}今天没什么可收的。(-${helper.dailyWage}文)`)
+          const wageLabel = `(-${helper.dailyWage}文)`
+          const leftLabel = `背包放不下，${name}只好把${leftInField}份收成留在了田里。`
+          if (collected.size > 0) {
+            const detail = [...collected.entries()].map(([n, c]) => `${n}×${c}`).join('、')
+            messages.push(`${name}帮你收了${detail}，已放进背包。${wageLabel}`)
+            if (leftInField > 0) messages.push(leftLabel)
+          } else if (leftInField > 0) {
+            messages.push(`${leftLabel}${wageLabel}`)
+          } else {
+            messages.push(`${name}今天没什么可收的——地里还没有成熟的作物。${wageLabel}`)
+          }
+          if (exhaustedNames.length > 0) messages.push(formatExhaustedLog(exhaustedNames))
+          break
+        }
+        case 'collect': {
+          // 收取加工坊里已完成的产物，省去玩家逐个点收
+          const processingStore = useProcessingStore()
+          const collected = processingStore.collectAllReady()
+          if (collected > 0) messages.push(`${name}帮你从加工坊收了${collected}份成品。(-${helper.dailyWage}文)`)
+          else messages.push(`${name}去加工坊转了一圈，今天没有做好的东西。(-${helper.dailyWage}文)`)
           break
         }
         case 'weed': {
@@ -256,6 +341,9 @@ export const useNpcStore = defineStore('npc', () => {
   const CHILD_NAMES_MALE = ['小龙', '小宝', '团子', '年年']
   const CHILD_NAMES_FEMALE = ['小凤', '阿花', '豆豆', '圆圆']
 
+  /** 再要一个孩子前，最小的孩子至少要长到的天数（约两个季节，刚会走路） */
+  const MIN_DAYS_BETWEEN_CHILDREN = 56
+
   /** 获取NPC状态 */
   const getNpcState = (npcId: string): NpcState | undefined => {
     return npcStates.value.find(s => s.npcId === npcId)
@@ -277,6 +365,24 @@ export const useNpcStore = defineStore('npc', () => {
     if (!npcDef?.birthday) return false
     const gameStore = useGameStore()
     return npcDef.birthday.season === gameStore.season && npcDef.birthday.day === gameStore.day
+  }
+
+  /** 今天还能不能给这位村民送礼（含生日额外一次） */
+  const canGiftToday = (npcId: string): boolean => {
+    const state = getNpcState(npcId)
+    if (!state) return false
+    if (isBirthday(npcId) && !state.birthdayGiftGiven) return true
+    return !state.giftedToday && state.giftsThisWeek < 2
+  }
+
+  /** 送礼状态说明文案，供界面直接展示 */
+  const getGiftStatusText = (npcId: string): string => {
+    const state = getNpcState(npcId)
+    if (!state) return ''
+    if (isBirthday(npcId) && !state.birthdayGiftGiven) return '生日礼 ×4'
+    if (state.giftedToday) return '今日已送'
+    if (state.giftsThisWeek >= 2) return '本周已送满'
+    return `可送礼 ${state.giftsThisWeek}/2`
   }
 
   /** 获取今天过生日的NPC (null if none) */
@@ -329,6 +435,14 @@ export const useNpcStore = defineStore('npc', () => {
     return text.replace(/\{player\}/g, playerStore.playerName).replace(/\{title\}/g, playerStore.honorific)
   }
 
+  /** 从候选池里挑一句，尽量避开上一次说过的那句 */
+  const pickDialogue = (pool: string[], lastSaid?: string): string => {
+    if (pool.length === 0) return '……'
+    const fresh = pool.length > 1 && lastSaid ? pool.filter(line => line !== lastSaid) : pool
+    const candidates = fresh.length > 0 ? fresh : pool
+    return candidates[Math.floor(Math.random() * candidates.length)]!
+  }
+
   /** 与NPC对话 (+20好感) */
   const talkTo = (npcId: string): { message: string; friendshipGain: number } | null => {
     const state = getNpcState(npcId)
@@ -379,30 +493,66 @@ export const useNpcStore = defineStore('npc', () => {
       const weatherLine = weatherDialogues[gameStore.weather]
       if (weatherLine) pool.push(weatherLine)
 
-      const message = pool[Math.floor(Math.random() * pool.length)]!
+      const message = pickDialogue(pool, state.lastDialogue)
+      state.lastDialogue = message
       return { message, friendshipGain: 20 }
     }
 
     // 知己NPC使用知己专属对话
     if (state.zhiji && npcDef.zhijiDialogues?.length) {
-      const raw = npcDef.zhijiDialogues[Math.floor(Math.random() * npcDef.zhijiDialogues.length)]!
-      const message = replaceDialoguePlaceholders(raw)
-      return { message, friendshipGain: 20 }
+      const raw = pickDialogue(npcDef.zhijiDialogues, state.lastDialogue)
+      state.lastDialogue = raw
+      return { message: replaceDialoguePlaceholders(raw), friendshipGain: 20 }
     }
 
     // 约会中NPC使用约会对话
     if (state.dating && npcDef.datingDialogues && npcDef.datingDialogues.length > 0) {
-      const raw = npcDef.datingDialogues[Math.floor(Math.random() * npcDef.datingDialogues.length)]!
-      const message = replaceDialoguePlaceholders(raw)
-      return { message, friendshipGain: 20 }
+      const raw = pickDialogue(npcDef.datingDialogues, state.lastDialogue)
+      state.lastDialogue = raw
+      return { message: replaceDialoguePlaceholders(raw), friendshipGain: 20 }
     }
 
+    // 普通关系：好感档台词 + 专属闲聊 + 情境闲聊混合，避免复读
+    const gameStoreRef = useGameStore()
     const level = getFriendshipLevel(npcId)
-    const dialogues = npcDef.dialogues[level]
-    const raw = dialogues[Math.floor(Math.random() * dialogues.length)]!
-    const message = replaceDialoguePlaceholders(raw)
+    const pool = [...npcDef.dialogues[level]]
+    pool.push(
+      ...buildChatterPool(npcId, {
+        season: gameStoreRef.season,
+        weather: gameStoreRef.weather,
+        period: gameStoreRef.timePeriod,
+        level
+      })
+    )
 
-    return { message, friendshipGain: 20 }
+    const raw = pickDialogue(pool, state.lastDialogue)
+    state.lastDialogue = raw
+
+    return { message: replaceDialoguePlaceholders(raw), friendshipGain: 20 }
+  }
+
+  /**
+   * 纯闲聊：不加好感、不占用每日对话次数、不消耗时间。
+   * 好感已经聊过之后，玩家仍然可以多听几句——村民不该是点一次就没反应的木头人。
+   */
+  const chatWith = (npcId: string): string | null => {
+    const state = getNpcState(npcId)
+    const npcDef = getNpcById(npcId)
+    if (!state || !npcDef) return null
+
+    const gameStoreRef = useGameStore()
+    const level = getFriendshipLevel(npcId)
+    const pool = buildChatterPool(npcId, {
+      season: gameStoreRef.season,
+      weather: gameStoreRef.weather,
+      period: gameStoreRef.timePeriod,
+      level
+    })
+    if (pool.length === 0) return null
+
+    const raw = pickDialogue(pool, state.lastDialogue)
+    state.lastDialogue = raw
+    return replaceDialoguePlaceholders(raw)
   }
 
   /** 送礼给NPC (每天1次, 每周2次) */
@@ -414,14 +564,24 @@ export const useNpcStore = defineStore('npc', () => {
   ): { gain: number; reaction: string } | null => {
     const state = getNpcState(npcId)
     if (!state) return null
-    if (state.giftedToday) return null
-    if (state.giftsThisWeek >= 2) return null
+
+    // 生日礼走独立额度：不占每日一次、也不占每周两次，但本身只能送一次。
+    // 这样即使本周已送满，生日当天照样能额外送一份。
+    const isBirthdayGift = isBirthday(npcId) && !state.birthdayGiftGiven
+    if (!isBirthdayGift) {
+      if (state.giftedToday) return null
+      if (state.giftsThisWeek >= 2) return null
+    }
 
     const inventoryStore = useInventoryStore()
     if (!inventoryStore.removeItem(itemId, 1, quality)) return null
 
-    state.giftedToday = true
-    state.giftsThisWeek++
+    if (isBirthdayGift) {
+      state.birthdayGiftGiven = true
+    } else {
+      state.giftedToday = true
+      state.giftsThisWeek++
+    }
     const npcDef = getNpcById(npcId)
     if (!npcDef) return null
 
@@ -443,7 +603,12 @@ export const useNpcStore = defineStore('npc', () => {
     }
 
     // 品质加成
-    const qualityMultiplier: Record<Quality, number> = { normal: 1.0, fine: 1.25, excellent: 1.5, supreme: 2.0 }
+    const qualityMultiplier: Record<Quality, number> = {
+      normal: 1.0,
+      fine: 1.25,
+      excellent: 1.5,
+      supreme: 2.0
+    }
     // 生日加成 (4倍)
     const birthdayMultiplier = isBirthday(npcId) ? 4 : 1
 
@@ -478,7 +643,10 @@ export const useNpcStore = defineStore('npc', () => {
 
     state.dating = true
     state.friendship += 160
-    return { success: true, message: `${npcDef.name}羞红了脸，接过了你的丝帕……你们开始约会了！` }
+    return {
+      success: true,
+      message: `${npcDef.name}羞红了脸，接过了你的丝帕……你们开始约会了！`
+    }
   }
 
   /** 求婚 (需2500好感/10心) */
@@ -516,7 +684,10 @@ export const useNpcStore = defineStore('npc', () => {
     weddingCountdown.value = 3
     weddingNpcId.value = npcId
     state.friendship += 400
-    return { success: true, message: `${npcDef.name}含泪接受了你的翡翠戒指……婚礼将在3天后举行！` }
+    return {
+      success: true,
+      message: `${npcDef.name}含泪接受了你的翡翠戒指……婚礼将在3天后举行！`
+    }
   }
 
   /** 获取已婚配偶状态 */
@@ -555,7 +726,10 @@ export const useNpcStore = defineStore('npc', () => {
     state.zhiji = true
     state.friendship += 160
     const label = playerStore.gender === 'male' ? '蓝颜知己' : '红颜知己'
-    return { success: true, message: `${npcDef.name}郑重地接过了玉佩……你们结为了${label}！` }
+    return {
+      success: true,
+      message: `${npcDef.name}郑重地接过了玉佩……你们结为了${label}！`
+    }
   }
 
   /** 断绝知己之缘 */
@@ -573,11 +747,17 @@ export const useNpcStore = defineStore('npc', () => {
     zhijiState.friendship = 1000
     daysZhiji.value = 0
 
-    return { success: true, message: `你和${npcDef?.name ?? '知己'}的知己之缘已断。` }
+    return {
+      success: true,
+      message: `你和${npcDef?.name ?? '知己'}的知己之缘已断。`
+    }
   }
 
   /** 每日婚礼倒计时更新 */
-  const dailyWeddingUpdate = (): { weddingToday: boolean; npcId: string | null } => {
+  const dailyWeddingUpdate = (): {
+    weddingToday: boolean
+    npcId: string | null
+  } => {
     if (weddingCountdown.value <= 0 || !weddingNpcId.value) {
       return { weddingToday: false, npcId: null }
     }
@@ -621,7 +801,10 @@ export const useNpcStore = defineStore('npc', () => {
     daysMarried.value = 0
     cancelWedding()
 
-    return { success: true, message: `你和${npcDef?.name ?? '配偶'}的婚姻结束了。` }
+    return {
+      success: true,
+      message: `你和${npcDef?.name ?? '配偶'}的婚姻结束了。`
+    }
   }
 
   /** 放生子女 */
@@ -667,6 +850,11 @@ export const useNpcStore = defineStore('npc', () => {
     if (childProposalPending.value) return false
     if (daysMarried.value < 7) return false
     if (spouse.friendship < 3000) return false
+    // 刚添了孩子就再提，既不合情理也很扰人——最小的孩子要长到会走路才会再议
+    if (children.value.length > 0) {
+      const youngestAge = Math.min(...children.value.map(c => c.daysOld))
+      if (youngestAge < MIN_DAYS_BETWEEN_CHILDREN) return false
+    }
     // 拒绝冷却：7天基础 + 每次拒绝额外7天
     if (childProposalDeclinedCount.value > 0) {
       const cooldownDays = 7 + childProposalDeclinedCount.value * 7
@@ -727,7 +915,11 @@ export const useNpcStore = defineStore('npc', () => {
     switch (action) {
       case 'gift': {
         if (pregnancy.value.giftedForPregnancy) {
-          return { success: false, message: '今天已经送过礼物了。', careGain: 0 }
+          return {
+            success: false,
+            message: '今天已经送过礼物了。',
+            careGain: 0
+          }
         }
         pregnancy.value.giftedForPregnancy = true
         careGain = pregnancy.value.stage === 'early' ? 5 : 3
@@ -764,13 +956,21 @@ export const useNpcStore = defineStore('npc', () => {
           }
         }
         if (!found) {
-          return { success: false, message: '没有合适的补品（人参/草药/茶饮）。', careGain: 0 }
+          return {
+            success: false,
+            message: '没有合适的补品（人参/草药/茶饮）。',
+            careGain: 0
+          }
         }
         break
       }
       case 'rest': {
         if (pregnancy.value.caredToday) {
-          return { success: false, message: '今天已经安排过休息了。', careGain: 0 }
+          return {
+            success: false,
+            message: '今天已经安排过休息了。',
+            careGain: 0
+          }
         }
         careGain = pregnancy.value.stage === 'late' ? 5 : 2
         message = '你让配偶好好休息了一天。'
@@ -791,11 +991,17 @@ export const useNpcStore = defineStore('npc', () => {
     const planInfo = MEDICAL_PLANS[plan]
     const playerStore = usePlayerStore()
     if (!playerStore.spendMoney(planInfo.cost)) {
-      return { success: false, message: `金钱不足（需要${planInfo.cost}文）。` }
+      return {
+        success: false,
+        message: `金钱不足（需要${planInfo.cost}文）。`
+      }
     }
 
     pregnancy.value.medicalPlan = plan
-    return { success: true, message: `选择了${planInfo.label}（${planInfo.cost}文）。` }
+    return {
+      success: true,
+      message: `选择了${planInfo.label}（${planInfo.cost}文）。`
+    }
   }
 
   /** 分娩处理（内部方法） */
@@ -892,19 +1098,47 @@ export const useNpcStore = defineStore('npc', () => {
     return {}
   }
 
-  /** 每日子女成长更新（仅已出生子女） */
-  const dailyChildUpdate = () => {
+  /** 每日子女成长更新（仅已出生子女），返回成长里程碑文案 */
+  const dailyChildUpdate = (): string[] => {
+    const milestones: string[] = []
+    const spouseName = (() => {
+      const spouse = getSpouse()
+      return spouse ? (getNpcById(spouse.npcId)?.name ?? '') : ''
+    })()
+
     for (const child of children.value) {
       child.daysOld++
       child.interactedToday = false
-      if (child.stage === 'baby' && child.daysOld >= 14) {
-        child.stage = 'toddler'
-      } else if (child.stage === 'toddler' && child.daysOld >= 28) {
-        child.stage = 'child'
-      } else if (child.stage === 'child' && child.daysOld >= 56) {
-        child.stage = 'teen'
+
+      // 跨阶段时给出可感知的成长事件，而不是在后台悄悄翻页
+      const nextStage = getChildStageByAge(child.daysOld)
+      if (nextStage !== child.stage) {
+        child.stage = nextStage
+        milestones.push(fillChildText(pickMilestone(nextStage), child.name, spouseName))
       }
     }
+
+    // 长成少年的孩子会主动分担农活
+    const teens = children.value.filter(c => c.stage === 'teen')
+    if (teens.length > 0) {
+      const farmStore = useFarmStore()
+      const unwatered = farmStore.plots.filter(p => (p.state === 'planted' || p.state === 'growing') && !p.watered)
+      let watered = 0
+      for (const teen of teens) {
+        for (let i = 0; i < TEEN_HELP_PLOTS && watered < unwatered.length; i++) {
+          farmStore.waterPlot(unwatered[watered]!.id)
+          watered++
+        }
+        if (watered === 0) break
+        milestones.push(`${teen.name}一早就去田里帮忙了。`)
+        break
+      }
+      if (watered > 0) {
+        milestones.push(`孩子帮你浇了${watered}块地。`)
+      }
+    }
+
+    return milestones
   }
 
   /** 与子女互动 */
@@ -912,18 +1146,22 @@ export const useNpcStore = defineStore('npc', () => {
     const child = children.value.find(c => c.id === childId)
     if (!child) return null
     if (child.interactedToday) return null
-    if (child.stage === 'baby') return null
 
     child.interactedToday = true
     child.friendship = Math.min(300, child.friendship + 2)
 
-    if (child.stage === 'child' && Math.random() < 0.1) {
-      const finds = ['wood', 'herb', 'pine_cone', 'wild_berry']
-      const item = finds[Math.floor(Math.random() * finds.length)]!
-      return { message: `${child.name}递给你一个东西。`, item }
+    const spouse = getSpouse()
+    const spouseName = spouse ? (getNpcById(spouse.npcId)?.name ?? '') : ''
+    const message = fillChildText(pickInteraction(child.stage), child.name, spouseName)
+
+    // 大些的孩子会往家里带点小东西
+    const pool = CHILD_GIFT_POOL[child.stage]
+    if (pool.length > 0 && Math.random() < CHILD_GIFT_CHANCE[child.stage]) {
+      const item = pool[Math.floor(Math.random() * pool.length)]!
+      return { message: `${message}（+2好感）`, item }
     }
 
-    return { message: `你和${child.name}玩了一会儿。(+2好感)` }
+    return { message: `${message}（+2好感）` }
   }
 
   /** 检查NPC是否有每日提示功能 */
@@ -988,6 +1226,8 @@ export const useNpcStore = defineStore('npc', () => {
       }
       state.talkedToday = false
       state.giftedToday = false
+      // 生日过完就把生日礼标记清掉，明年生日再用
+      state.birthdayGiftGiven = false
       // 每周日重置周送礼计数 (day 7,14,21,28)
       if (gameStore.day % 7 === 0) {
         state.giftsThisWeek = 0
@@ -996,6 +1236,50 @@ export const useNpcStore = defineStore('npc', () => {
 
     // 知己天数递增
     if (getZhiji()) daysZhiji.value++
+  }
+
+  // ============================================================
+  // 村民备注
+  // ============================================================
+
+  /** 玩家给村民写的备注（npcId → 备注） */
+  const npcNotes = ref<Record<string, string>>({})
+
+  /** 规整备注：去首尾空白，按字截断 */
+  const normalizeNote = (note: string): string => Array.from(note.trim()).slice(0, NPC_NOTE_MAX_LENGTH).join('').trim()
+
+  /** 设置备注；规整后为空则删除 */
+  const setNpcNote = (npcId: string, note: string): void => {
+    const normalized = normalizeNote(note)
+    const next: Record<string, string> = {}
+    for (const [id, value] of Object.entries(npcNotes.value)) {
+      if (id !== npcId) next[id] = value
+    }
+    if (normalized) next[npcId] = normalized
+    npcNotes.value = next
+  }
+
+  /** 获取备注，无备注返回空串 */
+  const getNpcNote = (npcId: string): string => npcNotes.value[npcId] ?? ''
+
+  /** 界面显示名：有备注为「原名(备注)」；找不到村民返回 npcId */
+  const getNpcDisplayName = (npcId: string): string => {
+    const name = getNpcById(npcId)?.name
+    if (!name) return npcId
+    const note = npcNotes.value[npcId]
+    return note ? `${name}(${note})` : name
+  }
+
+  /** 读档：只保留字符串备注 */
+  const loadNpcNotes = (raw: unknown): Record<string, string> => {
+    if (!raw || typeof raw !== 'object') return {}
+    const result: Record<string, string> = {}
+    for (const [id, value] of Object.entries(raw as Record<string, unknown>)) {
+      if (typeof value !== 'string') continue
+      const note = normalizeNote(value)
+      if (note) result[id] = note
+    }
+    return result
   }
 
   const serialize = () => {
@@ -1015,6 +1299,7 @@ export const useNpcStore = defineStore('npc', () => {
       weddingCountdown: weddingCountdown.value,
       weddingNpcId: weddingNpcId.value,
       hiredHelpers: hiredHelpers.value,
+      npcNotes: npcNotes.value,
       friendshipVersion: 2
     }
   }
@@ -1083,6 +1368,7 @@ export const useNpcStore = defineStore('npc', () => {
     weddingCountdown.value = (data as any).weddingCountdown ?? 0
     weddingNpcId.value = (data as any).weddingNpcId ?? null
     hiredHelpers.value = (data as any).hiredHelpers ?? []
+    npcNotes.value = loadNpcNotes((data as any).npcNotes ?? {})
   }
 
   return {
@@ -1100,14 +1386,18 @@ export const useNpcStore = defineStore('npc', () => {
     hiredHelpers,
     HELPER_WAGES,
     HELPER_TASK_NAMES,
+    HELPER_TASK_DESCRIPTIONS,
     getNpcState,
     getFriendshipLevel,
     isBirthday,
+    canGiftToday,
+    getGiftStatusText,
     getTodayBirthdayNpc,
     checkHeartEvent,
     markHeartEventTriggered,
     adjustFriendship,
     talkTo,
+    chatWith,
     giveGift,
     startDating,
     propose,
@@ -1136,6 +1426,10 @@ export const useNpcStore = defineStore('npc', () => {
     isTipGivenToday,
     getDailyTip,
     tipGivenToday,
+    npcNotes,
+    setNpcNote,
+    getNpcNote,
+    getNpcDisplayName,
     PREGNANCY_STAGE_CONFIG,
     MEDICAL_PLANS,
     serialize,

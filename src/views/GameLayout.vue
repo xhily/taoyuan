@@ -7,9 +7,35 @@
     <!-- 状态栏 -->
     <StatusBar @request-sleep="showSleepConfirm = true" />
 
-    <Button class="text-center justify-center !text-sm" :icon="Moon" :icon-size="12" @click.stop="showSleepConfirm = true">
-      {{ sleepLabel }}
-    </Button>
+    <div class="flex space-x-1.5">
+      <!-- 同一地点组内翻页（不产生移动耗时）。窄屏下只压缩面板名，箭头始终保留 -->
+      <button v-if="prevPanel" class="btn text-xs min-w-6 !pl-0.5 !pr-1.5" @click.stop="goPrevPanel">
+        <ChevronLeft :size="12" class="flex-shrink-0" />
+        <span class="truncate !ml-0">{{ prevPanel.label }}</span>
+      </button>
+      <Button
+        class="flex-1 text-center justify-center !text-sm whitespace-nowrap !px-2 md:!px-4"
+        :icon="Moon"
+        :icon-size="12"
+        @click.stop="showSleepConfirm = true"
+      >
+        {{ sleepLabel }}
+      </Button>
+      <!-- 手动存档：与「休息」分开，随时可以落盘，不必熬到睡觉 -->
+      <Button
+        class="text-center justify-center !text-sm whitespace-nowrap !px-2 md:!px-4"
+        :icon="Save"
+        :icon-size="12"
+        :disabled="isSaving"
+        @click.stop="handleManualSave"
+      >
+        {{ isSaving ? '保存中' : '保存' }}
+      </Button>
+      <button v-if="nextPanel" class="btn text-xs min-w-6 !pl-1.5 !pr-0.5" @click.stop="goNextPanel">
+        <span class="truncate">{{ nextPanel.label }}</span>
+        <ChevronRight :size="12" class="flex-shrink-0 !ml-0" />
+      </button>
+    </div>
 
     <!-- 内容 -->
     <div class="game-panel flex-1 min-h-0 overflow-y-auto">
@@ -35,6 +61,33 @@
     <button class="mobile-log-btn" :class="{ 'with-void': warehouseStore.hasVoidChest }" @click="showLogModal = true">
       <History :size="20" />
     </button>
+    <!-- 待办按钮 -->
+    <button class="mobile-todo-btn" :class="{ 'with-void': warehouseStore.hasVoidChest }" @click="showTodoModal = true">
+      <ListChecks :size="20" />
+      <span v-if="todoUrgentCount > 0" class="todo-badge">{{ todoUrgentCount }}</span>
+    </button>
+    <!-- 背包按钮：随手清包 / 吃东西，不必特地跑一趟 -->
+    <button class="mobile-bag-btn" :class="{ 'with-void': warehouseStore.hasVoidChest }" @click="showBagModal = true">
+      <Package :size="20" />
+    </button>
+
+    <TodoPanel :open="showTodoModal" @close="showTodoModal = false" />
+
+    <!-- 背包快捷弹窗：直接嵌入背包面板，不走路由，因此不消耗移动时间与体力 -->
+    <Transition name="panel-fade">
+      <div
+        v-if="showBagModal"
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        @click.self="showBagModal = false"
+      >
+        <div class="game-panel max-w-lg w-full max-h-[85vh] overflow-y-auto relative">
+          <button class="absolute top-2 right-2 text-muted hover:text-text z-10" @click="showBagModal = false">
+            <X :size="14" />
+          </button>
+          <InventoryView />
+        </div>
+      </div>
+    </Transition>
 
     <SettingsDialog :open="showSettings" @close="showSettings = false" />
 
@@ -124,7 +177,9 @@
     <Transition name="panel-fade">
       <div v-if="pendingFarmEvent" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div class="game-panel max-w-xs w-full text-center">
-          <p class="text-xs leading-relaxed mb-4">{{ pendingFarmEvent.message }}</p>
+          <p class="text-xs leading-relaxed mb-4">
+            {{ pendingFarmEvent.message }}
+          </p>
           <div class="flex flex-col space-y-1.5">
             <Button v-for="(c, i) in pendingFarmEvent.choices" :key="i" class="w-full justify-center" @click="handleFarmEventChoice(c)">
               {{ c.label }}
@@ -176,7 +231,13 @@
                     v-for="(item, idx) in vc.items"
                     :key="idx"
                     class="flex items-center justify-between px-2 py-0.5 border border-accent/5 rounded-xs mr-1"
-                    @click.stop="voidItemDetail = { itemId: item.itemId, quality: item.quality, quantity: item.quantity }"
+                    @click.stop="
+                      voidItemDetail = {
+                        itemId: item.itemId,
+                        quality: item.quality,
+                        quantity: item.quantity
+                      }
+                    "
                   >
                     <span class="text-[10px] truncate mr-2 cursor-pointer hover:underline" :class="voidQualityClass(item.quality)">
                       {{ getItemName(item.itemId) }}
@@ -266,7 +327,9 @@
       >
         <div class="game-panel max-w-xs w-full">
           <div class="flex items-center justify-between mb-2">
-            <p class="text-sm text-accent">{{ voidQtyModal.mode === 'withdraw' ? '取出' : '存入' }}</p>
+            <p class="text-sm text-accent">
+              {{ voidQtyModal.mode === 'withdraw' ? '取出' : '存入' }}
+            </p>
             <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="voidQtyModal = null" />
           </div>
           <p class="text-xs mb-2" :class="voidQualityClass(voidQtyModal.quality)">
@@ -392,7 +455,9 @@
                 </button>
               </div>
               <div class="flex flex-col space-y-0.5">
-                <p v-for="(msg, mi) in group.messages" :key="mi" class="text-xs text-muted px-1">{{ msg }}</p>
+                <p v-for="(msg, mi) in group.messages" :key="mi" class="text-xs text-muted px-1">
+                  {{ msg }}
+                </p>
               </div>
             </div>
           </div>
@@ -415,13 +480,65 @@
       </div>
     </Transition>
 
+    <!-- 体力即将耗尽确认：这一步做完体力就归零了，先问一声 -->
+    <Transition name="panel-fade">
+      <div v-if="playerStore.exhaustPrompt" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[80] p-4">
+        <div class="game-panel max-w-xs w-full text-center">
+          <Divider title label="体力即将耗尽" />
+          <p class="text-xs leading-relaxed mb-2">再做这一步，体力就见底了。</p>
+          <p class="text-[10px] text-muted mb-1">体力归零后今天就干不了活了，只能回家睡觉。</p>
+          <p class="text-[10px] text-muted mb-3">主动回家不扣钱；但若拖到凌晨2点才倒下，会损失{{ passOutPenaltyPct }}%铜钱。</p>
+          <p v-if="!hasEdibleItem" class="text-[10px] text-danger mb-3">背包里没有能吃的东西，做完这步就无法回血了。</p>
+          <div class="flex space-x-3 justify-center">
+            <Button :icon="X" :icon-size="12" @click="playerStore.cancelExhaust()">先歇歇</Button>
+            <Button class="!bg-accent !text-bg" @click="playerStore.confirmExhaust()">继续（今天不再问）</Button>
+          </div>
+          <p class="text-[10px] text-muted/50 mt-2">点「继续」后再操作一次即可。</p>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 深夜就寝询问（凌晨1点） -->
+    <Transition name="panel-fade">
+      <div v-if="showBedtimePrompt" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="game-panel max-w-xs w-full text-center">
+          <Divider title label="夜深了" />
+          <p class="text-xs leading-relaxed mb-2">现在是{{ formatTime(gameStore.hour) }}，你的眼皮开始打架。</p>
+          <p class="text-danger text-xs mb-1">再过一个时辰（凌晨2点）你会当场昏倒。</p>
+          <p class="text-danger text-xs mb-1">昏倒将损失{{ passOutPenaltyPct }}%铜钱（上限{{ PASSOUT_MONEY_PENALTY_CAP }}文），</p>
+          <p class="text-danger text-xs mb-1">且次日体力只恢复{{ passOutRecoveryPct }}%。</p>
+          <p class="text-xs text-muted mb-1">现在回去休息，体力可恢复{{ lateRecoveryPct }}%。</p>
+          <div class="flex space-x-3 justify-center mt-4">
+            <Button :icon="X" :icon-size="12" @click="declineBedtime">再撑一会儿</Button>
+            <Button class="!bg-accent !text-bg" :icon="Moon" :icon-size="12" @click="acceptBedtime">回去睡觉</Button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 昏倒结算告知 -->
+    <Transition name="panel-fade">
+      <div v-if="lastPassOutNotice" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="game-panel max-w-xs w-full text-center">
+          <Divider title label="你昏了过去" />
+          <p class="text-xs leading-relaxed mb-3 text-danger">
+            {{ lastPassOutNotice }}
+          </p>
+          <p class="text-[10px] text-muted mb-3">下次记得在凌晨2点前休息，或留意体力条。</p>
+          <Button class="w-full justify-center" @click="closePassOutNotice">知道了</Button>
+        </div>
+      </div>
+    </Transition>
+
     <!-- 休息确认 -->
     <Transition name="panel-fade">
       <div v-if="showSleepConfirm" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div class="game-panel max-w-xs w-full text-center">
           <Divider title>{{ sleepLabel }}</Divider>
           <p class="text-xs leading-relaxed mb-1">{{ sleepSummary }}</p>
-          <p v-for="(warn, wi) in sleepWarning.split('\n').filter(Boolean)" :key="wi" class="text-danger text-xs mb-1">{{ warn }}</p>
+          <p v-for="(warn, wi) in sleepWarning.split('\n').filter(Boolean)" :key="wi" class="text-danger text-xs mb-1">
+            {{ warn }}
+          </p>
           <div class="flex space-x-3 justify-center mt-4">
             <Button :icon="X" :icon-size="12" @click="showSleepConfirm = false">再等等</Button>
             <Button class="btn-danger" :icon="Moon" :icon-size="12" @click="confirmSleep">{{ sleepLabel }}</Button>
@@ -445,21 +562,44 @@
   import { useFarmStore } from '@/stores/useFarmStore'
   import { useDialogs } from '@/composables/useDialogs'
   import type { MorningChoiceEvent } from '@/data/farmEvents'
-  import { handleEndDay } from '@/composables/useEndDay'
-  import { addLog, logHistory, clearAllLogs, clearDayLogs, _registerDayLabelGetter } from '@/composables/useGameLog'
+  import { handleEndDay, lastPassOutNotice } from '@/composables/useEndDay'
+  import { addLog, showFloat, logHistory, clearAllLogs, clearDayLogs, _registerDayLabelGetter } from '@/composables/useGameLog'
+  import { useSaveStore } from '@/stores/useSaveStore'
   import {
     LATE_NIGHT_RECOVERY_MAX,
     LATE_NIGHT_RECOVERY_MIN,
     PASSOUT_STAMINA_RECOVERY,
     PASSOUT_MONEY_PENALTY_RATE,
-    PASSOUT_MONEY_PENALTY_CAP
+    PASSOUT_MONEY_PENALTY_CAP,
+    PASSOUT_HOUR,
+    BEDTIME_PROMPT_HOUR,
+    formatTime
   } from '@/data/timeConstants'
   import { getNpcById, getItemById, getCropById } from '@/data'
   import { CHEST_DEFS } from '@/data/items'
   import { useGameClock } from '@/composables/useGameClock'
   import { useAudio } from '@/composables/useAudio'
   import type { Quality } from '@/types'
-  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2 } from 'lucide-vue-next'
+  import {
+    Moon,
+    X,
+    Map,
+    Settings as SettingsIcon,
+    Archive,
+    ArrowDown,
+    ArrowDownToLine,
+    History,
+    Trash2,
+    Save,
+    ListChecks,
+    Package,
+    ChevronLeft,
+    ChevronRight
+  } from 'lucide-vue-next'
+  import TodoPanel from '@/components/game/TodoPanel.vue'
+  import InventoryView from '@/views/game/InventoryView.vue'
+  import { useTodoList } from '@/composables/useTodoList'
+  import { usePanelPager } from '@/composables/usePanelPager'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import MobileMapMenu from '@/components/game/MobileMapMenu.vue'
@@ -513,7 +653,7 @@
 
   const npcStore = useNpcStore()
 
-  const { startClock, stopClock, pauseClock, resumeClock } = useGameClock()
+  const { startClock, stopClock, setClockBlocker } = useGameClock()
 
   /** 移动端地图菜单 */
   const showMobileMap = ref(false)
@@ -526,6 +666,13 @@
 
   /** 日志弹窗 */
   const showLogModal = ref(false)
+
+  /** 待办弹窗 */
+  const showTodoModal = ref(false)
+  const { urgentCount: todoUrgentCount } = useTodoList()
+
+  /** 背包快捷弹窗 */
+  const showBagModal = ref(false)
   /** 日志清空确认：undefined=不显示, null=清空全部, string=清空指定天 */
   const clearLogTarget = ref<string | null | undefined>(undefined)
   const requestClearLogs = (dayLabel: string | null) => {
@@ -562,6 +709,9 @@
   onMounted(() => startClock())
   onUnmounted(() => stopClock())
 
+  /** 凌晨1点的「是否回去休息」询问 */
+  const showBedtimePrompt = ref(false)
+
   // 弹窗打开时自动暂停时钟，全部关闭后恢复
   watch(
     () =>
@@ -574,18 +724,63 @@
         childProposalVisible.value ||
         pendingFarmEvent.value ||
         pendingDiscoveryScene.value ||
-        showSleepConfirm.value
+        showSleepConfirm.value ||
+        showBedtimePrompt.value ||
+        lastPassOutNotice.value ||
+        playerStore.exhaustPrompt
       ),
-    hasModal => {
-      if (hasModal) pauseClock()
-      else resumeClock()
+    hasModal => setClockBlocker('modal', hasModal),
+    { immediate: true }
+  )
+
+  // === 深夜提醒与昏倒告知 ===
+  watch(
+    () => gameStore.hour,
+    h => {
+      if (!gameStore.isGameStarted) return
+      // 凌晨2点：时钟已停在该时刻，结算并告知玩家
+      if (h >= PASSOUT_HOUR) {
+        if (!lastPassOutNotice.value) {
+          showBedtimePrompt.value = false
+          setClockBlocker('endday', true)
+          handleEndDay()
+          switchToSeasonalBgm()
+          setClockBlocker('endday', false)
+        }
+        return
+      }
+      // 凌晨1点：主动询问是否回去休息（每天仅一次）
+      if (h >= BEDTIME_PROMPT_HOUR && !gameStore.bedtimePrompted) {
+        gameStore.bedtimePrompted = true
+        showBedtimePrompt.value = true
+      }
     }
   )
+
+  /** 就寝询问：去睡觉 */
+  const acceptBedtime = () => {
+    showBedtimePrompt.value = false
+    confirmSleep()
+  }
+
+  /** 就寝询问：再撑一会儿 */
+  const declineBedtime = () => {
+    showBedtimePrompt.value = false
+    addLog('你决定再撑一会儿……记得在凌晨2点前回去休息。')
+  }
+
+  /** 关闭昏倒告知 */
+  const closePassOutNotice = () => {
+    lastPassOutNotice.value = null
+  }
 
   /** 从路由名称获取当前面板标识 */
   const currentPanel = computed(() => {
     return (route.name as string) ?? 'farm'
   })
+
+  /** 同组面板翻页 */
+  const { prevPanel, nextPanel, goPrevPanel, goNextPanel } = usePanelPager(currentPanel)
 
   const sleepLabel = computed(() => {
     if (gameStore.hour >= 24) return '倒头就睡'
@@ -594,11 +789,14 @@
   })
 
   const sleepSummary = computed(() => {
-    if (playerStore.stamina <= 0 || gameStore.hour >= 26) {
+    if (gameStore.hour >= 26) {
       return '你已经精疲力竭……将在原地昏倒。'
     }
     if (gameStore.hour >= 24) {
       return '已经过了午夜，拖着疲惫的身体回家……'
+    }
+    if (playerStore.stamina <= 0) {
+      return '体力已经用尽，好在还能走回家。睡一觉，明天又是新的一天。'
     }
     return '回到家中，安稳入睡。明日又是新的一天。'
   })
@@ -607,7 +805,7 @@
     const warnings: string[] = []
     const homeStore = useHomeStore()
     const staminaBonus = homeStore.getStaminaRecoveryBonus()
-    if (playerStore.stamina <= 0 || gameStore.hour >= 26) {
+    if (gameStore.hour >= 26) {
       const pct = Math.round(Math.min(PASSOUT_STAMINA_RECOVERY + staminaBonus, 1) * 100)
       const penaltyPct = Math.round(PASSOUT_MONEY_PENALTY_RATE * 100)
       if (pct < 100) {
@@ -651,6 +849,69 @@
     return warnings.join('\n')
   })
 
+  /** 昏倒罚金比例（百分数） */
+  const passOutPenaltyPct = Math.round(PASSOUT_MONEY_PENALTY_RATE * 100)
+
+  /** 背包里是否有能恢复体力的东西（用于耗尽确认时的提示） */
+  const hasEdibleItem = computed(() => inventoryStore.items.some(i => (getItemById(i.itemId)?.staminaRestore ?? 0) > 0))
+
+  /** 昏倒后次日体力恢复比例（含住宅加成） */
+  const passOutRecoveryPct = computed(() => {
+    const bonus = useHomeStore().getStaminaRecoveryBonus()
+    return Math.round(Math.min(PASSOUT_STAMINA_RECOVERY + bonus, 1) * 100)
+  })
+
+  /** 此刻就寝的体力恢复比例（含住宅加成） */
+  const lateRecoveryPct = computed(() => {
+    const bonus = useHomeStore().getStaminaRecoveryBonus()
+    const t = Math.min(Math.max(gameStore.hour - 24, 0), 1)
+    const pct = LATE_NIGHT_RECOVERY_MAX - t * (LATE_NIGHT_RECOVERY_MAX - LATE_NIGHT_RECOVERY_MIN) + bonus
+    return Math.round(Math.min(pct, 1) * 100)
+  })
+
+  // === 存档：手动保存 + 离开页面前自动保存 ===
+  const saveStore = useSaveStore()
+  const isSaving = ref(false)
+
+  /** 手动保存到当前槽位 */
+  const handleManualSave = () => {
+    if (isSaving.value) return
+    isSaving.value = true
+    const ok = saveStore.autoSave()
+    showFloat(ok ? '已保存进度' : '保存失败，请在设置中检查存档', ok ? 'success' : 'danger')
+    if (ok) addLog('手动保存了游戏进度。')
+    // 短暂锁定，避免连点重复写盘
+    setTimeout(() => {
+      isSaving.value = false
+    }, 600)
+  }
+
+  /**
+   * 关闭标签页 / 切到后台时落盘。
+   * pagehide 与 visibilitychange 一起用：移动端浏览器和 App 往往不触发 beforeunload。
+   */
+  const saveBeforeExit = () => {
+    if (!gameStore.isGameStarted) return
+    saveStore.autoSave()
+  }
+
+  const handleVisibilityChange = () => {
+    if (document.hidden) saveBeforeExit()
+  }
+
+  onMounted(() => {
+    window.addEventListener('beforeunload', saveBeforeExit)
+    window.addEventListener('pagehide', saveBeforeExit)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('beforeunload', saveBeforeExit)
+    window.removeEventListener('pagehide', saveBeforeExit)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    saveBeforeExit()
+  })
+
   /** 宠物领养 */
   const petChoice = ref<'cat' | 'dog' | null>(null)
   const petNameInput = ref('')
@@ -669,8 +930,8 @@
   /** 子女提议回应 */
   const proposalSpouseName = computed(() => {
     const spouse = npcStore.getSpouse()
-    if (!spouse) return '配偶'
-    return getNpcById(spouse.npcId)?.name ?? '配偶'
+    if (!spouse || !getNpcById(spouse.npcId)) return '配偶'
+    return npcStore.getNpcDisplayName(spouse.npcId)
   })
 
   const handleChildProposalResponse = (response: 'accept' | 'decline' | 'wait') => {
@@ -765,7 +1026,11 @@
   const handleVoidDepositDuplicates = () => {
     if (!expandedVoidChestId.value) return
     const chestId = expandedVoidChestId.value
-    const snapshot = voidDuplicateDepositItems.value.map(i => ({ itemId: i.itemId, quality: i.quality, quantity: i.quantity }))
+    const snapshot = voidDuplicateDepositItems.value.map(i => ({
+      itemId: i.itemId,
+      quality: i.quality,
+      quantity: i.quantity
+    }))
     let totalDeposited = 0
     let kindCount = 0
     for (const item of snapshot) {
@@ -783,7 +1048,11 @@
   }
 
   /** 虚空箱道具信息弹窗 */
-  const voidItemDetail = ref<{ itemId: string; quality: Quality; quantity: number } | null>(null)
+  const voidItemDetail = ref<{
+    itemId: string
+    quality: Quality
+    quantity: number
+  } | null>(null)
   const voidItemDef = computed(() => {
     if (!voidItemDetail.value) return null
     return getItemById(voidItemDetail.value.itemId) ?? null
@@ -851,10 +1120,10 @@
 
   const confirmSleep = () => {
     showSleepConfirm.value = false
-    pauseClock()
+    setClockBlocker('endday', true)
     handleEndDay()
     switchToSeasonalBgm()
-    resumeClock()
+    setClockBlocker('endday', false)
   }
 </script>
 
@@ -935,6 +1204,90 @@
   .mobile-log-btn.with-void {
     bottom: calc(calc(0.35rem * 10) + 144px + constant(safe-area-inset-bottom, 0px));
     bottom: calc(calc(0.35rem * 10) + 144px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 待办按钮：叠在日志按钮上方一格 */
+  .mobile-todo-btn {
+    position: fixed;
+    bottom: calc(calc(0.35rem * 10) + 144px + constant(safe-area-inset-bottom, 0px));
+    bottom: calc(calc(0.35rem * 10) + 144px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    z-index: 40;
+    width: 40px;
+    height: 40px;
+    border-radius: 2px;
+    background: rgb(var(--color-panel));
+    border: 2px solid var(--color-accent);
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .mobile-todo-btn.with-void {
+    bottom: calc(calc(0.35rem * 10) + 192px + constant(safe-area-inset-bottom, 0px));
+    bottom: calc(calc(0.35rem * 10) + 192px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-todo-btn:hover,
+  .mobile-todo-btn:active {
+    background: var(--color-accent);
+    color: rgb(var(--color-bg));
+  }
+
+  /* 背包按钮：再往上叠一格 */
+  .mobile-bag-btn {
+    position: fixed;
+    bottom: calc(calc(0.35rem * 10) + 192px + constant(safe-area-inset-bottom, 0px));
+    bottom: calc(calc(0.35rem * 10) + 192px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    z-index: 40;
+    width: 40px;
+    height: 40px;
+    border-radius: 2px;
+    background: rgb(var(--color-panel));
+    border: 2px solid var(--color-accent);
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .mobile-bag-btn.with-void {
+    bottom: calc(calc(0.35rem * 10) + 240px + constant(safe-area-inset-bottom, 0px));
+    bottom: calc(calc(0.35rem * 10) + 240px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bag-btn:hover,
+  .mobile-bag-btn:active {
+    background: var(--color-accent);
+    color: rgb(var(--color-bg));
+  }
+
+  /* 要紧事项角标 */
+  .todo-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 2px;
+    background: var(--color-danger);
+    color: rgb(var(--color-bg));
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
   }
 
   .mobile-map-btn:hover,

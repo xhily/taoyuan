@@ -29,8 +29,16 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     description: '专业矿工的标准装备',
     pieces: { ring: 'miners_ring', hat: 'miner_helmet', shoe: 'miner_boots' },
     bonuses: [
-      { count: 2, effects: [{ type: 'ore_bonus', value: 1 }], description: '矿石加成+1' },
-      { count: 3, effects: [{ type: 'mining_stamina', value: 0.1 }], description: '采矿体力消耗-10%' }
+      {
+        count: 2,
+        effects: [{ type: 'ore_bonus', value: 1 }],
+        description: '矿石加成+1'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'mining_stamina', value: 0.1 }],
+        description: '采矿体力消耗-10%'
+      }
     ]
   },
   {
@@ -39,8 +47,16 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     description: '老练渔夫的行头',
     pieces: { ring: 'anglers_ring', hat: 'fisher_hat', shoe: 'fishing_waders' },
     bonuses: [
-      { count: 2, effects: [{ type: 'fish_quality_bonus', value: 0.1 }], description: '鱼类品质+10%' },
-      { count: 3, effects: [{ type: 'fishing_calm', value: 0.1 }], description: '钓鱼稳定+10%' }
+      {
+        count: 2,
+        effects: [{ type: 'fish_quality_bonus', value: 0.1 }],
+        description: '鱼类品质+10%'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'fishing_calm', value: 0.1 }],
+        description: '钓鱼稳定+10%'
+      }
     ]
   },
 
@@ -49,50 +65,110 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     id: 'merchant_set',
     name: '商贾套装',
     description: '精明商人的生意行头',
-    pieces: { ring: 'merchants_ring', hat: 'merchant_hat', shoe: 'merchant_boots' },
+    pieces: {
+      ring: 'merchants_ring',
+      hat: 'merchant_hat',
+      shoe: 'merchant_boots'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'sell_price_bonus', value: 0.05 }], description: '售价+5%' },
-      { count: 3, effects: [{ type: 'shop_discount', value: 0.08 }], description: '商店折扣+8%' }
+      {
+        count: 2,
+        effects: [{ type: 'sell_price_bonus', value: 0.05 }],
+        description: '售价+5%'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'shop_discount', value: 0.08 }],
+        description: '商店折扣+8%'
+      }
     ]
   },
   {
     id: 'harvest_set',
     name: '丰收套装',
     description: '丰收季节的农人装束',
-    pieces: { ring: 'harvest_moon_ring', hat: 'jade_hairpin', shoe: 'silk_slippers' },
+    pieces: {
+      ring: 'harvest_moon_ring',
+      hat: 'jade_hairpin',
+      shoe: 'silk_slippers'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'crop_growth_bonus', value: 0.1 }], description: '作物生长+10%' },
-      { count: 3, effects: [{ type: 'crop_quality_bonus', value: 0.1 }], description: '作物品质+10%' }
+      {
+        count: 2,
+        effects: [{ type: 'crop_growth_bonus', value: 0.1 }],
+        description: '作物生长+10%'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'crop_quality_bonus', value: 0.1 }],
+        description: '作物品质+10%'
+      }
     ]
   },
   {
     id: 'dragon_warrior_set',
     name: '战龙套装',
     description: '以龙为名的战士铠甲',
-    pieces: { ring: 'warlord_ring', hat: 'dragon_helm', shoe: 'dragon_scale_boots' },
+    pieces: {
+      ring: 'warlord_ring',
+      hat: 'dragon_helm',
+      shoe: 'dragon_scale_boots'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'attack_bonus', value: 3 }], description: '攻击力+3' },
-      { count: 3, effects: [{ type: 'crit_rate_bonus', value: 0.1 }], description: '暴击率+10%' }
+      {
+        count: 2,
+        effects: [{ type: 'attack_bonus', value: 3 }],
+        description: '攻击力+3'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'crit_rate_bonus', value: 0.1 }],
+        description: '暴击率+10%'
+      }
     ]
   },
   {
     id: 'obsidian_set',
     name: '黑曜套装',
     description: '黑曜石锻造的重型护甲',
-    pieces: { ring: 'stalwart_ring', hat: 'obsidian_helm', shoe: 'obsidian_greaves' },
+    pieces: {
+      ring: 'stalwart_ring',
+      hat: 'obsidian_helm',
+      shoe: 'obsidian_greaves'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'max_hp_bonus', value: 20 }], description: '最大HP+20' },
-      { count: 3, effects: [{ type: 'defense_bonus', value: 0.1 }], description: '防御+10%' }
+      {
+        count: 2,
+        effects: [{ type: 'max_hp_bonus', value: 20 }],
+        description: '最大HP+20'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'defense_bonus', value: 0.1 }],
+        description: '防御+10%'
+      }
     ]
   },
   {
     id: 'phoenix_set',
     name: '凤凰套装',
     description: '凤凰涅槃，福运加身',
-    pieces: { ring: 'fortune_ring', hat: 'phoenix_crown', shoe: 'phoenix_boots' },
+    pieces: {
+      ring: 'fortune_ring',
+      hat: 'phoenix_crown',
+      shoe: 'phoenix_boots'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'luck', value: 0.05 }], description: '幸运+5%' },
-      { count: 3, effects: [{ type: 'exp_bonus', value: 0.15 }], description: '经验加成+15%' }
+      {
+        count: 2,
+        effects: [{ type: 'luck', value: 0.05 }],
+        description: '幸运+5%'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'exp_bonus', value: 0.15 }],
+        description: '经验加成+15%'
+      }
     ]
   },
 
@@ -101,29 +177,61 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     id: 'shadow_set',
     name: '暗影套装',
     description: '暗影中潜行的刺客装备',
-    pieces: { ring: 'shadow_ring', hat: 'shadow_mask', shoe: 'shadow_striders' },
+    pieces: {
+      ring: 'shadow_ring',
+      hat: 'shadow_mask',
+      shoe: 'shadow_striders'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'vampiric', value: 0.05 }], description: '吸血+5%' },
-      { count: 3, effects: [{ type: 'monster_drop_bonus', value: 0.15 }], description: '掉落率+15%' }
+      {
+        count: 2,
+        effects: [{ type: 'vampiric', value: 0.05 }],
+        description: '吸血+5%'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'monster_drop_bonus', value: 0.15 }],
+        description: '掉落率+15%'
+      }
     ]
   },
   {
     id: 'frost_queen_set',
     name: '冰后套装',
     description: '冰霜女王的遗物',
-    pieces: { ring: 'frost_queen_circlet', hat: 'frost_queen_tiara', shoe: 'frost_queen_slippers' },
+    pieces: {
+      ring: 'frost_queen_circlet',
+      hat: 'frost_queen_tiara',
+      shoe: 'frost_queen_slippers'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'fishing_calm', value: 0.1 }], description: '钓鱼稳定+10%' },
-      { count: 3, effects: [{ type: 'monster_drop_bonus', value: 0.1 }], description: '掉落率+10%' }
+      {
+        count: 2,
+        effects: [{ type: 'fishing_calm', value: 0.1 }],
+        description: '钓鱼稳定+10%'
+      },
+      {
+        count: 3,
+        effects: [{ type: 'monster_drop_bonus', value: 0.1 }],
+        description: '掉落率+10%'
+      }
     ]
   },
   {
     id: 'dragon_king_set',
     name: '龙王套装',
     description: '深渊龙王的至高遗产',
-    pieces: { ring: 'abyss_dragon_ring', hat: 'abyss_dragon_horns', shoe: 'abyss_dragon_treads' },
+    pieces: {
+      ring: 'abyss_dragon_ring',
+      hat: 'abyss_dragon_horns',
+      shoe: 'abyss_dragon_treads'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'attack_bonus', value: 5 }], description: '攻击力+5' },
+      {
+        count: 2,
+        effects: [{ type: 'attack_bonus', value: 5 }],
+        description: '攻击力+5'
+      },
       {
         count: 3,
         effects: [
@@ -140,9 +248,17 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     id: 'forest_hunter_set',
     name: '竹林猎手套装',
     description: '以竹林猛兽的皮骨打造的猎人装备',
-    pieces: { ring: 'wolf_fang_pendant', hat: 'wolf_pelt_hood', shoe: 'bear_pelt_boots' },
+    pieces: {
+      ring: 'wolf_fang_pendant',
+      hat: 'wolf_pelt_hood',
+      shoe: 'bear_pelt_boots'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'attack_bonus', value: 3 }], description: '攻击力+3' },
+      {
+        count: 2,
+        effects: [{ type: 'attack_bonus', value: 3 }],
+        description: '攻击力+3'
+      },
       {
         count: 3,
         effects: [
@@ -157,9 +273,17 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     id: 'beast_king_set',
     name: '兽王套装',
     description: '竹林之王的战利品，尽显猎手荣耀',
-    pieces: { ring: 'tiger_fang_ring', hat: 'tiger_pelt_cape', shoe: 'bear_pelt_boots' },
+    pieces: {
+      ring: 'tiger_fang_ring',
+      hat: 'tiger_pelt_cape',
+      shoe: 'bear_pelt_boots'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'attack_bonus', value: 5 }], description: '攻击力+5' },
+      {
+        count: 2,
+        effects: [{ type: 'attack_bonus', value: 5 }],
+        description: '攻击力+5'
+      },
       {
         count: 3,
         effects: [
@@ -176,9 +300,18 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     id: 'guild_champion_set',
     name: '公会勇士套装',
     description: '冒险家公会精英战士的专属装备',
-    pieces: { weapon: 'guild_war_blade', ring: 'guild_war_ring', hat: 'guild_war_helm', shoe: 'guild_war_boots' },
+    pieces: {
+      weapon: 'guild_war_blade',
+      ring: 'guild_war_ring',
+      hat: 'guild_war_helm',
+      shoe: 'guild_war_boots'
+    },
     bonuses: [
-      { count: 2, effects: [{ type: 'attack_bonus', value: 3 }], description: '攻击力+3' },
+      {
+        count: 2,
+        effects: [{ type: 'attack_bonus', value: 3 }],
+        description: '攻击力+3'
+      },
       {
         count: 3,
         effects: [

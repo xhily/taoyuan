@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center justify-between mb-2">
       <h3 class="text-accent text-sm">
         <Home :size="14" class="inline" />
         牧场
@@ -8,14 +8,26 @@
       <Button v-if="unpettedCount > 0" :icon="Hand" @click="handlePetAll">一键抚摸（{{ unpettedCount }}只）</Button>
     </div>
 
-    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">{{ tutorialHint }}</p>
+    <!-- 每日例行操作放在最上面，免得为了喂食放牧来回翻屏 -->
+    <div v-if="animalStore.animals.length > 0" class="flex flex-wrap mb-3">
+      <Button class="mr-1 mb-1" :icon="Wheat" :icon-size="12" :disabled="unfedCount === 0" @click="unfedCount > 0 && handleFeedAll()">
+        {{ unfedCount > 0 ? `喂食全部（${unfedCount}只）` : '都已喂过' }}
+      </Button>
+      <Button class="mr-1 mb-1" :icon="Sun" :icon-size="12" :disabled="!canGrazeOrFeed" @click="canGrazeOrFeed && handleGraze()">
+        {{ grazeButtonLabel }}
+      </Button>
+    </div>
+
+    <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
+      {{ tutorialHint }}
+    </p>
 
     <!-- 宠物区域 -->
     <div class="mb-4 border border-accent/20 rounded-xs p-3">
       <p class="text-xs text-muted mb-2">宠物</p>
       <template v-if="animalStore.pet">
         <div class="flex items-center justify-between mb-1">
-          <div class="flex items-center space-x-1">
+          <div class="flex items-center space-x-1 min-w-0 mr-2">
             <template v-if="renamingId === 'pet'">
               <input
                 v-model="renameInput"
@@ -24,28 +36,48 @@
                 @keyup.enter="confirmRename"
                 @keyup.escape="cancelRename"
               />
-              <Button class="py-0 px-1" @click="confirmRename">确定</Button>
-              <Button class="py-0 px-1" @click="cancelRename">取消</Button>
+              <Button class="btn-compact" @click="confirmRename">确定</Button>
+              <Button class="btn-compact" @click="cancelRename">取消</Button>
             </template>
             <template v-else>
-              <span class="text-xs text-accent">{{ animalStore.pet.type === 'cat' ? '猫' : '狗' }} — {{ animalStore.pet.name }}</span>
-              <button class="text-muted hover:text-accent" @click="startRename('pet', animalStore.pet!.name)">
+              <span class="text-xs text-accent truncate">
+                {{ animalStore.pet.type === 'cat' ? '猫' : '狗' }} — {{ animalStore.pet.name }}
+              </span>
+              <button class="text-muted hover:text-accent shrink-0" @click="startRename('pet', animalStore.pet!.name)">
                 <Pencil :size="10" />
               </button>
             </template>
           </div>
-          <Button class="py-0 px-1" :icon="Hand" :disabled="animalStore.pet.wasPetted" @click="handlePetThePet">
+          <Button class="btn-compact" :icon="Hand" :icon-size="12" :disabled="animalStore.pet.wasPetted" @click="handlePetThePet">
             {{ animalStore.pet.wasPetted ? '已摸' : '抚摸' }}
           </Button>
         </div>
         <div class="flex items-center space-x-1">
           <span class="text-[10px] text-muted w-6">好感</span>
           <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
-            <div class="h-full rounded-xs bg-danger transition-all" :style="{ width: Math.floor(animalStore.pet.friendship / 10) + '%' }" />
+            <div
+              class="h-full rounded-xs bg-danger transition-all"
+              :style="{
+                width: Math.floor(animalStore.pet.friendship / 10) + '%'
+              }"
+            />
           </div>
           <span class="text-[10px] text-muted">{{ animalStore.pet.friendship }}/1000</span>
         </div>
-        <p v-if="animalStore.pet.friendship >= 800" class="text-xs text-success mt-1">好感度很高，每天有机会叼回采集物！</p>
+        <div class="flex flex-wrap items-center mt-1.5">
+          <span
+            v-for="tag in petAbilityTags"
+            :key="tag.id"
+            class="text-[10px] border rounded-xs px-1 mr-1 flex items-center space-x-0.5"
+            :class="tag.unlocked ? 'text-success border-success/30' : 'text-muted/40 border-muted/10'"
+          >
+            <span>{{ tag.label }}</span>
+            <template v-if="!tag.unlocked">
+              <Heart :size="10" />
+              <span>{{ tag.unlockFriendship }}</span>
+            </template>
+          </span>
+        </div>
       </template>
       <div v-else class="flex flex-col items-center justify-center py-6 text-muted">
         <Home :size="32" class="mb-2" />
@@ -123,8 +155,9 @@
         <!-- 动物列表 -->
         <div v-if="getAnimalsInBuilding(bDef.type).length > 0" class="flex flex-col space-y-1 max-h-60 overflow-y-auto">
           <div v-for="animal in getAnimalsInBuilding(bDef.type)" :key="animal.id" class="border border-accent/10 rounded-xs p-2 mr-1">
-            <div class="flex items-center justify-between mb-1">
-              <div class="flex items-center space-x-1">
+            <!-- 名字与按钮组允许换行：小屏放不下时按钮组整体落到第二行，不再把按钮挤成竖排 -->
+            <div class="flex flex-wrap items-center justify-between mb-1 -mt-1">
+              <div class="flex items-center space-x-1 min-w-0 mr-2 mt-1">
                 <template v-if="renamingId === animal.id">
                   <input
                     v-model="renameInput"
@@ -133,24 +166,41 @@
                     @keyup.enter="confirmRename"
                     @keyup.escape="cancelRename"
                   />
-                  <Button class="py-0 px-1" @click="confirmRename">确定</Button>
-                  <Button class="py-0 px-1" @click="cancelRename">取消</Button>
+                  <Button class="btn-compact" @click="confirmRename">确定</Button>
+                  <Button class="btn-compact" @click="cancelRename">取消</Button>
                 </template>
                 <template v-else>
-                  <span class="text-xs text-accent">{{ animal.name }}</span>
-                  <button class="text-muted hover:text-accent" @click="startRename(animal.id, animal.name)">
+                  <span class="text-xs text-accent truncate">{{ animal.name }}</span>
+                  <button class="text-muted hover:text-accent shrink-0" @click="startRename(animal.id, animal.name)">
                     <Pencil :size="10" />
                   </button>
                 </template>
               </div>
-              <div class="flex items-center space-x-1">
-                <Button class="py-0 px-1" :icon="Apple" :disabled="animal.wasFed" @click="handleFeedAnimal(animal.id, animal.name)">
+              <div class="flex items-center space-x-1 shrink-0 ml-auto mt-1">
+                <Button
+                  class="btn-compact"
+                  :icon="Apple"
+                  :icon-size="12"
+                  :disabled="animal.wasFed"
+                  @click="handleFeedAnimal(animal.id, animal.name)"
+                >
                   {{ animal.wasFed ? '已喂' : '喂食' }}
                 </Button>
-                <Button class="py-0 px-1" :icon="Hand" :disabled="animal.wasPetted" @click="handlePetAnimal(animal.id)">
+                <Button class="btn-compact" :icon="Hand" :icon-size="12" :disabled="animal.wasPetted" @click="handlePetAnimal(animal.id)">
                   {{ animal.wasPetted ? '已摸' : '抚摸' }}
                 </Button>
-                <Button class="py-0 px-1" :icon="Coins" @click="sellTarget = { id: animal.id, name: animal.name, type: animal.type }">
+                <Button
+                  class="btn-compact"
+                  :icon="Coins"
+                  :icon-size="12"
+                  @click="
+                    sellTarget = {
+                      id: animal.id,
+                      name: animal.name,
+                      type: animal.type
+                    }
+                  "
+                >
                   出售
                 </Button>
               </div>
@@ -168,7 +218,9 @@
                   <div
                     class="h-full rounded-xs transition-all"
                     :class="getMoodBarColor(animal.mood)"
-                    :style="{ width: Math.floor((animal.mood / 255) * 100) + '%' }"
+                    :style="{
+                      width: Math.floor((animal.mood / 255) * 100) + '%'
+                    }"
                   />
                 </div>
                 <span class="text-[10px] text-muted w-6">{{ getMoodText(animal.mood) }}</span>
@@ -176,14 +228,25 @@
               <div v-if="animal.hunger > 0" class="flex items-center space-x-1">
                 <span class="text-[10px] text-muted w-6">饥饿</span>
                 <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
-                  <div class="h-full rounded-xs bg-danger transition-all" :style="{ width: Math.floor((animal.hunger / 7) * 100) + '%' }" />
+                  <div
+                    class="h-full rounded-xs bg-danger transition-all"
+                    :style="{
+                      width: Math.floor((animal.hunger / 7) * 100) + '%'
+                    }"
+                  />
                 </div>
                 <span class="text-[10px] text-danger w-6">{{ animal.hunger }}天</span>
               </div>
             </div>
             <div v-if="animal.sick" class="flex items-center justify-between mt-0.5">
               <p class="text-[10px] text-danger">生病中({{ animal.sickDays }}/5天)</p>
-              <Button class="py-0 px-1" :icon="Syringe" :disabled="medicineCount <= 0" @click="handleHealAnimal(animal.id, animal.name)">
+              <Button
+                class="btn-compact"
+                :icon="Syringe"
+                :icon-size="12"
+                :disabled="medicineCount <= 0"
+                @click="handleHealAnimal(animal.id, animal.name)"
+              >
                 治疗
               </Button>
             </div>
@@ -212,8 +275,8 @@
 
       <template v-if="animalStore.stableBuilt">
         <div v-if="animalStore.getHorse" class="border border-accent/10 rounded-xs p-2">
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center space-x-1">
+          <div class="flex flex-wrap items-center justify-between mb-1 -mt-1">
+            <div class="flex items-center space-x-1 min-w-0 mr-2 mt-1">
               <template v-if="renamingId === animalStore.getHorse.id">
                 <input
                   v-model="renameInput"
@@ -222,49 +285,76 @@
                   @keyup.enter="confirmRename"
                   @keyup.escape="cancelRename"
                 />
-                <Button class="py-0 px-1" @click="confirmRename">确定</Button>
-                <Button class="py-0 px-1" @click="cancelRename">取消</Button>
+                <Button class="btn-compact" @click="confirmRename">确定</Button>
+                <Button class="btn-compact" @click="cancelRename">取消</Button>
               </template>
               <template v-else>
-                <span class="text-xs text-accent">{{ animalStore.getHorse.name }}</span>
-                <button class="text-muted hover:text-accent" @click="startRename(animalStore.getHorse!.id, animalStore.getHorse!.name)">
+                <span class="text-xs text-accent truncate">{{ animalStore.getHorse.name }}</span>
+                <span class="text-[10px] text-muted whitespace-nowrap">{{ animalStore.horseBreedDef.name }}</span>
+                <button
+                  class="text-muted hover:text-accent shrink-0"
+                  @click="startRename(animalStore.getHorse!.id, animalStore.getHorse!.name)"
+                >
                   <Pencil :size="10" />
                 </button>
               </template>
             </div>
-            <div class="flex items-center space-x-1">
+            <div class="flex items-center space-x-1 shrink-0 ml-auto mt-1">
               <Button
-                class="py-0 px-1"
+                class="btn-compact"
                 :icon="Apple"
+                :icon-size="12"
                 :disabled="animalStore.getHorse.wasFed"
                 @click="handleFeedAnimal(animalStore.getHorse.id, animalStore.getHorse.name)"
               >
                 {{ animalStore.getHorse.wasFed ? '已喂' : '喂食' }}
               </Button>
               <Button
-                class="py-0 px-1"
+                class="btn-compact"
                 :icon="Hand"
+                :icon-size="12"
                 :disabled="animalStore.getHorse.wasPetted"
                 @click="handlePetAnimal(animalStore.getHorse.id)"
               >
                 {{ animalStore.getHorse.wasPetted ? '已摸' : '抚摸' }}
               </Button>
               <Button
-                class="py-0 px-1"
+                class="btn-compact"
                 :icon="Coins"
-                @click="sellTarget = { id: animalStore.getHorse!.id, name: animalStore.getHorse!.name, type: animalStore.getHorse!.type }"
+                :icon-size="12"
+                @click="
+                  sellTarget = {
+                    id: animalStore.getHorse!.id,
+                    name: animalStore.getHorse!.name,
+                    type: animalStore.getHorse!.type
+                  }
+                "
               >
                 出售
               </Button>
             </div>
           </div>
           <div class="space-y-0.5">
+            <!-- 把马的实际收益写明：品种和好感都会影响赶路与放牧 -->
+            <p class="text-[10px] text-muted/70">
+              {{ animalStore.horseBreedDef.description }}
+            </p>
+            <p class="text-[10px] text-accent/70">
+              赶路耗时 ×{{ animalStore.getHorseTravelTimeMultiplier().toFixed(2) }} · 体力 ×{{
+                animalStore.getHorseTravelStaminaMultiplier().toFixed(2)
+              }}
+              · 放牧协助
+              {{ Math.round(animalStore.getHorseGrazeBonusChance() * 100) }}%
+            </p>
+            <p class="text-[10px] text-muted/50">喂食抚摸提升好感，好感越高赶路越省力、放牧带回的产物越多。</p>
             <div class="flex items-center space-x-1">
               <span class="text-[10px] text-muted w-6">好感</span>
               <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
                 <div
                   class="h-full rounded-xs bg-danger transition-all"
-                  :style="{ width: Math.floor(animalStore.getHorse.friendship / 10) + '%' }"
+                  :style="{
+                    width: Math.floor(animalStore.getHorse.friendship / 10) + '%'
+                  }"
                 />
               </div>
             </div>
@@ -274,7 +364,9 @@
                 <div
                   class="h-full rounded-xs transition-all"
                   :class="getMoodBarColor(animalStore.getHorse.mood)"
-                  :style="{ width: Math.floor((animalStore.getHorse.mood / 255) * 100) + '%' }"
+                  :style="{
+                    width: Math.floor((animalStore.getHorse.mood / 255) * 100) + '%'
+                  }"
                 />
               </div>
               <span class="text-[10px] text-muted w-6">{{ getMoodText(animalStore.getHorse.mood) }}</span>
@@ -284,7 +376,9 @@
               <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
                 <div
                   class="h-full rounded-xs bg-danger transition-all"
-                  :style="{ width: Math.floor((animalStore.getHorse.hunger / 7) * 100) + '%' }"
+                  :style="{
+                    width: Math.floor((animalStore.getHorse.hunger / 7) * 100) + '%'
+                  }"
                 />
               </div>
               <span class="text-[10px] text-danger w-6">{{ animalStore.getHorse.hunger }}天</span>
@@ -563,15 +657,17 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { Hammer, ShoppingCart, Hand, Apple, Home, ArrowUp, Egg, X, Coins, Syringe, Pencil } from 'lucide-vue-next'
+  import { Hammer, ShoppingCart, Hand, Apple, Home, ArrowUp, Egg, X, Coins, Syringe, Pencil, Wheat, Sun, Heart } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import { useAnimalStore } from '@/stores/useAnimalStore'
   import { useGameStore } from '@/stores/useGameStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { ANIMAL_BUILDINGS, ANIMAL_DEFS, HAY_ITEM_ID, getItemById, getBuildingUpgrade, INCUBATION_MAP, FEED_DEFS } from '@/data'
+  import { BUILDING_CAPACITY_PER_LEVEL } from '@/data/animals'
+  import { PET_ABILITIES, PET_PETTING_FRIENDSHIP, getPetFetchChance, getCatPestLimit, isPetAbilityUnlocked } from '@/data/pets'
   import { ACTION_TIME_COSTS } from '@/data/timeConstants'
-  import type { AnimalBuildingType, AnimalType, AnimalDef } from '@/types'
+  import type { AnimalBuildingType, AnimalType, AnimalDef, PetAbilityDef, PetAbilityId, PetState } from '@/types'
   import { addLog } from '@/composables/useGameLog'
   import { handleEndDay } from '@/composables/useEndDay'
   import { useTutorialStore } from '@/stores/useTutorialStore'
@@ -757,7 +853,7 @@
   const getBuildingCapacity = (type: AnimalBuildingType): number => {
     const level = getBuildingLevel(type)
     if (type === 'stable') return 1
-    return level * 4
+    return level * BUILDING_CAPACITY_PER_LEVEL
   }
 
   const getMoodText = (mood: number): string => {
@@ -796,6 +892,26 @@
     return ''
   })
 
+  /**
+   * 放牧按钮是否可点。
+   * 一早进牧场时牲畜都还没喂，按严格规则会直接变灰；这里允许「未喂食但有饲料」也能点，
+   * 由 handleGraze 先自动喂一遍再放牧，省掉来回两次操作。
+   */
+  const canGrazeOrFeed = computed(() => {
+    if (canGraze.value) return true
+    if (animalStore.grazedToday || gameStore.isRainy) return false
+    if (unfedCount.value === 0) return false
+    // 冬天只有牦牛能放牧，没牦牛就别自动喂了
+    if (gameStore.season === 'winter' && !animalStore.animals.some(a => a.type === 'yak')) return false
+    return selectedFeedCount.value > 0
+  })
+
+  const grazeButtonLabel = computed(() => {
+    if (canGraze.value) return '放牧全部'
+    if (canGrazeOrFeed.value) return '喂食并放牧'
+    return grazeDisabledReason.value || '放牧全部'
+  })
+
   // === 升级弹窗 ===
 
   interface UpgradeModalData {
@@ -820,7 +936,7 @@
       buildingType: type,
       currentName: getBuildingDisplayName(type),
       currentLevel: level,
-      currentCapacity: level * 4,
+      currentCapacity: level * BUILDING_CAPACITY_PER_LEVEL,
       targetName: upgrade.name,
       targetLevel: upgrade.level,
       targetCapacity: upgrade.capacity,
@@ -899,9 +1015,10 @@
   }
 
   const handlePetThePet = () => {
-    const success = animalStore.petThePet()
-    if (success) {
-      addLog(`抚摸了${animalStore.pet?.name ?? '宠物'}，好感度+5。`)
+    const result = animalStore.petThePet()
+    if (result.success) {
+      const staminaText = result.staminaGained > 0 ? `，体力+${result.staminaGained}` : ''
+      addLog(`抚摸了${animalStore.pet?.name ?? '宠物'}，好感度+${PET_PETTING_FRIENDSHIP}${staminaText}。`)
       const tr = gameStore.advanceTime(ACTION_TIME_COSTS.petAnimal)
       if (tr.message) addLog(tr.message)
       if (tr.passedOut) handleEndDay()
@@ -909,6 +1026,37 @@
       addLog('今天已经抚摸过了。')
     }
   }
+
+  // === 宠物能力 ===
+
+  interface PetAbilityTag {
+    id: PetAbilityId
+    label: string
+    unlocked: boolean
+    unlockFriendship: number
+  }
+
+  /** 已解锁能力的标签：叼物带当前概率，捕虫带每日处数 */
+  const getPetAbilityLabel = (ability: PetAbilityDef, current: PetState): string => {
+    if (ability.id === 'fetch') return `${ability.name} ${Math.round(getPetFetchChance(current.friendship) * 100)}%`
+    if (ability.id === 'pest') return `${ability.name} ${getCatPestLimit(current.friendship)}处`
+    return ability.name
+  }
+
+  /** 宠物卡能力标签：已解锁高亮，未解锁带好感门槛 */
+  const petAbilityTags = computed<PetAbilityTag[]>(() => {
+    const current = animalStore.pet
+    if (!current) return []
+    return PET_ABILITIES.filter(a => a.petTypes.includes(current.type)).map(a => {
+      const unlocked = isPetAbilityUnlocked(current.type, a.id, current.friendship)
+      return {
+        id: a.id,
+        label: unlocked ? getPetAbilityLabel(a, current) : a.name,
+        unlocked,
+        unlockFriendship: a.unlockFriendship
+      }
+    })
+  })
 
   const unpettedCount = computed(() => {
     let count = animalStore.animals.filter(a => !a.wasPetted).length
@@ -922,9 +1070,10 @@
       addLog('体力不足，无法一键抚摸。')
       return
     }
-    const count = animalStore.petAllAnimals()
+    const { count, staminaGained } = animalStore.petAllAnimals()
     if (count > 0) {
-      addLog(`一口气抚摸了${count}只动物，大家都很开心！`)
+      const staminaText = staminaGained > 0 ? `体力+${staminaGained}。` : ''
+      addLog(`一口气抚摸了${count}只动物，大家都很开心！${staminaText}`)
       const tr = gameStore.advanceTime(ACTION_TIME_COSTS.batchPet)
       if (tr.message) addLog(tr.message)
       if (tr.passedOut) handleEndDay()
@@ -997,6 +1146,11 @@
   }
 
   const handleGraze = () => {
+    // 还没喂就先喂一遍：一早进牧场时这两步本来就是连着做的
+    if (!canGraze.value && unfedCount.value > 0) {
+      handleFeedAll()
+      if (!canGraze.value) return
+    }
     const result = animalStore.grazeAnimals()
     addLog(result.message)
     if (result.success) {

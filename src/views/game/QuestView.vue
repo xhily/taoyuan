@@ -24,7 +24,9 @@
       >
         <div class="min-w-0">
           <p class="text-xs text-accent truncate">第{{ mainQuestDef.chapter }}章 · {{ mainQuestDef.title }}</p>
-          <p class="text-xs text-muted truncate">{{ mainQuestDef.description }}</p>
+          <p class="text-xs text-muted truncate">
+            {{ mainQuestDef.description }}
+          </p>
         </div>
         <span
           class="text-xs whitespace-nowrap ml-2"
@@ -56,7 +58,7 @@
           class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
           @click="questModal = { type: 'board', questId: quest.id }"
         >
-          <p class="text-xs truncate min-w-0">{{ quest.description }}</p>
+          <p class="text-xs truncate min-w-0">{{ questDescription(quest) }}</p>
           <span class="text-xs text-accent whitespace-nowrap ml-2">{{ quest.moneyReward }}文</span>
         </div>
       </div>
@@ -73,7 +75,9 @@
         @click="questModal = { type: 'special' }"
       >
         <div class="min-w-0">
-          <p class="text-xs truncate">{{ questStore.specialOrder.description }}</p>
+          <p class="text-xs truncate">
+            {{ questDescription(questStore.specialOrder) }}
+          </p>
         </div>
         <span class="text-xs text-accent whitespace-nowrap ml-2">{{ questStore.specialOrder.moneyReward }}文</span>
       </div>
@@ -104,7 +108,7 @@
           @click="questModal = { type: 'active', questId: quest.id }"
         >
           <div class="flex items-center justify-between">
-            <p class="text-xs truncate min-w-0">{{ quest.description }}</p>
+            <p class="text-xs truncate min-w-0">{{ questDescription(quest) }}</p>
             <span class="text-xs whitespace-nowrap ml-2" :class="canSubmit(quest) ? 'text-success' : 'text-muted'">
               {{ canSubmit(quest) ? '可提交' : `剩${quest.daysRemaining}天` }}
             </span>
@@ -113,7 +117,9 @@
             <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
               <div
                 class="h-full rounded-xs bg-accent transition-all"
-                :style="{ width: Math.floor((getEffectiveProgress(quest) / quest.targetQuantity) * 100) + '%' }"
+                :style="{
+                  width: Math.floor((getEffectiveProgress(quest) / quest.targetQuantity) * 100) + '%'
+                }"
               />
             </div>
             <span class="text-xs text-muted">{{ getEffectiveProgress(quest) }}/{{ quest.targetQuantity }}</span>
@@ -143,8 +149,12 @@
           <!-- 主线任务详情 -->
           <template v-if="questModal.type === 'main' && mainQuestDef">
             <p class="text-accent text-sm mb-1">第{{ mainQuestDef.chapter }}章「{{ chapterTitle }}」</p>
-            <p class="text-xs font-bold text-accent mb-1">{{ mainQuestDef.title }}</p>
-            <p class="text-xs text-muted leading-relaxed mb-2">{{ mainQuestDef.description }}</p>
+            <p class="text-xs font-bold text-accent mb-1">
+              {{ mainQuestDef.title }}
+            </p>
+            <p class="text-xs text-muted leading-relaxed mb-2">
+              {{ mainQuestDef.description }}
+            </p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">目标</p>
               <div v-for="(obj, i) in mainQuestDef.objectives" :key="i" class="flex items-center space-x-1">
@@ -159,7 +169,8 @@
                 {{ mainQuestDef.moneyReward }}文
                 <template v-if="mainQuestDef.friendshipReward?.length">+ 好感</template>
                 <template v-if="mainQuestDef.itemReward?.length">
-                  + {{ mainQuestDef.itemReward.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join(', ') }}
+                  +
+                  {{ mainQuestDef.itemReward.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join(', ') }}
                 </template>
               </p>
             </div>
@@ -175,7 +186,9 @@
             <Button
               v-else
               class="w-full justify-center"
-              :class="{ '!bg-accent !text-bg': questStore.canSubmitMainQuest() }"
+              :class="{
+                '!bg-accent !text-bg': questStore.canSubmitMainQuest()
+              }"
               :icon="CheckCircle"
               :icon-size="12"
               :disabled="!questStore.canSubmitMainQuest()"
@@ -188,10 +201,15 @@
           <!-- 委托详情 -->
           <template v-if="questModal.type === 'board' && selectedBoardQuest">
             <p class="text-accent text-sm mb-2">委托详情</p>
-            <p class="text-xs leading-relaxed mb-2">{{ selectedBoardQuest.description }}</p>
+            <p class="text-xs leading-relaxed mb-2">
+              {{ questDescription(selectedBoardQuest) }}
+            </p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">目标</p>
-              <p class="text-xs">{{ selectedBoardQuest.targetItemName }} × {{ selectedBoardQuest.targetQuantity }}</p>
+              <p class="text-xs">
+                {{ selectedBoardQuest.targetItemName }} ×
+                {{ selectedBoardQuest.targetQuantity }}
+              </p>
             </div>
             <div class="border border-accent/10 rounded-xs p-2 mb-3">
               <p class="text-xs text-muted mb-1">奖励</p>
@@ -216,10 +234,15 @@
                 {{ questStore.specialOrder.tierLabel }}
               </span>
             </p>
-            <p class="text-xs leading-relaxed mb-2">{{ questStore.specialOrder.description }}</p>
+            <p class="text-xs leading-relaxed mb-2">
+              {{ questDescription(questStore.specialOrder) }}
+            </p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">目标</p>
-              <p class="text-xs">{{ questStore.specialOrder.targetItemName }} × {{ questStore.specialOrder.targetQuantity }}</p>
+              <p class="text-xs">
+                {{ questStore.specialOrder.targetItemName }} ×
+                {{ questStore.specialOrder.targetQuantity }}
+              </p>
             </div>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">限时</p>
@@ -230,7 +253,8 @@
               <p class="text-xs">
                 {{ questStore.specialOrder.moneyReward }}文 + 好感{{ questStore.specialOrder.friendshipReward }}
                 <template v-if="questStore.specialOrder.itemReward?.length">
-                  + {{ questStore.specialOrder.itemReward.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join(', ') }}
+                  +
+                  {{ questStore.specialOrder.itemReward.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join(', ') }}
                 </template>
               </p>
             </div>
@@ -250,7 +274,9 @@
             <p class="text-accent text-sm mb-2">
               {{ selectedActiveQuest.type === 'special_order' ? '特殊订单' : '委托' }}
             </p>
-            <p class="text-xs leading-relaxed mb-2">{{ selectedActiveQuest.description }}</p>
+            <p class="text-xs leading-relaxed mb-2">
+              {{ questDescription(selectedActiveQuest) }}
+            </p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">进度</p>
               <div v-if="selectedActiveQuest.type !== 'delivery'" class="flex items-center space-x-2">
@@ -267,7 +293,8 @@
                 </span>
               </div>
               <p v-else class="text-xs">
-                背包中 {{ inventoryStore.getItemCount(selectedActiveQuest.targetItemId) }}/{{ selectedActiveQuest.targetQuantity }}
+                背包中
+                {{ inventoryStore.getItemCount(selectedActiveQuest.targetItemId) }}/{{ selectedActiveQuest.targetQuantity }}
               </p>
             </div>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
@@ -279,7 +306,8 @@
               <p class="text-xs">
                 {{ selectedActiveQuest.moneyReward }}文
                 <template v-if="selectedActiveQuest.itemReward?.length">
-                  + {{ selectedActiveQuest.itemReward.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join(', ') }}
+                  +
+                  {{ selectedActiveQuest.itemReward.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join(', ') }}
                 </template>
               </p>
             </div>
@@ -306,15 +334,23 @@
   import Button from '@/components/game/Button.vue'
   import type { QuestInstance } from '@/types'
   import { useInventoryStore } from '@/stores/useInventoryStore'
+  import { useNpcStore } from '@/stores/useNpcStore'
   import { useQuestStore } from '@/stores/useQuestStore'
   import { getItemById, getStoryQuestById, CHAPTER_TITLES } from '@/data'
   import { addLog } from '@/composables/useGameLog'
 
   const questStore = useQuestStore()
   const inventoryStore = useInventoryStore()
+  const npcStore = useNpcStore()
 
   const getItemName = (id: string): string => {
     return getItemById(id)?.name ?? id
+  }
+
+  /** 委托描述：存档里拼好的委托人名换成显示名（含备注），不改存档 */
+  const questDescription = (quest: QuestInstance): string => {
+    if (!quest.npcName || !npcStore.getNpcNote(quest.npcId)) return quest.description
+    return quest.description.split(quest.npcName).join(npcStore.getNpcDisplayName(quest.npcId))
   }
 
   // === 弹窗状态 ===

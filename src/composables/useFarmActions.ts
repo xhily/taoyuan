@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useAchievementStore } from '@/stores/useAchievementStore'
 import { useBreedingStore } from '@/stores/useBreedingStore'
 import { useCookingStore } from '@/stores/useCookingStore'
-import { useFarmStore } from '@/stores/useFarmStore'
+import { useFarmStore, formatExhaustedLog } from '@/stores/useFarmStore'
 import { useGameStore } from '@/stores/useGameStore'
 import { useInventoryStore } from '@/stores/useInventoryStore'
 import { usePlayerStore } from '@/stores/usePlayerStore'
@@ -206,7 +206,8 @@ export const handlePlotClick = (plotId: number) => {
       const yieldDouble = genetics && !intensiveDouble && Math.random() < (genetics.yield / 100) * 0.3
       // 桃源田庄：15% 概率额外收获
       const standardDouble = !intensiveDouble && !yieldDouble && gameStore.farmMapType === 'standard' && Math.random() < 0.15
-      const harvestQty = intensiveDouble || yieldDouble || standardDouble ? 2 : 1
+      // 地块等级：每级额外 +1（同作物同品质）
+      const harvestQty = (intensiveDouble || yieldDouble || standardDouble ? 2 : 1) + result.bonus
       inventoryStore.addItem(cropId, harvestQty, quality)
       achievementStore.discoverItem(cropId)
       achievementStore.recordCropHarvest()
@@ -214,7 +215,7 @@ export const handlePlotClick = (plotId: number) => {
       const { leveledUp, newLevel } = skillStore.addExp('farming', 10)
       const qualityLabel = quality !== 'normal' ? `(${QUALITY_NAMES[quality]})` : ''
       sfxHarvest()
-      const qtyLabel = intensiveDouble || yieldDouble || standardDouble ? '×2' : ''
+      const qtyLabel = harvestQty > 1 ? `×${harvestQty}` : ''
       showFloat(`+${cropDef?.name ?? cropId}${qtyLabel}${qualityLabel}`, 'success')
       let msg = `收获了${cropDef?.name ?? cropId}${qtyLabel}${qualityLabel}！`
       if (intensiveDouble) msg += ' 精耕细作，双倍丰收！'
@@ -235,7 +236,10 @@ export const handlePlotClick = (plotId: number) => {
       }
       // 育种种子回收
       if (genetics && shouldReturnBreedingSeed(quality)) {
-        const returned: SeedGenetics = { ...genetics, id: generateGeneticsId() }
+        const returned: SeedGenetics = {
+          ...genetics,
+          id: generateGeneticsId()
+        }
         if (useBreedingStore().addToBox(returned)) {
           msg += ' 育种种子已回收。'
         } else {
@@ -247,6 +251,7 @@ export const handlePlotClick = (plotId: number) => {
         sfxLevelUp()
       }
       addLog(msg)
+      if (result.exhausted) addLog(formatExhaustedLog([cropDef?.name ?? cropId]))
       const tr = gameStore.advanceTime(ACTION_TIME_COSTS.harvest)
       if (tr.message) addLog(tr.message)
       if (tr.passedOut) {
@@ -311,9 +316,13 @@ export const handleSellAll = (filterCategories?: ItemCategory[]) => {
   const sellable = inventoryStore.items
     .filter(inv => {
       const def = getItemById(inv.itemId)
-      return def && def.category !== 'seed' && !inv.locked && (!allowed || allowed.has(def.category))
+      return def && def.category !== 'seed' && !def.protected && !inv.locked && (!allowed || allowed.has(def.category))
     })
-    .map(inv => ({ itemId: inv.itemId, quantity: inv.quantity, quality: inv.quality }))
+    .map(inv => ({
+      itemId: inv.itemId,
+      quantity: inv.quantity,
+      quality: inv.quality
+    }))
   for (const item of sellable) {
     const earned = shopStore.sellItem(item.itemId, item.quantity, item.quality)
     if (earned > 0) {
@@ -496,6 +505,7 @@ export const handleBatchHarvest = () => {
   // 再收获普通作物
   const targets = farmStore.plots.filter(p => p.state === 'harvestable' && p.giantCropGroup === null)
   let seedsReturned = 0
+  const exhaustedCrops: string[] = []
 
   for (const plot of targets) {
     const plotFertilizer = plot.fertilizer
@@ -512,7 +522,8 @@ export const handleBatchHarvest = () => {
       const intensiveDouble = skillStore.getSkill('farming').perk10 === 'intensive' && Math.random() < 0.2
       const yieldDouble = genetics && !intensiveDouble && Math.random() < (genetics.yield / 100) * 0.3
       const standardDouble = !intensiveDouble && !yieldDouble && gameStore.farmMapType === 'standard' && Math.random() < 0.15
-      const harvestQty = intensiveDouble || yieldDouble || standardDouble ? 2 : 1
+      // 地块等级：每级额外 +1（同作物同品质）
+      const harvestQty = (intensiveDouble || yieldDouble || standardDouble ? 2 : 1) + result.bonus
       inventoryStore.addItem(cropId, harvestQty, quality)
       achievementStore.discoverItem(cropId)
       achievementStore.recordCropHarvest()
@@ -520,6 +531,7 @@ export const handleBatchHarvest = () => {
       skillStore.addExp('farming', 10)
       harvested++
       harvestedCrops.push(cropDef?.name ?? cropId)
+      if (result.exhausted) exhaustedCrops.push(cropDef?.name ?? cropId)
       // 育种甜度加成
       if (genetics && genetics.sweetness > 0 && cropDef) {
         const bonusMoney = Math.floor((cropDef.sellPrice * harvestQty * genetics.sweetness) / 200)
@@ -532,7 +544,10 @@ export const handleBatchHarvest = () => {
       }
       // 育种种子回收
       if (genetics && shouldReturnBreedingSeed(quality)) {
-        const returned: SeedGenetics = { ...genetics, id: generateGeneticsId() }
+        const returned: SeedGenetics = {
+          ...genetics,
+          id: generateGeneticsId()
+        }
         if (useBreedingStore().addToBox(returned)) seedsReturned++
       }
     }
@@ -552,6 +567,7 @@ export const handleBatchHarvest = () => {
       .map(([name, count]) => (count > 1 ? `${name}x${count}` : name))
       .join('、')
     addLog(`一键收获了${harvested}株作物：${cropSummary}。`)
+    if (exhaustedCrops.length > 0) addLog(formatExhaustedLog(exhaustedCrops))
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.batchHarvest * inventoryStore.getToolStaminaMultiplier('scythe'))
     if (tr.message) addLog(tr.message)
     if (tr.passedOut) handleEndDay()

@@ -118,6 +118,8 @@ export interface TradeExchangeItemDef {
   isWalletItem?: boolean
   /** 是否为装备 */
   equipType?: 'weapon' | 'ring' | 'hat' | 'shoe'
+  /** 兑换后把马升级为指定品种（需已有马厩与马） */
+  isHorseUpgrade?: 'steppe' | 'cloud' | 'divine'
 }
 
 // === 恶魔轮盘 ===

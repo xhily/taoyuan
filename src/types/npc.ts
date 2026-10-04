@@ -37,6 +37,11 @@ export interface NpcState {
   giftedToday: boolean
   /** 本周送礼次数 (上限2) */
   giftsThisWeek: number
+  /**
+   * 生日礼是否已送。
+   * 生日当天可额外送一次，不占每日与每周额度——否则本周送满两次的话生日反而送不了。
+   */
+  birthdayGiftGiven?: boolean
   /** 是否正在约会 */
   dating: boolean
   /** 是否已结婚 */
@@ -45,6 +50,8 @@ export interface NpcState {
   zhiji: boolean
   /** 已触发的心事件ID */
   triggeredHeartEvents: string[]
+  /** 上一次说过的台词，用于避免连续重复 */
+  lastDialogue?: string
 }
 
 /** 心事件场景 */
@@ -92,7 +99,7 @@ export type PregnancyStage = 'early' | 'mid' | 'late' | 'ready'
 export type ProposalResponse = 'accept' | 'decline' | 'wait'
 
 /** 雇工任务类型 */
-export type FarmHelperTask = 'water' | 'feed' | 'harvest' | 'weed' | 'bait'
+export type FarmHelperTask = 'water' | 'feed' | 'harvest' | 'weed' | 'bait' | 'collect'
 
 /** 雇工状态 */
 export interface HiredHelper {

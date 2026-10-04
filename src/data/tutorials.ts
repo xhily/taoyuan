@@ -65,7 +65,12 @@ export const MORNING_TIPS: MorningTipDef[] = [
     conditionKey: 'neverVisitedShop',
     message: '柳村长说：「商圈有各种种子和道具出售，有空去逛逛吧。」'
   },
-  { id: 'tip_try_fishing', priority: 10, conditionKey: 'neverFished', message: '柳村长说：「村东的清溪鱼虾丰美，带上鱼竿去试试钓鱼吧。」' },
+  {
+    id: 'tip_try_fishing',
+    priority: 10,
+    conditionKey: 'neverFished',
+    message: '柳村长说：「村东的清溪鱼虾丰美，带上鱼竿去试试钓鱼吧。」'
+  },
   {
     id: 'tip_try_mining',
     priority: 11,
